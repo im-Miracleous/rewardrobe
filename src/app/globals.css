@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-display: 'Sora', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  
+  .font-display { 
+    font-family: var(--font-display); 
+  }
+  
+  .font-body { 
+    font-family: var(--font-body); 
+  }
+  
+  body { 
+    font-family: var(--font-body); 
+    background-color: #fafaf9; /* stone-50 */
+    color: #292524; /* stone-800 */
+  }
+}
