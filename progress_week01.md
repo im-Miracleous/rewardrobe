@@ -41,20 +41,14 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 
 > _Bagian ini diisi oleh masing-masing anggota sesuai progress aktual._
 
-| NIM | Nama | Task | Status | Catatan |
-|---|---|---|---|---|
-| 2472008 | Christian Anthony Hermawan | — | — | — |
-| 2472042 | Gavin Malik Setiawan | — | — | — |
-| 2472019 | Miracle Steven Gerrald | — | — | — |
-| 2472029 | Henry Ferdynand Budiana | — | — | — |
+| NIM | Nama | Task | Status |
+|---|---|---|---|
+| 2472008 | Christian Anthony Hermawan | — | — |
+| 2472042 | Gavin Malik Setiawan | — | — |
+| 2472019 | Miracle Steven Gerrald | — | — |
+| 2472029 | Henry Ferdynand Budiana | Membuat `progress_week01.md` | Done |
 
 **Status legend:** `Not Started` · `In Progress` · `Done` · `Blocked`
 
 ---
-
-## Notes & Blockers
-
-> _Tulis kendala, pertanyaan, atau hal yang perlu didiskusikan di sini._
-
--
 
