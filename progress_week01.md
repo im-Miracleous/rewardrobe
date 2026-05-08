@@ -2,10 +2,10 @@
 **Project:** ReWardrobe  
 **Periode:** Week 1  
 **Kelompok:**
+- 2472019 — Miracle Steven Gerrald (Ketua)
 - 2472008 — Christian Anthony Hermawan
-- 2472042 — Gavin Malik Setiawan
-- 2472019 — Miracle Steven Gerrald
 - 2472029 — Henry Ferdynand Budiana
+- 2472042 — Gavin Malik Setiawan
 
 ---
 
@@ -29,24 +29,32 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 
 ## Features Implemented — Week 1
 
-### Login & Autentikasi
-- Form login dengan validasi email dan password
-- Autentikasi berbasis role (Admin / Donatur / Penerima)
-- Session management setelah login berhasil
-- Redirect otomatis ke dashboard sesuai role masing-masing pengguna
+### Inisiasi Project
+- Inisiasi project web app dengan teknologi Next.js (frontend) dan Node.js (backend).
+- Membuat template awal website secara static (mockup design) untuk Landing page, halaman Autentikasi (Login + Register), dan Dashboard berdasarkan role.
+
+#### Notes:
+Untuk mengakses desain awal dari halaman Dashboard, silahkan login dengan kredensial berikut:
+1. Admin -> Email: admin@example.com
+2. Donatur -> Email: donatur@example.com
+3. Penerima -> Email: penerima@example.com
+
+**PS:**
+- Semua akun dummy menggunakan password: `password`.
+- Karena website masih bersifat static, proses authentication disini masih *hard-coded*. Implementasi yang benar akan dilakukan di tahap selanjutnya, seiring perkembangan website.
 
 ---
 
 ## Current Progress
 
-> _Bagian ini diisi oleh masing-masing anggota sesuai progress aktual._
+> _Bagian ini diisi oleh masing-masing anggota sesuai progress real-time._
 
-| NIM | Nama | Task | Status |
+| NRP | Nama | Task | Status |
 |---|---|---|---|
+| 2472019 | Miracle Steven Gerrald | Inisiasi project dengan teknologi `Next.js` (frontend) & `Node.js` (backend) | Done |
 | 2472008 | Christian Anthony Hermawan | — | — |
-| 2472042 | Gavin Malik Setiawan | — | — |
-| 2472019 | Miracle Steven Gerrald | — | — |
 | 2472029 | Henry Ferdynand Budiana | Membuat `progress_week01.md` | Done |
+| 2472042 | Gavin Malik Setiawan | — | — |
 
 **Status legend:** `Not Started` · `In Progress` · `Done` · `Blocked`
 
