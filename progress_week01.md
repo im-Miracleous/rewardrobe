@@ -52,7 +52,7 @@ Untuk mengakses desain awal dari halaman Dashboard, silahkan login dengan kreden
 | NRP | Nama | Task | Status |
 |---|---|---|---|
 | 2472019 | Miracle Steven Gerrald | Inisiasi project dengan teknologi `Next.js` (frontend) & `Node.js` (backend) | Done |
-| 2472008 | Christian Anthony Hermawan | Merancang struktur pola desain | Done |
+| 2472008 | Christian Anthony Hermawan | Merancang struktur pola desain & membuat daftar fitur pada `Fitur.md`| Done |
 | 2472029 | Henry Ferdynand Budiana | Membuat `progress_week01.md` | Done |
 | 2472042 | Gavin Malik Setiawan | Membuat `README.md` | Done |
 
