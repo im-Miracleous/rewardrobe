@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             Int           @id @default(autoincrement())
+  nama           String
+  email          String        @unique
+  password       String
+  no_telpon      String?
+  alamat_lengkap String?
+  kota           String?
+  foto_profil    String?
+  role           RoleUser
+  tipe           TipePenerima?
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+
+  @@map("users")
+}
+
+enum RoleUser {
+  admin
+  donatur
+  penerima
+}
+
+enum TipePenerima {
+  panti
+  komunitas
+  pengrajin
+}

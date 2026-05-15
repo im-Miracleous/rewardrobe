@@ -176,6 +176,12 @@ export default function AuthPage() {
                             <>Sudah punya akun? <button onClick={() => { setView('login'); setErrorMsg(''); setShowPassword(false); }} className="font-bold text-green-600 hover:underline">Masuk disini</button></>
                         )}
                     </div>
+
+                    <div className="mt-4 text-center">
+                        <Link href="/db-check" className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 text-xs font-semibold text-stone-600 shadow-sm transition hover:border-green-200 hover:text-green-700">
+                            Database check
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>
