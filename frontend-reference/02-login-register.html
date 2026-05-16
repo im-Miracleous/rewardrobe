@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReWardrobe — Masuk / Daftar</title>
+  <meta name="description" content="Masuk atau buat akun ReWardrobe untuk mulai berdonasi pakaian.">
+  <style>
+    :root {
+      --primary: #1D9E75;
+      --primary-dark: #167D5C;
+      --primary-darker: #0F5E44;
+      --primary-light: #2DB88A;
+      --accent: #A8E6CF;
+      --accent-light: #E8F8F0;
+      --text: #1A2B23;
+      --text-secondary: #5A6E62;
+      --text-muted: #94A39B;
+      --border: #D8E5DE;
+      --bg: #FFFFFF;
+      --bg-alt: #F6FAF8;
+      --radius: 10px;
+      --radius-full: 100px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --transition: all .25s cubic-bezier(.4, 0, .2, 1)
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--font);
+      display: flex;
+      -webkit-font-smoothing: antialiased
+    }
+
+    /* ─── LEFT PANEL ─── */
+    .panel-left {
+      width: 42%;
+      background: linear-gradient(160deg, var(--primary-darker), var(--primary-dark));
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .panel-left::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 30% 70%, rgba(29, 158, 117, .2), transparent)
+    }
+
+    .panel-left::after {
+      content: '';
+      position: absolute;
+      top: -80px;
+      right: -80px;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: rgba(168, 230, 207, .06)
+    }
+
+    .left-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 28px;
+      z-index: 1
+    }
+
+    .left-logo-icon {
+      width: 38px;
+      height: 38px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px
+    }
+
+    .left-logo-text {
+      font-weight: 700;
+      font-size: 20px;
+      color: #fff
+    }
+
+    .left-logo-text em {
+      font-style: normal;
+      color: var(--accent)
+    }
+
+    .panel-left h2 {
+      font-size: 30px;
+      font-weight: 800;
+      color: #fff;
+      text-align: center;
+      line-height: 1.15;
+      margin-bottom: 10px;
+      z-index: 1;
+      letter-spacing: -.02em
+    }
+
+    .panel-left h2 em {
+      font-style: normal;
+      color: var(--accent)
+    }
+
+    .panel-left p {
+      color: rgba(255, 255, 255, .6);
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.6;
+      max-width: 280px;
+      z-index: 1
+    }
+
+    /* ─── RIGHT PANEL ─── */
+    .panel-right {
+      flex: 1;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 32px 40px
+    }
+
+    /* ─── TAB SWITCH ─── */
+    .tab-switch {
+      display: flex;
+      background: var(--bg-alt);
+      border-radius: 8px;
+      padding: 3px;
+      margin-bottom: 24px;
+      width: 100%;
+      max-width: 440px;
+      border: 1px solid var(--border)
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-muted);
+      transition: var(--transition);
+      border: none;
+      background: none;
+      font-family: var(--font)
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(29, 158, 117, .25)
+    }
+
+    /* ─── FORM ─── */
+    .form-box {
+      width: 100%;
+      max-width: 440px
+    }
+
+    .form-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+      letter-spacing: -.01em
+    }
+
+    .form-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 20px
+    }
+
+
+
+    .form-group {
+      margin-bottom: 12px
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+      letter-spacing: .02em
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: var(--font);
+      outline: none;
+      color: var(--text);
+      background: var(--bg-alt);
+      transition: var(--transition)
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 158, 117, .1)
+    }
+
+    input::placeholder {
+      color: var(--text-muted)
+    }
+
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231D9E75' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 10px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      margin-top: 4px;
+      transition: var(--transition)
+    }
+
+    .btn-submit:hover {
+      background: var(--primary-light);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(29, 158, 117, .2)
+    }
+
+    .form-footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 14px
+    }
+
+    .form-footer a {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none
+    }
+
+    .form-footer a:hover {
+      text-decoration: underline
+    }
+
+    /* ─── ROLE SELECTION ─── */
+    .role-step {
+      width: 100%;
+      max-width: 440px;
+      display: none;
+      text-align: center
+    }
+
+    .role-step.visible {
+      display: block
+    }
+
+    .role-step-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px
+    }
+
+    .role-step-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 20px
+    }
+
+    .role-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px
+    }
+
+    .role-card {
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: var(--bg)
+    }
+
+    .role-card:hover {
+      border-color: var(--primary);
+      background: var(--accent-light)
+    }
+
+    .role-card.selected {
+      border-color: var(--primary);
+      background: var(--accent-light);
+      box-shadow: 0 0 0 3px rgba(29, 158, 117, .12)
+    }
+
+    .role-card-icon {
+      font-size: 28px;
+      margin-bottom: 6px
+    }
+
+    .role-card-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px
+    }
+
+    .role-card-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.4
+    }
+
+    .penerima-type {
+      display: none;
+      margin-bottom: 12px;
+      text-align: left
+    }
+
+    .penerima-type.visible {
+      display: block
+    }
+
+    .btn-next {
+      width: 100%;
+      padding: 10px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: var(--transition)
+    }
+
+    .btn-next:hover {
+      background: var(--primary-light);
+      transform: translateY(-1px)
+    }
+
+    .btn-next:disabled {
+      background: var(--border);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      transform: none
+    }
+
+    .btn-back-step {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font);
+      margin-top: 10px;
+      transition: var(--transition)
+    }
+
+    .btn-back-step:hover {
+      color: var(--primary)
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media(max-width:768px) {
+
+      html,
+      body {
+        overflow: auto;
+      }
+
+      body {
+        flex-direction: column
+      }
+
+      .panel-left {
+        width: 100%;
+        padding: 28px 20px
+      }
+
+      .panel-left h2 {
+        font-size: 22px
+      }
+
+      .panel-right {
+        padding: 28px 20px
+      }
+
+      .form-row {
+        grid-template-columns: 1fr
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="panel-left">
+    <div class="left-logo">
+      <div class="left-logo-icon">👕</div>
+      <span class="left-logo-text"><em>Re</em>Wardrobe</span>
+    </div>
+    <h2>Satu Akun,<br><em>Seribu</em> Dampak.</h2>
+    <p>Bergabung dan mulai perjalanan donasimu. Setiap pakaian yang kamu donasikan membawa harapan nyata.</p>
+  </div>
+
+  <div class="panel-right">
+    <!-- STEP 1: Login/Register Tabs -->
+    <div id="auth-step">
+      <div class="tab-switch">
+        <button class="tab active" id="tab-login" onclick="switchTab('login')">Masuk</button>
+        <button class="tab" id="tab-register" onclick="switchTab('register')">Daftar</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div class="form-box" id="login-form">
+        <div class="form-title">Selamat Datang</div>
+        <div class="form-sub">Masuk ke akun ReWardrobe kamu</div>
+        <div class="form-group"><label>Email</label><input type="email" placeholder="nama@email.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" placeholder="Masukkan password"></div>
+        <button class="btn-submit" onclick="handleLogin()">Masuk</button>
+        <div class="form-footer">Belum punya akun? <a href="#" onclick="switchTab('register')">Daftar sekarang</a></div>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div class="form-box" id="register-form" style="display:none">
+        <div class="form-title">Buat Akun Baru</div>
+        <div class="form-sub">Isi data di bawah untuk mendaftar</div>
+        <div class="form-group"><label>Nama Lengkap</label><input type="text" placeholder="Nama kamu"></div>
+        <div class="form-group"><label>Email</label><input type="email" placeholder="nama@email.com"></div>
+        <div class="form-group"><label>Kota</label>
+          <select>
+            <option>Pilih kota...</option>
+            <option>Jakarta</option>
+            <option>Bandung</option>
+            <option>Surabaya</option>
+            <option>Yogyakarta</option>
+            <option>Semarang</option>
+            <option>Medan</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Password</label><input type="password" placeholder="Min. 8 karakter"></div>
+        <button class="btn-submit" onclick="showRoleStep()">Lanjutkan</button>
+        <div class="form-footer">Sudah punya akun? <a href="#" onclick="switchTab('login')">Masuk</a></div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Role Selection -->
+    <div class="role-step" id="role-step">
+      <div class="role-step-title">Pilih Peranmu</div>
+      <div class="role-step-sub">Tentukan bagaimana kamu ingin menggunakan ReWardrobe</div>
+      <div class="role-cards">
+        <div class="role-card" id="role-donatur" onclick="selectRole('donatur')">
+          <div class="role-card-icon">🤲</div>
+          <div class="role-card-label">Berdonasi Pakaian</div>
+          <div class="role-card-desc">Donasikan pakaian yang tidak terpakai</div>
+        </div>
+        <div class="role-card" id="role-penerima" onclick="selectRole('penerima')">
+          <div class="role-card-icon">🏠</div>
+          <div class="role-card-label">Menerima Donasi</div>
+          <div class="role-card-desc">Cari pakaian donasi untuk kebutuhan</div>
+        </div>
+      </div>
+      <div class="penerima-type" id="penerima-type">
+        <label>Tipe Penerima</label>
+        <select id="penerima-select">
+          <option>Pilih tipe penerima...</option>
+          <option>Panti Asuhan</option>
+          <option>Komunitas</option>
+          <option>Pengrajin</option>
+        </select>
+      </div>
+      <button class="btn-next" id="btn-create" onclick="createAccount()" disabled>Buat Akun</button>
+      <button class="btn-back-step" onclick="backToAuth()">← Kembali ke formulir</button>
+    </div>
+  </div>
+
+  <script>
+    let selectedRole = null;
+
+    function switchTab(tab) {
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+      document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+    }
+
+    function showRoleStep() {
+      document.getElementById('auth-step').style.display = 'none';
+      document.getElementById('role-step').classList.add('visible');
+    }
+
+    function backToAuth() {
+      document.getElementById('auth-step').style.display = '';
+      document.getElementById('role-step').classList.remove('visible');
+    }
+
+    function selectRole(role) {
+      selectedRole = role;
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('role-' + role).classList.add('selected');
+      document.getElementById('penerima-type').classList.toggle('visible', role === 'penerima');
+      document.getElementById('btn-create').disabled = false;
+    }
+
+    function createAccount() {
+      if (selectedRole === 'donatur') {
+        location.href = '03-dashboard-donatur.html';
+      } else if (selectedRole === 'penerima') {
+        location.href = '05-dashboard-penerima.html';
+      }
+    }
+
+    function handleLogin() {
+      location.href = '03-dashboard-donatur.html';
+    }
+
+    // Handle hash-based tab switching
+    if (window.location.hash === '#register') {
+      switchTab('register');
+    }
+  </script>
+</body>
+
+</html>

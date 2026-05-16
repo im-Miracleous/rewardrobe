@@ -1,6 +1,5 @@
-# Progress Report — Week 1
+# Progress Report — Week 2
 **Project:** ReWardrobe  
-**Periode:** Week 1  
 **Kelompok:**
 - 2472019 — Miracle Steven Gerrald (Ketua)
 - 2472008 — Christian Anthony Hermawan
@@ -27,34 +26,32 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 
 ---
 
-## Features Implemented — Week 1
+## Features Implemented — Week 2
 
-### Inisiasi Project
-- Inisiasi project web app dengan teknologi Next.js (frontend) dan Node.js (backend).
-- Membuat template awal website secara static (mockup design) untuk Landing page, halaman Autentikasi (Login + Register), dan Dashboard berdasarkan role.
+### 2472019 — Miracle Steven Gerrald
+- Authentication system: API routes untuk login (`/api/auth/login`), register (`/api/auth/register`), dan logout (`/api/auth/logout`)
+- Secure password hashing menggunakan bcryptjs dan session management via cookies
+- Role-based dashboard redirection setelah login
+- Middleware (`middleware.ts`) untuk proteksi semua route `/dashboard/*` berdasarkan role
+- Prisma ORM setup dengan PostgreSQL: schema `User`, enum role, dan migration SQL
+- Seed file (`prisma/seed.ts`) untuk populate default users (admin, donatur, penerima)
+- Script CLI `scripts/create-admin.js` untuk membuat admin user tanpa melalui website
+- Dokumentasi di `README.md` dan `SETUP.md` mencakup database setup, auth flow, API usage, dan troubleshooting
 
-#### Notes:
-Untuk mengakses desain awal dari halaman Dashboard, silahkan login dengan kredensial berikut:
-1. Admin -> Email: admin@example.com
-2. Donatur -> Email: donatur@example.com
-3. Penerima -> Email: penerima@example.com
-
-**PS:**
-- Semua akun dummy menggunakan password: `password`.
-- Karena website masih bersifat static, proses authentication disini masih *hard-coded*. Implementasi yang benar akan dilakukan di tahap selanjutnya, seiring perkembangan website.
+### 2472042 — Gavin Malik Setiawan
+- Frontend mockup referensi aplikasi dalam bentuk HTML static page (belum menggunakan TSX)
+- Melanjutkan progress mockup dari minggu sebelumnya
 
 ---
 
 ## Current Progress
 
-> _Bagian ini diisi oleh masing-masing anggota sesuai progress real-time._
-
 | NRP | Nama | Task | Status |
 |---|---|---|---|
-| 2472019 | Miracle Steven Gerrald | Inisiasi project dengan teknologi `Next.js` (frontend) & `Node.js` (backend) | Done |
-| 2472008 | Christian Anthony Hermawan | Merancang struktur pola desain & membuat daftar fitur pada `Fitur.md`| Done |
-| 2472029 | Henry Ferdynand Budiana | Membuat `progress_week01.md` | Done |
-| 2472042 | Gavin Malik Setiawan | Membuat `README.md` | Done |
+| 2472019 | Miracle Steven Gerrald | Authentication system, database setup, middleware, dokumentasi | Done |
+| 2472008 | Christian Anthony Hermawan | | |
+| 2472029 | Henry Ferdynand Budiana | | |
+| 2472042 | Gavin Malik Setiawan | Frontend mockup (HTML static page) | In Progress |
 
 **Status legend:** `Not Started` · `In Progress` · `Done` · `Blocked`
 

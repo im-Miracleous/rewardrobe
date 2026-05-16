@@ -17,6 +17,131 @@ npm run dev
 
 Buka browser di alamat [http://localhost:3000](http://localhost:3000) untuk melihat hasilnya.
 
+## Database Setup
+
+ReWardrobe menggunakan Prisma ORM untuk terhubung ke PostgreSQL. Pastikan PostgreSQL sudah aktif sebelum menjalankan app.
+
+Catatan: proyek ini memakai Prisma 7, jadi Prisma Client perlu PostgreSQL driver adapter (`@prisma/adapter-pg`) saat runtime.
+
+### 1. Siapkan file `.env`
+
+Buat file `.env` di root project, lalu isi dengan connection string PostgreSQL yang valid.
+
+Contoh untuk PostgreSQL lokal:
+
+```bash
+DATABASE_URL="postgresql://postgres:password@localhost:5432/rewardrobe_db?schema=public"
+```
+
+Catatan:
+
+* Ganti `password` sesuai password PostgreSQL kamu.
+* Pastikan database `rewardrobe_db` sudah dibuat.
+* Jika pakai Docker atau server remote, ganti `localhost` dan port sesuai host database yang benar.
+
+### 2. Install dependency
+
+```bash
+npm install
+```
+
+Jika perlu, generate ulang Prisma Client dengan:
+
+```bash
+npx prisma generate
+```
+
+### 3. Jalankan migration
+
+Setelah database aktif dan `DATABASE_URL` benar, jalankan:
+
+```bash
+npx prisma migrate dev --name init
+```
+
+Command ini akan mengecek koneksi ke PostgreSQL, membuat atau memperbarui tabel sesuai `prisma/schema.prisma`, dan men-generate Prisma Client.
+
+### 4. Jalankan aplikasi
+
+```bash
+npm run dev
+```
+
+Lalu buka:
+
+* [http://localhost:3000](http://localhost:3000) untuk halaman utama.
+* [http://localhost:3000/db-check](http://localhost:3000/db-check) untuk test koneksi database.
+
+### Endpoint API untuk test database
+
+Endpoint berikut mengecek status DB secara otomatis dan bisa dipakai dari frontend dengan polling:
+
+```bash
+GET /api/db-status
+```
+
+Contoh response berhasil:
+
+```json
+{
+    "connected": true,
+    "latencyMs": 12,
+    "userCount": 0,
+    "message": "Prisma bisa terhubung ke PostgreSQL dan membaca tabel User.",
+    "checkedAt": "2026-05-15T03:21:00.000Z"
+}
+```
+
+### Route CRUD User
+
+Untuk menguji operasi baca/tulis ke tabel `users`, gunakan route berikut:
+
+```bash
+GET /api/users
+POST /api/users
+GET /api/users/:id
+PATCH /api/users/:id
+DELETE /api/users/:id
+```
+
+Contoh `POST` untuk membuat user test:
+
+```bash
+curl -X POST http://localhost:3000/api/users \
+    -H "Content-Type: application/json" \
+    -d '{"nama":"Test User","email":"test@example.com","password":"password","role":"donatur"}'
+```
+
+Contoh `GET` untuk melihat semua user:
+
+```bash
+curl http://localhost:3000/api/users
+```
+
+Contoh `PATCH` untuk update user:
+
+```bash
+curl -X PATCH http://localhost:3000/api/users/1 \
+    -H "Content-Type: application/json" \
+    -d '{"kota":"Bandung"}'
+```
+
+Contoh `DELETE` untuk hapus user:
+
+```bash
+curl -X DELETE http://localhost:3000/api/users/1
+```
+
+### 5. Verifikasi tambahan
+
+Jika ingin cek isi database secara visual:
+
+```bash
+npx prisma studio
+```
+
+Jika halaman `db-check` menampilkan status `Connected`, berarti Next.js app sudah berhasil terhubung ke PostgreSQL lewat Prisma.
+
 ---
 
 ## 👀 Problem
