@@ -1,8 +1,8 @@
 "use client";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import { Bell } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 
 export default function DashboardLayout({
@@ -11,11 +11,28 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const router = useRouter();
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
     let title = 'Dashboard';
     if (pathname.includes('/admin')) title = 'Admin Dashboard';
     if (pathname.includes('/donatur')) title = 'Donatur Dashboard';
     if (pathname.includes('/penerima')) title = 'Penerima Dashboard';
+
+    useEffect(() => {
+        const user = localStorage.getItem('user');
+
+        if (!user) {
+            router.replace('/auth/login');
+            return;
+        }
+
+        setIsCheckingAuth(false);
+    }, [router]);
+
+    if (isCheckingAuth) {
+        return <div className="min-h-screen bg-stone-50" />;
+    }
 
     return (
         <div className="flex min-h-screen bg-stone-50">

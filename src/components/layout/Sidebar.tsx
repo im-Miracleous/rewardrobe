@@ -1,11 +1,13 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Shirt, Package, ShieldCheck, Heart, Trophy, LogOut, Settings, User } from 'lucide-react';
 
 export default function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     // Menentukan role dari URL
     let role = 'admin';
@@ -31,6 +33,27 @@ export default function Sidebar() {
     };
 
     const navItems = menus[role] || [];
+
+    const handleLogout = async () => {
+        setIsLoggingOut(true);
+
+        try {
+            localStorage.removeItem('user');
+            localStorage.removeItem('authToken');
+
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            router.replace('/auth/login');
+            router.refresh();
+        } finally {
+            setIsLoggingOut(false);
+        }
+    };
 
     return (
         <aside className="w-64 bg-white border-r border-stone-200 fixed inset-y-0 left-0 flex flex-col z-40">
@@ -70,9 +93,14 @@ export default function Sidebar() {
                     <Settings size={18} className="text-stone-400 hover:text-stone-600" />
                 </div>
 
-                <Link href="/auth" className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-all">
-                    <LogOut size={18} /> Keluar
-                </Link>
+                <button
+                    type="button"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                    <LogOut size={18} /> {isLoggingOut ? 'Keluar...' : 'Keluar'}
+                </button>
             </div>
         </aside>
     );
