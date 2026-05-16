@@ -28,19 +28,20 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 
 ## Features Implemented — Week 2
 
-### 2472019 — Miracle Steven Gerrald
-- Authentication system: API routes untuk login (`/api/auth/login`), register (`/api/auth/register`), dan logout (`/api/auth/logout`)
-- Secure password hashing menggunakan bcryptjs dan session management via cookies
-- Role-based dashboard redirection setelah login
-- Middleware (`middleware.ts`) untuk proteksi semua route `/dashboard/*` berdasarkan role
-- Prisma ORM setup dengan PostgreSQL: schema `User`, enum role, dan migration SQL
-- Seed file (`prisma/seed.ts`) untuk populate default users (admin, donatur, penerima)
-- Script CLI `scripts/create-admin.js` untuk membuat admin user tanpa melalui website
-- Dokumentasi di `README.md` dan `SETUP.md` mencakup database setup, auth flow, API usage, dan troubleshooting
+Implementasi Authentication System
+Membangun sistem autentikasi lengkap mencakup API routes untuk login, register, dan logout (`/api/auth/login`, `/api/auth/register`, `/api/auth/logout`), password hashing menggunakan bcryptjs, serta session management via cookies.
+Menambahkan middleware (`middleware.ts`) untuk proteksi route `/dashboard/*` berdasarkan role, beserta role-based redirection setelah login.
+Menyiapkan Prisma ORM dengan PostgreSQL (schema `User`, enum role, migration SQL), seed file untuk default users, dan script CLI `scripts/create-admin.js` untuk pembuatan admin tanpa melalui website.
+Melanjutkan pengembangan frontend mockup (static HTML) dari minggu sebelumnya.
 
-### 2472042 — Gavin Malik Setiawan
-- Frontend mockup referensi aplikasi dalam bentuk HTML static page (belum menggunakan TSX)
-- Melanjutkan progress mockup dari minggu sebelumnya
+Notes:
+Dokumentasi lengkap tersedia di `README.md` dan `SETUP.md`, mencakup database setup, auth flow, API usage, dan troubleshooting.
+
+PS:
+Untuk login, gunakan kredensial berikut (semua akun menggunakan password: `password`):
+- **Admin** → Email: `admin@example.com`
+- **Donatur** → Email: `donatur@example.com`
+- **Penerima** → Email: `penerima@example.com`
 
 ---
 
@@ -50,7 +51,7 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 |---|---|---|---|
 | 2472019 | Miracle Steven Gerrald | Authentication system, database setup, middleware, dokumentasi | Done |
 | 2472008 | Christian Anthony Hermawan | | |
-| 2472029 | Henry Ferdynand Budiana | | |
+| 2472029 | Henry Ferdynand Budiana | Modifikasi `progress_week02.md` | Done |
 | 2472042 | Gavin Malik Setiawan | Frontend mockup (HTML static page) | In Progress |
 
 **Status legend:** `Not Started` · `In Progress` · `Done` · `Blocked`
