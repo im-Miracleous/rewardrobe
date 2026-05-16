@@ -47,12 +47,12 @@ Untuk login, gunakan kredensial berikut (semua akun menggunakan password: `passw
 
 ## Current Progress
 
-| NRP | Nama | Task | Status |
-|---|---|---|---|
-| 2472019 | Miracle Steven Gerrald | Authentication system, database setup, middleware, dokumentasi | Done |
-| 2472008 | Christian Anthony Hermawan | | |
-| 2472029 | Henry Ferdynand Budiana | Modifikasi `progress_week02.md` | Done |
-| 2472042 | Gavin Malik Setiawan | Frontend mockup (HTML static page) | In Progress |
+| NRP     | Nama                       | Task                                                                         | Status      |
+| ------- | -------------------------- | ---------------------------------------------------------------------------- | ----------- |
+| 2472019 | Miracle Steven Gerrald     | Authentication system, database setup, middleware, dokumentasi               | Done        |
+| 2472008 | Christian Anthony Hermawan | Software testing, perbaikan branch dengan mengembalikan `progress_week01.md`, sedikit memperjelas `README.md` | In Progress |
+| 2472029 | Henry Ferdynand Budiana    | Modifikasi `progress_week02.md`                                              | Done        |
+| 2472042 | Gavin Malik Setiawan       | Frontend mockup (HTML static page)                                           | In Progress |
 
 **Status legend:** `Not Started` · `In Progress` · `Done` · `Blocked`
 
