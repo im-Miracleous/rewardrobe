@@ -10,7 +10,7 @@ Platform ekonomi sirkular berbasis komunitas untuk donasi, daur ulang, dan manaj
 * 2472029 - Henry Ferdynand Budiana
 * 2472042 - Gavin Malik Setiawan
 
-Untuk menjalankan aplikasi, eksekusi command berikut:
+Jika sebelumnya telah melakukan setup, Untuk menjalankan aplikasi, eksekusi command berikut:
 ```bash
 npm run dev
 ```
