@@ -32,14 +32,19 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 
 ## Current Progress
 **Miracle (2472019)**
+
 - 
 - 
 - 
 
 **Christian (2472008)**
 
-- Menyempurnakan `README.md`, dengan menambah instruksi untuk melakukan seeding database
-- Implementasi fitur tambah donasi bagi donatur
+- Menyempurnakan `README.md` dengan penambahan instruksi seeding database
+- Implementasi fitur tambah donasi untuk donatur (form + validasi dasar)
+- Integrasi form donasi ke API `/api/barang-donasi`
+- Menambahkan validasi agar field wajib tidak bisa dikosongkan
+- Menambahkan fitur upload gambar untuk bukti donasi
+- Menampilkan preview gambar sebelum submit
 
 **Henry (2472029)**
 
@@ -48,7 +53,10 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 - 
 
 **Gavin (2472042)**
-- Add Prisma schema for donation system (BarangDonasi, Permintaan, Pengiriman, LogPoin, Notifikasi)
-- Run initial Prisma migration for PostgreSQL
-- Implement seed script with sample users and donation data
-- Add BarangDonasi API routes (POST, GET, PATCH) with Zod validation
+
+- Menambahkan Prisma schema untuk sistem donasi (BarangDonasi, Permintaan, Pengiriman, LogPoin, Notifikasi)
+- Menjalankan migrasi awal Prisma untuk PostgreSQL
+- Mengimplementasikan seed script dengan data user dan contoh donasi
+- Menambahkan API BarangDonasi (POST, GET, PATCH) dengan validasi Zod
+- Menghubungkan API dengan database Prisma
+- Menyusun struktur dasar backend agar siap digunakan oleh frontend
