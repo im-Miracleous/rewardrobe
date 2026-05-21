@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReWardrobe — Dashboard Penerima</title>
+<style>
+:root{--primary:#1D9E75;--primary-dark:#167D5C;--primary-darker:#0F5E44;--primary-light:#2DB88A;--accent:#A8E6CF;--accent-light:#E8F8F0;--text:#1A2B23;--text-secondary:#5A6E62;--text-muted:#94A39B;--border:#E2E8F0;--bg:#FFF;--bg-alt:#F6FAF8;--bg-page:#F1F5F3;--radius:12px;--radius-lg:16px;--radius-full:100px;--sw:240px;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;--shadow-md:0 4px 20px rgba(0,0,0,.08);--transition:all .25s cubic-bezier(.4,0,.2,1)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg-page);display:flex;min-height:100vh;-webkit-font-smoothing:antialiased}
+.sidebar{width:var(--sw);background:var(--primary-darker);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:50}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.s-icon{width:34px;height:34px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.s-text{font-weight:700;font-size:17px;color:#fff}.s-text em{font-style:normal;color:var(--accent)}
+.sidebar-nav{padding:20px 12px;flex:1;display:flex;flex-direction:column;gap:4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;color:rgba(255,255,255,.55);font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;transition:var(--transition)}
+.nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
+.nav-item.active{background:var(--primary);color:#fff;font-weight:600}
+.nav-icon{font-size:16px;width:20px;text-align:center}
+.nav-badge-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;margin-left:auto}
+.sidebar-user{padding:16px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px}
+.u-name{font-size:13px;font-weight:600;color:#fff}
+.u-role-badge{display:inline-block;background:rgba(29,158,117,.3);color:var(--accent);font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--radius-full);margin-top:2px}
+
+.main{margin-left:var(--sw);flex:1;padding:28px 36px 120px; position:relative;}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-title{font-size:22px;font-weight:700;color:var(--text)}
+.page-sub{font-size:13px;color:var(--text-secondary);margin-top:2px}
+
+/* VIEWS */
+.view-section { display: none; animation: fadeIn 0.3s ease; }
+.view-section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* KATALOG */
+.onboarding-tip{background:var(--accent-light);border:1px solid var(--accent);border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;animation:slideDown .3s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.tip-text{flex:1;font-size:13px;color:var(--text-secondary);line-height:1.5}.tip-text strong{color:var(--text)}
+.tip-close{width:28px;height:28px;border-radius:6px;border:none;background:none;font-size:14px;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tip-close:hover{background:rgba(0,0,0,.06)}
+.search-bar{position:relative;margin-bottom:16px}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text-muted)}
+.search-input{width:100%;padding:12px 16px 12px 42px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:var(--font);outline:none;background:var(--bg);color:var(--text);transition:var(--transition)}
+.search-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(29,158,117,.1)}
+.filter-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.filter-chips{display:flex;gap:8px}
+.chip{padding:8px 18px;border-radius:var(--radius-full);border:1.5px solid var(--border);background:var(--bg);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);color:var(--text-secondary);transition:var(--transition)}
+.chip:hover{border-color:var(--primary);color:var(--primary)}
+.chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.results-count{font-size:13px;color:var(--text-muted)}
+
+.catalog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.item-card{background:var(--bg);border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;transition:var(--transition);cursor:pointer}
+.item-card:hover{box-shadow:var(--shadow-md);transform:translateY(-3px)}
+.item-img{height:150px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:52px;position:relative}
+.item-label{position:absolute;top:10px;left:10px;padding:4px 10px;border-radius:var(--radius-full);font-size:10px;font-weight:700}
+.label-layak{background:#dcfce7;color:#16a34a}
+.label-perbaikan{background:#fef3c7;color:#d97706}
+.item-city{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:600;padding:3px 9px;border-radius:var(--radius-full)}
+.item-body{padding:14px}
+.item-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.item-chips{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.item-chip{font-size:10px;color:var(--text-muted);background:var(--bg-alt);padding:3px 8px;border-radius:var(--radius-full);font-weight:500;border:1px solid var(--border)}
+.btn-request{width:100%;padding:9px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:var(--transition)}
+.btn-request:hover{background:var(--primary-light)}
+
+/* DELIVERY BAR */
+.delivery-bar{position:fixed;bottom:0;left:var(--sw);right:0;background:var(--bg);border-top:1px solid var(--border);padding:14px 36px;z-index:90;box-shadow:0 -4px 20px rgba(0,0,0,.06)}
+.delivery-content{display:flex;align-items:center;gap:16px}
+.delivery-info{flex:1}
+.delivery-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px}
+.delivery-title a{color:var(--primary);text-decoration:none}.delivery-title a:hover{text-decoration:underline}
+.step-indicator{display:flex;align-items:center;gap:0}
+.step-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.step-dot.done{background:var(--primary)}
+.step-dot.current{background:var(--primary);box-shadow:0 0 0 3px rgba(29,158,117,.2);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(29,158,117,.2)}50%{box-shadow:0 0 0 6px rgba(29,158,117,.1)}}
+.step-dot.pending{background:var(--border)}
+.step-line{width:40px;height:2px;flex-shrink:0}
+.step-line.done{background:var(--primary)}
+.step-line.pending{background:var(--border)}
+.step-labels{display:flex;margin-top:4px}
+.step-lbl{font-size:9px;font-weight:600;min-width:52px}
+.step-lbl.done{color:var(--primary)}.step-lbl.current{color:var(--primary);font-weight:700}.step-lbl.pending{color:var(--text-muted)}
+.btn-delivery{background:var(--accent-light);color:var(--primary-dark);border:1.5px solid var(--accent);padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:var(--transition);flex-shrink:0}
+.btn-delivery:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* CARDS */
+.card{background:var(--bg);border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;}
+.list-item{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid #f5f5f5;transition:var(--transition)}
+.list-item:last-child{border-bottom:none}
+.list-item:hover{background:var(--bg-alt)}
+.badge{padding:4px 10px;border-radius:var(--radius-full);font-size:10px;font-weight:600;letter-spacing:.02em}
+.badge-green{background:#dcfce7;color:#16a34a}
+.badge-yellow{background:#fef3c7;color:#d97706}
+.badge-blue{background:#dbeafe;color:#2563eb}
+.badge-gray{background:#f3f4f6;color:#6b7280}
+
+/* DETAIL BARANG VIEW */
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);margin-bottom:24px}
+.breadcrumb a{color:var(--primary);text-decoration:none;font-weight:500;cursor:pointer}.breadcrumb a:hover{text-decoration:underline}
+.detail-layout{display:grid;grid-template-columns:1fr 1.2fr;gap:28px;margin-bottom:28px}
+.main-img{width:100%;height:300px;background:var(--accent-light);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:90px;position:relative;border:1.5px solid var(--border);margin-bottom:12px;overflow:hidden}
+.ai-overlay{position:absolute;bottom:14px;left:14px;background:rgba(0,0,0,.75);color:#fff;padding:8px 14px;border-radius:10px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px)}
+.ai-dot{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.thumb-row{display:flex;gap:8px}
+.thumb{width:64px;height:64px;background:var(--accent-light);border-radius:10px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;transition:var(--transition)}
+.thumb:hover,.thumb.active{border-color:var(--primary);box-shadow:0 0 0 3px rgba(29,158,117,.1)}
+.item-label-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:var(--radius-full);font-size:12px;font-weight:700;margin-bottom:12px}
+.detail-title{font-size:26px;font-weight:800;color:var(--text);margin-bottom:8px;letter-spacing:-.02em}
+.detail-sub{font-size:15px;color:var(--text-secondary);margin-bottom:22px;line-height:1.65}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
+.meta-item{background:var(--bg-alt);border-radius:10px;padding:12px 14px;border:1px solid var(--border)}
+.meta-label{font-size:10px;color:var(--text-muted);font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.meta-val{font-size:14px;font-weight:600;color:var(--text)}
+.btn-request-main{width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);margin-bottom:10px;transition:var(--transition)}
+.btn-request-main:hover{background:var(--primary-light);transform:translateY(-1px);box-shadow:0 4px 16px rgba(29,158,117,.2)}
+.btn-back{width:100%;padding:12px;background:var(--bg);color:var(--primary);border:1.5px solid var(--primary);border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);transition:var(--transition)}
+.btn-back:hover{background:var(--accent-light)}
+
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);padding:6px 0;z-index:100}
+.mobile-nav-items{display:flex;justify-content:space-around}
+.mobile-nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:10px;font-weight:600;color:var(--text-muted);text-decoration:none;cursor:pointer;}
+.mobile-nav-item.active{color:var(--primary)}
+.mobile-nav-item span:first-child{font-size:20px}
+@media(max-width:768px){
+  .sidebar{display:none}.main{margin-left:0;padding:20px 16px 160px}.mobile-nav{display:block}
+  .catalog-grid{grid-template-columns:1fr 1fr}.delivery-bar{left:0;padding:14px 16px}
+  .detail-layout{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="s-icon">👕</div><span class="s-text"><em>Re</em>Wardrobe</span></div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" onclick="switchView('katalog', this)"><span class="nav-icon">📋</span> Katalog</a>
+    <a class="nav-item" onclick="switchView('permintaan', this)"><span class="nav-icon">📬</span> Permintaan Saya</a>
+    <a class="nav-item" onclick="switchView('notif', this)"><span class="nav-icon">🔔</span> Notifikasi <span class="nav-badge-dot" id="notif-badge"></span></a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="avatar">PH</div>
+    <div><div class="u-name">Panti Harapan</div><div class="u-role-badge">Panti Asuhan</div></div>
+  </div>
+  <div style="padding: 16px; margin-top: auto; border-top:1px solid rgba(255,255,255,.08)">
+      <button style="width:100%; background:none; border:1px solid rgba(255,255,255,0.2); color:#fff; padding:8px; border-radius:8px; font-size:12px; cursor:pointer;" onclick="location.href='02-login-register.html'">Keluar</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+      <div>
+          <div class="page-title" id="page-title-text">Katalog Donasi</div>
+          <div class="page-sub" id="page-sub-text">Temukan pakaian donasi yang tersedia di sekitar lokasimu</div>
+      </div>
+  </div>
+
+  <!-- ═══ KATALOG VIEW ═══ -->
+  <div id="view-katalog" class="view-section active">
+      <div class="onboarding-tip" id="onboarding-tip">
+        <div style="font-size:20px;flex-shrink:0">ℹ️</div>
+        <div class="tip-text">Sebagai <strong>Panti Asuhan</strong>, kamu dapat meminta barang berlabel <strong>Layak Donasi</strong> dan <strong>Perlu Perbaikan</strong>.</div>
+        <button class="tip-close" onclick="document.getElementById('onboarding-tip').style.display='none'">✕</button>
+      </div>
+
+      <div class="search-bar"><span class="search-icon">🔍</span><input class="search-input" placeholder="Cari nama barang, kategori..."></div>
+
+      <div class="filter-row">
+        <div class="filter-chips">
+          <button class="chip active" onclick="setFilter(this)">Semua</button>
+          <button class="chip" onclick="setFilter(this)">Layak Donasi</button>
+          <button class="chip" onclick="setFilter(this)">Perlu Perbaikan</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <select style="padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-full);font-size:13px;font-family:var(--font);outline:none;background:var(--bg);color:var(--text);cursor:pointer;appearance:none;padding-right:28px;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231D9E75' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center">
+            <option>Semua Kota</option>
+            <option selected>Jakarta</option>
+            <option>Bandung</option>
+            <option>Surabaya</option>
+            <option>Yogyakarta</option>
+            <option>Semarang</option>
+          </select>
+          <div class="results-count">Menampilkan <strong>6</strong> barang</div>
+        </div>
+      </div>
+
+      <div class="catalog-grid">
+        <div class="item-card" onclick="openDetail('Kemeja Putih', '👕', '0.3kg', 'Kemeja', 'Layak Donasi')">
+          <div class="item-img">👕<span class="item-label label-layak">✓ Layak Donasi</span><span class="item-city">📍 Jakarta</span></div>
+          <div class="item-body"><div class="item-name">Kemeja Putih</div><div class="item-chips"><span class="item-chip">Kemeja</span><span class="item-chip">0.3kg</span></div><button class="btn-request" onclick="requestItem(event, this)">Minta Item</button></div>
+        </div>
+        <div class="item-card" onclick="openDetail('Celana Jeans', '👖', '0.5kg', 'Celana', 'Perlu Perbaikan')">
+          <div class="item-img">👖<span class="item-label label-perbaikan">⚠ Perlu Perbaikan</span><span class="item-city">📍 Jakarta</span></div>
+          <div class="item-body"><div class="item-name">Celana Jeans</div><div class="item-chips"><span class="item-chip">Celana</span><span class="item-chip">0.5kg</span></div><button class="btn-request" onclick="requestItem(event, this)">Minta Item</button></div>
+        </div>
+        <div class="item-card" onclick="openDetail('Gaun Pesta', '👗', '0.6kg', 'Gaun', 'Layak Donasi')">
+          <div class="item-img">👗<span class="item-label label-layak">✓ Layak Donasi</span><span class="item-city">📍 Bandung</span></div>
+          <div class="item-body"><div class="item-name">Gaun Pesta</div><div class="item-chips"><span class="item-chip">Gaun</span><span class="item-chip">0.6kg</span></div><button class="btn-request" onclick="requestItem(event, this)">Minta Item</button></div>
+        </div>
+        <div class="item-card" onclick="openDetail('Kaos Polos Putih', '👕', '0.2kg', 'Kaos', 'Layak Donasi')">
+          <div class="item-img">👕<span class="item-label label-layak">✓ Layak Donasi</span><span class="item-city">📍 Jakarta</span></div>
+          <div class="item-body"><div class="item-name">Kaos Polos Putih</div><div class="item-chips"><span class="item-chip">Kaos</span><span class="item-chip">0.2kg</span></div><button class="btn-request" onclick="requestItem(event, this)">Minta Item</button></div>
+        </div>
+        <div class="item-card" onclick="openDetail('Syal & Selendang', '🧣', '0.3kg', 'Aksesoris', 'Layak Donasi')">
+          <div class="item-img">🧣<span class="item-label label-layak">✓ Layak Donasi</span><span class="item-city">📍 Surabaya</span></div>
+          <div class="item-body"><div class="item-name">Syal &amp; Selendang</div><div class="item-chips"><span class="item-chip">Aksesoris</span><span class="item-chip">0.3kg</span></div><button class="btn-request" onclick="requestItem(event, this)">Minta Item</button></div>
+        </div>
+        <div class="item-card" onclick="openDetail('Jaket Parasut', '🧥', '0.7kg', 'Jaket', 'Perlu Perbaikan')">
+          <div class="item-img">🧥<span class="item-label label-perbaikan">⚠ Perlu Perbaikan</span><span class="item-city">📍 Bandung</span></div>
+          <div class="item-body"><div class="item-name">Jaket Parasut</div><div class="item-chips"><span class="item-chip">Jaket</span><span class="item-chip">0.7kg</span></div><button class="btn-request" onclick="requestItem(event, this)">Minta Item</button></div>
+        </div>
+      </div>
+  </div>
+
+  <!-- ═══ PERMINTAAN SAYA VIEW ═══ -->
+  <div id="view-permintaan" class="view-section">
+      <div class="card">
+          <div class="list-item">
+              <div style="font-size:24px; background:var(--accent-light); padding:10px; border-radius:10px;">👕</div>
+              <div style="flex:1;">
+                  <div style="font-weight:600; font-size:14px;">Kemeja Anak-Anak</div>
+                  <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Diminta 16 Mei 2026 · Dari: Andi Donatur</div>
+              </div>
+              <span class="badge badge-green">Disetujui ✓</span>
+          </div>
+          <div class="list-item">
+              <div style="font-size:24px; background:var(--accent-light); padding:10px; border-radius:10px;">👖</div>
+              <div style="flex:1;">
+                  <div style="font-weight:600; font-size:14px;">Celana Pendek</div>
+                  <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Diminta 16 Mei 2026 · Dari: Budi Santoso</div>
+              </div>
+              <span class="badge badge-gray">Menunggu Konfirmasi</span>
+          </div>
+          <div class="list-item">
+              <div style="font-size:24px; background:var(--accent-light); padding:10px; border-radius:10px;">👗</div>
+              <div style="flex:1;">
+                  <div style="font-weight:600; font-size:14px;">Baju Lebaran</div>
+                  <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Diminta 10 Mei 2026 · Dari: Citra Putri</div>
+              </div>
+              <span class="badge badge-blue">Dalam Pengiriman 🚚</span>
+          </div>
+      </div>
+  </div>
+
+  <!-- ═══ NOTIFIKASI VIEW ═══ -->
+  <div id="view-notif" class="view-section">
+      <div class="card">
+          <div class="list-item" style="background:var(--bg-alt)">
+              <div style="width:8px; height:8px; border-radius:50%; background:var(--primary);"></div>
+              <div style="flex:1;">
+                  <div style="font-weight:600; font-size:13px;">Permintaan Dikonfirmasi</div>
+                  <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Permintaan 'Kemeja Anak-Anak' kamu telah disetujui oleh admin.</div>
+                  <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">2 jam yang lalu</div>
+              </div>
+          </div>
+          <div class="list-item" style="background:var(--bg-alt)">
+              <div style="width:8px; height:8px; border-radius:50%; background:var(--primary);"></div>
+              <div style="flex:1;">
+                  <div style="font-weight:600; font-size:13px;">Barang Baru Tersedia</div>
+                  <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Ada 5 pakaian baru yang sesuai dengan panti asuhan di dekat lokasimu.</div>
+                  <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">5 jam yang lalu</div>
+              </div>
+          </div>
+          <div class="list-item">
+              <div style="width:8px; height:8px; border-radius:50%; background:transparent;"></div>
+              <div style="flex:1; opacity:0.7;">
+                  <div style="font-weight:600; font-size:13px;">Pengiriman Dimulai</div>
+                  <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">'Baju Lebaran' sedang dalam perjalanan menuju alamatmu.</div>
+                  <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">2 hari yang lalu</div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <!-- ═══ DETAIL BARANG VIEW ═══ -->
+  <div id="view-detail" class="view-section">
+      <div class="breadcrumb"><a onclick="closeDetail()">Katalog</a><span>›</span><span id="dt-bread">Kemeja Putih</span></div>
+      <div class="detail-layout">
+        <div>
+          <div class="main-img">
+            <span id="dt-img">👕</span>
+            <div class="ai-overlay"><span class="ai-dot"></span> AI: <span id="dt-label-txt">Layak Donasi</span> — 94% conf</div>
+          </div>
+          <div class="thumb-row">
+            <div class="thumb active" id="dt-thumb">👕</div>
+            <div class="thumb">🏷️</div>
+            <div class="thumb">📦</div>
+          </div>
+        </div>
+        <div>
+          <span class="item-label-badge label-layak" id="dt-badge">✓ Layak Donasi</span>
+          <div class="detail-title" id="dt-title">Kemeja Putih</div>
+          <div class="detail-sub">Kondisi baik, hanya ada sedikit noda yang bisa dicuci. Masih layak dan nyaman digunakan sehari-hari.</div>
+          
+          <div class="meta-grid">
+            <div class="meta-item"><div class="meta-label">Kategori</div><div class="meta-val" id="dt-kat">Kemeja</div></div>
+            <div class="meta-item"><div class="meta-label">Berat</div><div class="meta-val" id="dt-berat">0.3 kg</div></div>
+            <div class="meta-item"><div class="meta-label">Lokasi</div><div class="meta-val">📍 Jakarta Pusat</div></div>
+            <div class="meta-item"><div class="meta-label">QR Code</div><div class="meta-val" style="font-family:monospace;font-size:12px">D-2026-00001</div></div>
+          </div>
+
+          <button class="btn-request-main" onclick="alert('Permintaan terkirim!'); closeDetail();">🙋 Minta Barang Ini</button>
+          <button class="btn-back" onclick="closeDetail()">← Kembali ke Katalog</button>
+        </div>
+      </div>
+  </div>
+
+</main>
+
+<div class="delivery-bar" id="delivery-bar">
+  <div class="delivery-content">
+    <div class="delivery-info">
+      <div class="delivery-title">1 permintaan sedang diproses → <a onclick="switchView('permintaan', document.querySelectorAll('.nav-item')[1])" style="cursor:pointer">Lihat Status</a></div>
+      <div class="step-indicator">
+        <div class="step-dot done"></div><div class="step-line done"></div>
+        <div class="step-dot current"></div><div class="step-line pending"></div>
+        <div class="step-dot pending"></div>
+      </div>
+      <div class="step-labels">
+        <span class="step-lbl done">Dikonfirmasi</span>
+        <span class="step-lbl current">Dikirim</span>
+        <span class="step-lbl pending">Diterima</span>
+      </div>
+    </div>
+    <button class="btn-delivery" onclick="switchView('permintaan', document.querySelectorAll('.nav-item')[1])">Lihat Detail →</button>
+  </div>
+</div>
+
+<nav class="mobile-nav"><div class="mobile-nav-items">
+  <a class="mobile-nav-item active" onclick="switchView('katalog', this, true)"><span>📋</span>Katalog</a>
+  <a class="mobile-nav-item" onclick="switchView('permintaan', this, true)"><span>📬</span>Permintaan</a>
+  <a class="mobile-nav-item" onclick="switchView('notif', this, true)"><span>🔔</span>Notifikasi</a>
+</div></nav>
+
+<script>
+function setFilter(el){document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active')}
+
+function requestItem(e, btn) {
+    e.stopPropagation();
+    btn.innerText = 'Diminta ✓';
+    btn.style.background = '#16a34a';
+    btn.style.pointerEvents = 'none';
+}
+
+function openDetail(title, icon, weight, category, label) {
+    // Hide standard topbar
+    document.querySelector('.topbar').style.display = 'none';
+    
+    // Set data
+    document.getElementById('dt-bread').innerText = title;
+    document.getElementById('dt-title').innerText = title;
+    document.getElementById('dt-img').innerText = icon;
+    document.getElementById('dt-thumb').innerText = icon;
+    document.getElementById('dt-berat').innerText = weight;
+    document.getElementById('dt-kat').innerText = category;
+    document.getElementById('dt-label-txt').innerText = label;
+    
+    if(label === 'Perlu Perbaikan') {
+        document.getElementById('dt-badge').className = 'item-label-badge label-perbaikan';
+        document.getElementById('dt-badge').innerText = '⚠ Perlu Perbaikan';
+    } else {
+        document.getElementById('dt-badge').className = 'item-label-badge label-layak';
+        document.getElementById('dt-badge').innerText = '✓ Layak Donasi';
+    }
+
+    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+    document.getElementById('view-detail').classList.add('active');
+    document.getElementById('delivery-bar').style.display = 'none';
+    window.scrollTo(0, 0);
+}
+
+function closeDetail() {
+    document.querySelector('.topbar').style.display = 'flex';
+    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+    document.getElementById('view-katalog').classList.add('active');
+}
+
+function switchView(viewId, element, isMobile = false) {
+  // If detail is open, reset topbar
+  document.querySelector('.topbar').style.display = 'flex';
+  
+  if(viewId === 'notif') {
+      document.getElementById('notif-badge').style.display = 'none';
+  }
+
+  document.querySelectorAll('.sidebar-nav .nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
+  
+  if (isMobile) {
+      element.classList.add('active');
+      const index = Array.from(document.querySelectorAll('.mobile-nav-item')).indexOf(element);
+      document.querySelectorAll('.sidebar-nav .nav-item')[index].classList.add('active');
+  } else {
+      element.classList.add('active');
+      const index = Array.from(document.querySelectorAll('.sidebar-nav .nav-item')).indexOf(element);
+      if(document.querySelectorAll('.mobile-nav-item')[index]) {
+          document.querySelectorAll('.mobile-nav-item')[index].classList.add('active');
+      }
+  }
+
+  document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + viewId).classList.add('active');
+
+  const titles = {
+      'katalog': { title: 'Katalog Donasi', sub: 'Temukan pakaian donasi yang tersedia di sekitar lokasimu' },
+      'permintaan': { title: 'Permintaan Saya', sub: 'Status dari pakaian yang kamu minta' },
+      'notif': { title: 'Notifikasi', sub: 'Pembaruan terbaru tentang akunmu' }
+  };
+  
+  document.getElementById('page-title-text').innerText = titles[viewId].title;
+  document.getElementById('page-sub-text').innerText = titles[viewId].sub;
+
+  // delivery bar only visible in katalog view
+  document.getElementById('delivery-bar').style.display = (viewId === 'katalog') ? 'block' : 'none';
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
