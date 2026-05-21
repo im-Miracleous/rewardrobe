@@ -5,62 +5,185 @@ import { hashPassword } from '../src/lib/auth';
 async function main() {
     const defaultPassword = await hashPassword('password');
 
-    const users = [
-        {
-            nama: 'Admin',
-            email: 'admin@example.com',
-            role: 'admin' as const,
-            tipe: null,
-            no_telpon: '000000000000',
-            alamat_lengkap: 'Alamat admin dummy',
-            kota: 'Jakarta',
-        },
-        {
-            nama: 'Donatur Dummy',
-            email: 'donatur@example.com',
-            role: 'donatur' as const,
-            tipe: null,
-            no_telpon: '081234567890',
-            alamat_lengkap: 'Alamat donatur dummy',
-            kota: 'Bandung',
-        },
-        {
-            nama: 'Penerima Dummy',
-            email: 'penerima@example.com',
-            role: 'penerima' as const,
-            tipe: 'panti' as const,
-            no_telpon: '089876543210',
-            alamat_lengkap: 'Alamat penerima dummy',
-            kota: 'Surabaya',
-        },
-    ];
+    // Delete in FK-dependency order before re-inserting
+    await prisma.notifikasi.deleteMany();
+    await prisma.logPoin.deleteMany();
+    await prisma.pengiriman.deleteMany();
+    await prisma.permintaan.deleteMany();
+    await prisma.barangDonasi.deleteMany();
 
-    for (const user of users) {
-        await prisma.user.upsert({
-            where: { email: user.email },
-            update: {
-                nama: user.nama,
-                password: defaultPassword,
-                role: user.role,
-                tipe: user.tipe,
-                no_telpon: user.no_telpon,
-                alamat_lengkap: user.alamat_lengkap,
-                kota: user.kota,
-            },
-            create: {
-                nama: user.nama,
-                email: user.email,
-                password: defaultPassword,
-                role: user.role,
-                tipe: user.tipe,
-                no_telpon: user.no_telpon,
-                alamat_lengkap: user.alamat_lengkap,
-                kota: user.kota,
-            },
-        });
-    }
+    // --- Users (upsert) ---
+    const admin = await prisma.user.upsert({
+        where: { email: 'admin@example.com' },
+        update: { nama: 'Admin Utama', password: defaultPassword, no_telpon: '000000000001', alamat_lengkap: 'Jl. Admin No. 1', kota: 'Jakarta' },
+        create: { nama: 'Admin Utama', email: 'admin@example.com', password: defaultPassword, role: 'admin', no_telpon: '000000000001', alamat_lengkap: 'Jl. Admin No. 1', kota: 'Jakarta' },
+    });
 
-    console.log('Seed selesai: admin@example.com, donatur@example.com, penerima@example.com');
+    await prisma.user.upsert({
+        where: { email: 'admin2@example.com' },
+        update: { nama: 'Admin Kedua', password: defaultPassword, no_telpon: '000000000002', alamat_lengkap: 'Jl. Admin No. 2', kota: 'Jakarta' },
+        create: { nama: 'Admin Kedua', email: 'admin2@example.com', password: defaultPassword, role: 'admin', no_telpon: '000000000002', alamat_lengkap: 'Jl. Admin No. 2', kota: 'Jakarta' },
+    });
+
+    const donatur = await prisma.user.upsert({
+        where: { email: 'donatur@example.com' },
+        update: { nama: 'Budi Santoso', password: defaultPassword, no_telpon: '081234567890', alamat_lengkap: 'Jl. Mawar No. 5', kota: 'Bandung' },
+        create: { nama: 'Budi Santoso', email: 'donatur@example.com', password: defaultPassword, role: 'donatur', no_telpon: '081234567890', alamat_lengkap: 'Jl. Mawar No. 5', kota: 'Bandung' },
+    });
+
+    const donatur2 = await prisma.user.upsert({
+        where: { email: 'donatur2@example.com' },
+        update: { nama: 'Siti Rahayu', password: defaultPassword, no_telpon: '081234567891', alamat_lengkap: 'Jl. Melati No. 3', kota: 'Surabaya' },
+        create: { nama: 'Siti Rahayu', email: 'donatur2@example.com', password: defaultPassword, role: 'donatur', no_telpon: '081234567891', alamat_lengkap: 'Jl. Melati No. 3', kota: 'Surabaya' },
+    });
+
+    const penerima = await prisma.user.upsert({
+        where: { email: 'penerima@example.com' },
+        update: { nama: 'Panti Asuhan Harapan', password: defaultPassword, tipe: 'panti', no_telpon: '089876543210', alamat_lengkap: 'Jl. Harapan No. 10', kota: 'Yogyakarta' },
+        create: { nama: 'Panti Asuhan Harapan', email: 'penerima@example.com', password: defaultPassword, role: 'penerima', tipe: 'panti', no_telpon: '089876543210', alamat_lengkap: 'Jl. Harapan No. 10', kota: 'Yogyakarta' },
+    });
+
+    const penerima2 = await prisma.user.upsert({
+        where: { email: 'penerima2@example.com' },
+        update: { nama: 'Komunitas Peduli Sesama', password: defaultPassword, tipe: 'komunitas', no_telpon: '089876543211', alamat_lengkap: 'Jl. Sosial No. 7', kota: 'Semarang' },
+        create: { nama: 'Komunitas Peduli Sesama', email: 'penerima2@example.com', password: defaultPassword, role: 'penerima', tipe: 'komunitas', no_telpon: '089876543211', alamat_lengkap: 'Jl. Sosial No. 7', kota: 'Semarang' },
+    });
+
+    // --- BarangDonasi ---
+    const verifiedAt = new Date('2026-05-10T08:00:00Z');
+
+    const barang1 = await prisma.barangDonasi.create({
+        data: {
+            judul: 'Kemeja Batik Pria',
+            deskripsi: 'Kemeja batik motif kawung, ukuran L, kondisi baik',
+            kategori: 'atasan_pria',
+            berat_kg: 0.5,
+            label_ai: 'layak_donasi',
+            status: 'disetujui',
+            donatur_id: donatur.id,
+            verified_by: admin.id,
+            verified_at: verifiedAt,
+        },
+    });
+
+    const barang2 = await prisma.barangDonasi.create({
+        data: {
+            judul: 'Jaket Denim',
+            deskripsi: 'Jaket denim biru, ukuran M, sedikit pudar',
+            kategori: 'atasan_pria',
+            berat_kg: 0.8,
+            label_ai: 'perlu_perbaikan',
+            status: 'menunggu_verifikasi',
+            donatur_id: donatur.id,
+        },
+    });
+
+    const barang3 = await prisma.barangDonasi.create({
+        data: {
+            judul: 'Gaun Pesta',
+            deskripsi: 'Gaun pesta warna merah, ukuran S, bekas pakai sekali',
+            kategori: 'atasan_wanita',
+            berat_kg: 0.6,
+            label_ai: 'layak_donasi',
+            status: 'tersalurkan',
+            donatur_id: donatur2.id,
+            verified_by: admin.id,
+            verified_at: verifiedAt,
+        },
+    });
+
+    await prisma.barangDonasi.create({
+        data: {
+            judul: 'Celana Jeans Sobek',
+            deskripsi: 'Celana jeans dengan banyak sobekan besar, tidak layak pakai',
+            kategori: 'bawahan',
+            berat_kg: 0.7,
+            label_ai: 'daur_ulang',
+            status: 'ditolak',
+            donatur_id: donatur2.id,
+            verified_by: admin.id,
+            verified_at: verifiedAt,
+        },
+    });
+
+    // --- Permintaan ---
+    await prisma.permintaan.create({
+        data: {
+            barang_id: barang1.id,
+            penerima_id: penerima.id,
+            pesan: 'Kami membutuhkan pakaian untuk anak-anak panti usia remaja.',
+            status: 'diterima',
+        },
+    });
+
+    await prisma.permintaan.create({
+        data: {
+            barang_id: barang3.id,
+            penerima_id: penerima.id,
+            pesan: 'Untuk acara wisuda anggota komunitas kami.',
+            status: 'diterima',
+        },
+    });
+
+    await prisma.permintaan.create({
+        data: {
+            barang_id: barang1.id,
+            penerima_id: penerima2.id,
+            pesan: 'Dibutuhkan untuk kegiatan sosial komunitas.',
+            status: 'menunggu',
+        },
+    });
+
+    // --- Pengiriman ---
+    await prisma.pengiriman.create({
+        data: {
+            barang_id: barang1.id,
+            tipe: 'donatur_ke_admin',
+            kurir: 'JNE',
+            status: 'terkirim',
+            resi: 'JNE20260510001',
+        },
+    });
+
+    await prisma.pengiriman.create({
+        data: {
+            barang_id: barang3.id,
+            tipe: 'donatur_ke_admin',
+            kurir: 'GoSend',
+            status: 'terkirim',
+            resi: 'GS20260510002',
+        },
+    });
+
+    await prisma.pengiriman.create({
+        data: {
+            barang_id: barang3.id,
+            tipe: 'admin_ke_penerima',
+            kurir: 'GrabExpress',
+            status: 'terkirim',
+            resi: 'GE20260512001',
+        },
+    });
+
+    // --- LogPoin ---
+    await prisma.logPoin.createMany({
+        data: [
+            { user_id: donatur.id,  poin: 50, keterangan: 'Donasi Kemeja Batik Pria berhasil disetujui' },
+            { user_id: donatur2.id, poin: 50, keterangan: 'Donasi Gaun Pesta berhasil tersalurkan' },
+            { user_id: donatur.id,  poin: 25, keterangan: 'Bonus donasi pertama' },
+        ],
+    });
+
+    // --- Notifikasi ---
+    await prisma.notifikasi.createMany({
+        data: [
+            { user_id: donatur.id,  judul: 'Barang Diverifikasi', pesan: 'Kemeja Batik Pria Anda telah disetujui oleh admin.', dibaca: true },
+            { user_id: penerima.id, judul: 'Permintaan Diterima', pesan: 'Permintaan Kemeja Batik Pria Anda telah dikonfirmasi.', dibaca: false },
+            { user_id: donatur2.id, judul: 'Barang Tersalurkan', pesan: 'Gaun Pesta Anda telah berhasil tersalurkan kepada penerima.', dibaca: false },
+        ],
+    });
+
+    console.log('Seed selesai: 6 users, 4 barang_donasi, 3 permintaan, 3 pengiriman, 3 log_poin, 3 notifikasi');
 }
 
 main()
