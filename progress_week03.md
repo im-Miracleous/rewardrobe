@@ -49,9 +49,7 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 - 
 
 **Gavin (2472042)**
-
-- Database: create all model schema
-- Database: run prisma migration
-- Backend: create POST /api/barang-donasi endpoint
-- Backend: create GET /api/barang-donasi endpoint
-- Backend: create PATCH /api/barang-donasi/[id] endpoint
+- Add Prisma schema for donation system (BarangDonasi, Permintaan, Pengiriman, LogPoin, Notifikasi)
+- Run initial Prisma migration for PostgreSQL
+- Implement seed script with sample users and donation data
+- Add BarangDonasi API routes (POST, GET, PATCH) with Zod validation
