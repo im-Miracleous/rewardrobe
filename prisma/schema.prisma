@@ -1,3 +1,9 @@
+// CODE-CITE:
+//   Title: Prisma Schema - Model Lengkap ReWardrobe
+//   Type: ai
+//   Value: Claude (claude.ai/code)
+//   Notes: Skema database lengkap termasuk model BarangDonasi, Permintaan, Pengiriman, LogPoin, Notifikasi, dan semua enum
+//   Lines Range: 151
 generator client {
   provider = "prisma-client-js"
 }

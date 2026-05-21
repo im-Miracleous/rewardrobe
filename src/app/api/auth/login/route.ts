@@ -1,3 +1,9 @@
+// CODE-CITE:
+//   Title: Login API Route - Autentikasi Email dan Password
+//   Type: ai
+//   Value: Claude (claude.ai/code)
+//   Notes: POST endpoint login, verifikasi password bcrypt, set httpOnly cookie sesi, redirect berdasarkan role
+//   Lines Range: 63
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { AUTH_COOKIE_NAME, createAuthCookieValue, getDashboardPathForRole, verifyPassword } from '@/lib/auth';

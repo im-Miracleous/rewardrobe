@@ -1,3 +1,9 @@
+// CODE-CITE:
+//   Title: Auth Utility Functions - Hash, Verify, Cookie, Role
+//   Type: ai
+//   Value: Claude (claude.ai/code)
+//   Notes: Fungsi utilitas autentikasi: hash/verify password bcrypt, serialisasi cookie, routing berdasarkan role
+//   Lines Range: 75
 import { hash, compare } from 'bcryptjs';
 
 export type AuthRole = 'admin' | 'donatur' | 'penerima';

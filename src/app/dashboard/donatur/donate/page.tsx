@@ -1,3 +1,9 @@
+// CODE-CITE:
+//   Title: Donation Form Page - Donatur Submit Barang
+//   Type: ai
+//   Value: Claude (claude.ai/code)
+//   Notes: Form donasi barang baru untuk donatur, termasuk upload foto, validasi, dan integrasi API POST /api/barang-donasi
+//   Lines Range: 307
 "use client";
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';

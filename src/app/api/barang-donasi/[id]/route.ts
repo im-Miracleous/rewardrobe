@@ -1,3 +1,9 @@
+// CODE-CITE:
+//   Title: BarangDonasi PATCH Route - Update Status Verifikasi
+//   Type: ai
+//   Value: Claude (claude.ai/code)
+//   Notes: Endpoint moderasi admin untuk approve/reject donasi, validasi Zod, cek keberadaan verifier di DB
+//   Lines Range: 67
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';

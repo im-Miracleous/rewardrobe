@@ -1,3 +1,9 @@
+// CODE-CITE:
+//   Title: Next.js Edge Middleware - Route Protection
+//   Type: ai
+//   Value: Claude (claude.ai/code)
+//   Notes: Middleware edge-safe untuk proteksi route /dashboard/*, validasi cookie auth, redirect berdasarkan role
+//   Lines Range: 57
 import { NextRequest, NextResponse } from 'next/server';
 
 /**

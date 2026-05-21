@@ -1,3 +1,9 @@
+// CODE-CITE:
+//   Title: BarangDonasi API Route - GET dan POST
+//   Type: ai
+//   Value: Claude (claude.ai/code)
+//   Notes: REST API endpoint untuk barang donasi, validasi Zod, query Prisma dengan relasi donatur dan verifier
+//   Lines Range: 93
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';

@@ -1,3 +1,9 @@
+// CODE-CITE:
+//   Title: Register API Route - Pembuatan Akun Donatur dan Penerima
+//   Type: ai
+//   Value: Claude (claude.ai/code)
+//   Notes: POST endpoint registrasi, validasi role, cek email duplikat, hash password, proteksi admin tidak bisa daftar via website
+//   Lines Range: 1-97
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { hashPassword } from '@/lib/auth';

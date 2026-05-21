@@ -11,7 +11,7 @@
 
 
 ## Tools Used
-- Claude (Haiku/Sonnet) for: [database schema design, API logic, code review, etc.]
+- Claude (Haiku/Sonnet)
 
 ## Background
 
@@ -48,9 +48,9 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 
 **Henry (2472029)**
 
-- 
-- 
-- 
+- Mengidentifikasi seluruh kode yang di-generate AI di codebase Week 2 dan Week 3
+- Menambahkan CodeCite citation ke 11 file source code sebagai dokumentasi referensi AI
+- Mendokumentasikan file-file berikut: middleware, auth API routes, auth utilities, barang-donasi API routes, form donasi, admin dashboard, Prisma schema, dan seed script
 
 **Gavin (2472042)**
 

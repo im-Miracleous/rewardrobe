@@ -1,3 +1,9 @@
+// CODE-CITE:
+//   Title: Admin Dashboard - Antrian Moderasi Real-time
+//   Type: ai
+//   Value: Claude (claude.ai/code)
+//   Notes: Dashboard admin dengan fetch data real dari API, stat cards dinamis, tabel moderasi, dan tombol setujui/tolak
+//   Lines Range: 1-245
 "use client";
 import React, { useEffect, useState } from 'react';
 import { ShieldCheck, Truck, CheckCircle, User, Image as ImageIcon, Loader2 } from 'lucide-react';
