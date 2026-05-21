@@ -115,7 +115,7 @@ curl -X POST http://localhost:3000/api/users \
 Contoh `GET` untuk melihat semua user:
 
 ```bash
-curl http://localhost:3000/api/users
+curl http://localhost:3000/api/users | npx json
 ```
 
 Contoh `PATCH` untuk update user:
