@@ -23,6 +23,7 @@ export default function Sidebar() {
         ],
         donatur: [
             { href: '/dashboard/donatur', label: 'Beranda Saya', icon: <Heart size={18} /> },
+            { href: '/dashboard/donatur/donate', label: 'Donasi Baru', icon: <Shirt size={18} /> },
             { href: '#', label: 'Riwayat Donasi', icon: <Shirt size={18} /> },
             { href: '#', label: 'Poin & Leaderboard', icon: <Trophy size={18} /> },
         ],

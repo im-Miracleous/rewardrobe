@@ -5,12 +5,21 @@ import prisma from '@/lib/prisma';
 const StatusBarangEnum = z.enum(['menunggu_verifikasi', 'disetujui', 'ditolak', 'tersalurkan']);
 
 const createSchema = z.object({
-    judul: z.string().min(1, 'Judul wajib diisi'),
-    deskripsi: z.string().min(1, 'Deskripsi wajib diisi'),
+    namaBarang: z.string().min(1, 'namaBarang wajib diisi'),
+    deskripsi: z.string().optional(),
     kategori: z.string().min(1, 'Kategori wajib diisi'),
+    kondisi: z.string().min(1, 'Kondisi wajib diisi'),
     berat_kg: z.number().positive('Berat harus lebih dari 0'),
     donatur_id: z.number().int().positive('donatur_id harus berupa integer positif'),
-    foto_url: z.string().url('foto_url harus berupa URL valid').optional(),
+    bukti_foto: z.string().optional(),
+}).superRefine((data, ctx) => {
+    if (data.kategori.toLowerCase() === 'pakaian' && (!data.bukti_foto || data.bukti_foto.trim() === '')) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "bukti_foto wajib diisi untuk kategori pakaian",
+            path: ["bukti_foto"]
+        });
+    }
 });
 
 export async function GET(request: NextRequest) {
@@ -55,20 +64,22 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { judul, deskripsi, kategori, berat_kg, donatur_id, foto_url } = parsed.data;
+        const { namaBarang, deskripsi, kategori, kondisi, berat_kg, donatur_id, bukti_foto } = parsed.data;
 
         const donaturExists = await prisma.user.findUnique({ where: { id: donatur_id } });
         if (!donaturExists) {
             return NextResponse.json({ data: null, error: 'donatur_id tidak ditemukan' }, { status: 404 });
         }
 
+        const fullDeskripsi = deskripsi ? `Kondisi: ${kondisi}\n\n${deskripsi}` : `Kondisi: ${kondisi}`;
+
         const barang = await prisma.barangDonasi.create({
             data: {
-                judul,
-                deskripsi,
+                judul: namaBarang,
+                deskripsi: fullDeskripsi,
                 kategori,
                 berat_kg,
-                foto_url,
+                foto_url: bukti_foto || null,
                 status: 'menunggu_verifikasi',
                 donatur_id,
             },

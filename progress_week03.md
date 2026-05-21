@@ -38,9 +38,8 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 
 **Christian (2472008)**
 
-- 
-- 
-- 
+- Menyempurnakan `README.md`, dengan menambah instruksi untuk melakukan seeding database
+- Implementasi fitur tambah donasi bagi donatur
 
 **Henry (2472029)**
 
