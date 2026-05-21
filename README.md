@@ -51,7 +51,7 @@ Jika perlu, generate ulang Prisma Client dengan:
 npx prisma generate
 ```
 
-### 3. Jalankan migration
+### 3. Jalankan migration & Seeder jika diperlukan
 
 Setelah database aktif dan `DATABASE_URL` benar, jalankan:
 
@@ -60,6 +60,12 @@ npx prisma migrate dev --name init
 ```
 
 Command ini akan mengecek koneksi ke PostgreSQL, membuat atau memperbarui tabel sesuai `prisma/schema.prisma`, dan men-generate Prisma Client.
+
+Setelah itu, jika pelru sample data, lakukan seeding untuk dengan menjalankan:
+
+```bash
+npm run db:seed
+```
 
 ### 4. Jalankan aplikasi
 

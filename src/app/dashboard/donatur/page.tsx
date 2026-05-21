@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Shirt, Leaf, Trophy, Upload, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
@@ -10,7 +11,9 @@ export default function DonaturDash() {
                     <h1 className="text-2xl font-display font-bold text-stone-900">Halo, Donatur!</h1>
                     <p className="text-stone-500">Terima kasih telah berkontribusi untuk bumi yang lebih baik.</p>
                 </div>
-                <Button className="shadow-lg shadow-green-600/20"><Upload size={18} /> Donasi Baru</Button>
+                <Link href="/dashboard/donatur/donate">
+                    <Button className="shadow-lg shadow-green-600/20"><Upload size={18} /> Donasi Baru</Button>
+                </Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
