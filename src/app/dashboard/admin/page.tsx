@@ -195,7 +195,12 @@ export default function AdminDash() {
                                 {pendingItems.map((item) => (
                                     <tr key={item.id} className="border-b border-stone-100 hover:bg-stone-50 transition-colors">
                                         <td className="p-5 font-bold text-stone-800">{item.donatur?.nama ?? '-'}</td>
-                                        <td className="p-5 text-stone-600">{item.judul ?? 'Donasi tanpa nama'}</td>
+                                        <td className="p-5 text-stone-600">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="font-semibold text-stone-800">{item.kategori ?? 'Tipe tidak disebutkan'}</span>
+                                                <span className="text-xs text-stone-500">{item.judul ?? 'Donasi tanpa nama'}</span>
+                                            </div>
+                                        </td>
                                         <td className="p-5">
                                             <div className="flex flex-col gap-1">
                                                 {getKondisiBadge(item.kondisi_user)}

@@ -5,7 +5,6 @@
 //   Notes: Endpoint moderasi admin untuk approve/reject donasi, validasi Zod, cek keberadaan verifier di DB
 //   Lines Range: 67
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { AUTH_COOKIE_NAME, parseAuthCookieValue } from '@/lib/auth';
@@ -37,7 +36,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
         const { status } = parsed.data;
 
-        const auth = parseAuthCookieValue(cookies().get(AUTH_COOKIE_NAME)?.value);
+        const auth = parseAuthCookieValue(request.cookies.get(AUTH_COOKIE_NAME)?.value);
         if (!auth) {
             return NextResponse.json({ data: null, error: 'Tidak terautentikasi' }, { status: 401 });
         }

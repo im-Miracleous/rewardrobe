@@ -18,6 +18,18 @@ const KONDISI_OPTIONS = [
     { label: 'Rusak / Perlu penanganan', value: 'rusak' },
 ];
 
+const TIPE_PAKAIAN_OPTIONS = [
+    { label: 'Kaos/Kemeja', value: 'Kaos/Kemeja' },
+    { label: 'Jaket', value: 'Jaket' },
+    { label: 'Celana panjang', value: 'Celana panjang' },
+    { label: 'Celana pendek', value: 'Celana pendek' },
+    { label: 'Rok', value: 'Rok' },
+    { label: 'Pakaian Dalam', value: 'Pakaian Dalam' },
+    { label: 'Sepatu', value: 'Sepatu' },
+    { label: 'Sandal', value: 'Sandal' },
+    { label: 'Lainnya', value: 'Lainnya' },
+];
+
 export default function DonatePage() {
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,13 +37,15 @@ export default function DonatePage() {
     const [errorMsg, setErrorMsg] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
 
-    const [namaBarang, setNamaBarang] = useState('');
-    const [deskripsi, setDeskripsi] = useState('');
+    const [tipePakaian, setTipePakaian] = useState('');
+    const [tipePakaianLainnya, setTipePakaianLainnya] = useState('');
+    const [catatan, setCatatan] = useState('');
     const [kondisi, setKondisi] = useState('');
     const [buktiFoto, setBuktiFoto] = useState('');
 
-    const isFormValid =
-        kondisi.trim() !== '';
+    const isTipeLainnya = tipePakaian === 'Lainnya';
+    const resolvedTipePakaian = isTipeLainnya ? tipePakaianLainnya.trim() : tipePakaian.trim();
+    const isFormValid = resolvedTipePakaian !== '' && kondisi.trim() !== '' && buktiFoto.trim() !== '';
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -54,7 +68,7 @@ export default function DonatePage() {
         setSuccessMsg('');
 
         if (!isFormValid) {
-            setErrorMsg('Harap lengkapi semua field yang diwajibkan.');
+            setErrorMsg('Harap pilih tipe pakaian, isi tipe lainnya bila diperlukan, unggah foto, dan pilih kondisi barang.');
             return;
         }
 
@@ -78,11 +92,11 @@ export default function DonatePage() {
             }
 
             const payload = {
-                namaBarang: namaBarang.trim() || undefined,
-                deskripsi,
+                tipePakaian: resolvedTipePakaian,
+                catatan,
                 kondisi,
                 donatur_id: donaturId,
-                ...(buktiFoto.trim() ? { bukti_foto: buktiFoto.trim() } : {}),
+                bukti_foto: buktiFoto.trim(),
             };
 
             const response = await fetch('/api/barang-donasi', {
@@ -101,8 +115,9 @@ export default function DonatePage() {
             setSuccessMsg('Donasi berhasil dikirim! Menunggu verifikasi admin.');
 
             // Reset form
-            setNamaBarang('');
-            setDeskripsi('');
+            setTipePakaian('');
+            setTipePakaianLainnya('');
+            setCatatan('');
             setKondisi('');
             setBuktiFoto('');
 
@@ -120,7 +135,6 @@ export default function DonatePage() {
 
     return (
         <div className="max-w-2xl mx-auto animate-[fadeIn_0.3s_ease]">
-            {/* Header */}
             <div className="mb-8">
                 <Link
                     href="/dashboard/donatur"
@@ -129,24 +143,49 @@ export default function DonatePage() {
                     <ArrowLeft size={16} /> Kembali ke Dashboard
                 </Link>
                 <h1 className="text-2xl font-display font-bold text-stone-900">Donasi Barang Baru</h1>
-                <p className="text-stone-500 mt-1">Isi informasi seperlunya. Nama, kategori, dan berat tidak wajib jika tidak Anda ketahui.</p>
+                <p className="text-stone-500 mt-1">Pilih tipe pakaian, unggah foto, lalu isi kondisi dan catatan seperlunya.</p>
             </div>
 
-            {/* Form Card */}
             <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <Input
-                        label="Nama Barang (Opsional)"
-                        id="donate-namaBarang"
-                        placeholder="Contoh: Jaket musim dingin"
-                        value={namaBarang}
-                        onChange={(e) => setNamaBarang(e.target.value)}
-                        disabled={isSubmitting}
-                    />
+                    <div className="flex flex-col gap-1.5 w-full">
+                        <label className="text-sm font-bold text-stone-700 font-display">
+                            Bukti Foto <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            required
+                            disabled={isSubmitting}
+                        />
+
+                        <div
+                            onClick={handleUploadClick}
+                            className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${buktiFoto ? 'border-stone-200 bg-stone-50 hover:bg-stone-100' : 'border-green-300 bg-green-50 hover:bg-green-100'}`}
+                        >
+                            {buktiFoto ? (
+                                <div className="relative w-full max-w-50 rounded-lg overflow-hidden border border-stone-200">
+                                    <img src={buktiFoto} alt="Preview" className="w-full h-auto object-cover" />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
+                                        <span className="text-white text-xs font-semibold">Ganti Foto</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <ImageIcon size={32} className="text-green-500 mb-2" />
+                                    <span className="text-sm font-semibold text-stone-600">Klik untuk unggah foto pakaian</span>
+                                </>
+                            )}
+                        </div>
+                        <span className="text-xs text-stone-500">Foto wajib diunggah untuk donasi pakaian.</span>
+                    </div>
 
                     <div className="flex flex-col gap-1.5 w-full">
                         <label htmlFor="donate-kondisi" className="text-sm font-bold text-stone-700 font-display">
-                            Kondisi barang
+                            Kondisi barang <span className="text-red-500">*</span>
                         </label>
                         <select
                             id="donate-kondisi"
@@ -168,48 +207,54 @@ export default function DonatePage() {
                     </div>
 
                     <div className="flex flex-col gap-1.5 w-full">
-                        <label className="text-sm font-bold text-stone-700 font-display">
-                            Bukti Foto (Opsional)
+                        <label htmlFor="donate-tipePakaian" className="text-sm font-bold text-stone-700 font-display">
+                            Tipe Pakaian <span className="text-red-500">*</span>
                         </label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
+                        <select
+                            id="donate-tipePakaian"
+                            value={tipePakaian}
+                            onChange={(e) => setTipePakaian(e.target.value)}
+                            required
                             disabled={isSubmitting}
-                        />
-
-                        <div
-                            onClick={handleUploadClick}
-                            className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors border-stone-200 bg-stone-50 hover:bg-stone-100"
+                            className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-800 bg-white transition-all focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 appearance-none cursor-pointer"
                         >
-                            {buktiFoto ? (
-                                <div className="relative w-full max-w-50 rounded-lg overflow-hidden border border-stone-200">
-                                    <img src={buktiFoto} alt="Preview" className="w-full h-auto object-cover" />
-                                    <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
-                                        <span className="text-white text-xs font-semibold">Ganti Foto</span>
-                                    </div>
-                                </div>
-                            ) : (
-                                <>
-                                    <ImageIcon size={32} className="text-stone-400 mb-2" />
-                                    <span className="text-sm font-semibold text-stone-600">Klik untuk unggah foto</span>
-                                </>
-                            )}
-                        </div>
+                            <option value="" disabled>
+                                Pilih tipe pakaian...
+                            </option>
+                            {TIPE_PAKAIAN_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
+                    {isTipeLainnya && (
+                        <div className="flex flex-col gap-1.5 w-full">
+                            <label htmlFor="donate-tipePakaianLainnya" className="text-sm font-bold text-stone-700 font-display">
+                                Spesifikasi Tipe Pakaian <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                                id="donate-tipePakaianLainnya"
+                                placeholder="Contoh: Jaket hoodie, gamis, blazer"
+                                value={tipePakaianLainnya}
+                                onChange={(e) => setTipePakaianLainnya(e.target.value)}
+                                required
+                                disabled={isSubmitting}
+                            />
+                        </div>
+                    )}
+
                     <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="donate-deskripsi" className="text-sm font-bold text-stone-700 font-display">
-                            Deskripsi (Opsional)
+                        <label htmlFor="donate-catatan" className="text-sm font-bold text-stone-700 font-display">
+                            Catatan (Opsional)
                         </label>
                         <textarea
-                            id="donate-deskripsi"
+                            id="donate-catatan"
                             rows={4}
-                            placeholder="Ceritakan detail barang tambahan..."
-                            value={deskripsi}
-                            onChange={(e) => setDeskripsi(e.target.value)}
+                            placeholder="Tulis info tambahan tentang barang..."
+                            value={catatan}
+                            onChange={(e) => setCatatan(e.target.value)}
                             disabled={isSubmitting}
                             className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-800 bg-white transition-all focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 resize-none"
                         />
