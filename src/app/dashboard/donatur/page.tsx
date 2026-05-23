@@ -17,7 +17,7 @@ export default function DonaturDash() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-center min-h-[160px]">
+                <div className="bg-linear-to-br from-green-600 to-green-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-center min-h-40">
                     <div className="relative z-10">
                         <div className="text-green-100 text-sm font-semibold mb-2">Total Poin Kamu</div>
                         <div className="text-5xl font-display font-extrabold mb-4">1.250</div>
@@ -28,7 +28,7 @@ export default function DonaturDash() {
                     <Trophy className="absolute -bottom-6 -right-6 text-white/10" size={140} />
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center min-h-[160px]">
+                <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center min-h-40">
                     <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center mb-4">
                         <Leaf size={24} className="text-green-500" />
                     </div>
@@ -36,7 +36,7 @@ export default function DonaturDash() {
                     <div className="text-3xl font-display font-extrabold text-stone-900">4,5 Kg</div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center min-h-[160px]">
+                <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center min-h-40">
                     <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
                         <Shirt size={24} className="text-blue-500" />
                     </div>

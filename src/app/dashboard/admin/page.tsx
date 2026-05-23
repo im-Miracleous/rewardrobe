@@ -18,10 +18,11 @@ interface Donatur {
 
 interface BarangDonasi {
     id: number;
-    judul: string;
+    judul: string | null;
     deskripsi: string;
-    kategori: string;
-    berat_kg: number;
+    kondisi_user: string;
+    kategori: string | null;
+    berat_kg: number | null;
     foto_url: string | null;
     label_ai: string | null;
     status: string;
@@ -33,16 +34,16 @@ interface BarangDonasi {
     donatur: Donatur;
 }
 
-function getLabelBadge(label: string | null) {
-    switch (label) {
-        case 'layak_donasi':
-            return <Badge color="green">Layak Donasi</Badge>;
-        case 'perlu_perbaikan':
-            return <Badge color="yellow">Perlu Perbaikan</Badge>;
-        case 'daur_ulang':
-            return <Badge color="stone">Daur Ulang</Badge>;
+function getKondisiBadge(kondisi: string) {
+    switch (kondisi) {
+        case 'baik':
+            return <Badge color="green">Baik</Badge>;
+        case 'fair':
+            return <Badge color="yellow">Fair</Badge>;
+        case 'rusak':
+            return <Badge color="stone">Rusak</Badge>;
         default:
-            return <Badge color="blue">Belum Dinilai</Badge>;
+            return <Badge color="blue">{kondisi}</Badge>;
     }
 }
 
@@ -102,20 +103,10 @@ export default function AdminDash() {
     const handleUpdateStatus = async (barangId: number, newStatus: string) => {
         setActionLoading(barangId);
         try {
-            // Get admin user from localStorage
-            const userStr = localStorage.getItem('user');
-            const user = userStr ? JSON.parse(userStr) : null;
-            const verifiedBy = user?.id;
-
-            if (!verifiedBy) {
-                setError('Admin ID tidak ditemukan. Silakan login ulang.');
-                return;
-            }
-
             const response = await fetch(`/api/barang-donasi/${barangId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus, verified_by: verifiedBy }),
+                body: JSON.stringify({ status: newStatus }),
             });
 
             const result = await response.json();
@@ -194,7 +185,7 @@ export default function AdminDash() {
                                 <tr className="bg-white border-b border-stone-200">
                                     <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Donatur</th>
                                     <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Barang</th>
-                                    <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Label / Status</th>
+                                    <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Kondisi / Status</th>
                                     <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Bukti Foto</th>
                                     <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Waktu Masuk</th>
                                     <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider text-right">Aksi</th>
@@ -204,16 +195,16 @@ export default function AdminDash() {
                                 {pendingItems.map((item) => (
                                     <tr key={item.id} className="border-b border-stone-100 hover:bg-stone-50 transition-colors">
                                         <td className="p-5 font-bold text-stone-800">{item.donatur?.nama ?? '-'}</td>
-                                        <td className="p-5 text-stone-600">{item.judul}</td>
+                                        <td className="p-5 text-stone-600">{item.judul ?? 'Donasi tanpa nama'}</td>
                                         <td className="p-5">
                                             <div className="flex flex-col gap-1">
-                                                {getLabelBadge(item.label_ai)}
+                                                {getKondisiBadge(item.kondisi_user)}
                                                 {getStatusBadge(item.status)}
                                             </div>
                                         </td>
                                         <td className="p-5">
                                             {item.foto_url ? (
-                                                <img src={item.foto_url} alt={item.judul} className="w-14 h-14 object-cover rounded-lg border border-stone-200" />
+                                                <img src={item.foto_url} alt={item.judul ?? 'Donasi'} className="w-14 h-14 object-cover rounded-lg border border-stone-200" />
                                             ) : (
                                                 <div className="w-14 h-14 bg-stone-100 rounded-lg border border-stone-200 flex items-center justify-center text-stone-400">
                                                     <ImageIcon size={20} />

@@ -163,7 +163,7 @@ Jika halaman `db-check` menampilkan status `Connected`, berarti Next.js app suda
 ## ☁️ Proposal
 
 * **Solusi Utama:** ReWardrobe diusulkan sebagai platform terpadu yang memisahkan akses pengguna menjadi Donatur, Penerima (Komunitas/Panti), dan Admin untuk menciptakan ekosistem donasi yang aman, terverifikasi, dan termoderasi.
-* **Smart Posting & Otomatisasi Siklus:** Menggunakan *AI Assessment* untuk memberikan label otomatis ("Layak Donasi", "Perlu Perbaikan", "Daur Ulang") pada foto unggahan donatur. Sistem juga secara cerdas akan menentukan alur penanganan tekstil otomatis berdasarkan jenis dan kondisi barang.
+* **Smart Posting & Moderasi:** Donatur mengisi kondisi barang secara mandiri sebelum barang masuk ke antrian moderasi admin. Sistem fokus pada proses yang ringan dan realistis, bukan menuntut input yang sulit dipastikan seperti berat atau nama produk.
 * **Fokus pada Lokalisasi:** Menyediakan katalog donasi dengan filter lokasi terdekat untuk menekan biaya logistik (mendukung pengiriman instan/COD yang lebih murah) dan mengurangi jejak karbon.
 * **Integrasi Logistik Terpadu (Satu Pintu):** Menyediakan *gateway* fasad logistik yang menghubungkan aplikasi dengan pihak ketiga (seperti GoSend, GrabExpress) untuk memudahkan penjemputan barang tanpa merumitkan kode integrasi API.
 * **Gamifikasi & Insentif Dampak:** Menggunakan modul analitik untuk menampilkan perhitungan reduksi jejak karbon dan limbah yang diselamatkan. Pengguna juga akan mendapatkan *reward* poin dan *badge* yang bisa ditukarkan dengan voucer diskon dari mitra *brand fashion* berkelanjutan.
@@ -174,7 +174,7 @@ Jika halaman `db-check` menampilkan status `Connected`, berarti Next.js app suda
 ## 🛫 Plan
 
 * **Manajemen Akun & Kebijakan Global:** Membangun *SystemConfigManager* terpusat menggunakan *Singleton Pattern* untuk mengatur kebijakan ekonomi sirkular (seperti standar kelayakan donasi). Pembuatan akun Donatur, Penerima, dan Admin akan dikelola dengan *Factory Method*.
-* **Pengembangan Fitur Cerdas & Interaktif:** * Membangun *Smart Posting* dengan *Strategy Pattern* agar algoritma AI penilai kelayakan dapat ditukar secara fleksibel.
+* **Pengembangan Fitur Cerdas & Interaktif:** * Membangun *Smart Posting* dengan *Strategy Pattern* agar alur penilaian dari donatur dan moderasi admin dapat ditukar secara fleksibel.
     * Menerapkan *Observer Pattern* untuk katalog lokasi dan sistem notifikasi instan agar pengguna relevan langsung mendapat pemberitahuan donasi baru.
 * **Pelacakan & Inventori (Transparansi):** * Membangun sistem *Inventory Tracking* dengan *QR Code* bagi *warehouse* untuk memvalidasi pemotongan stok secara *real-time*.
     * Membangun *Donation Tracker* terperinci menggunakan *State Pattern* untuk melacak status pakaian dari penjemputan hingga penyaluran.

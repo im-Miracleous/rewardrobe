@@ -12,18 +12,10 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Link from 'next/link';
 
-const KATEGORI_OPTIONS = [
-    'Pakaian',
-    'Aksesoris',
-    'Sepatu',
-    'Tas',
-    'Lainnya',
-];
-
 const KONDISI_OPTIONS = [
-    'Sangat Bagus / Seperti Baru',
-    'Bagus / Layak Pakai',
-    'Kurang Bagus / Perlu Perbaikan Sedikit',
+    { label: 'Fair / Cukup layak', value: 'fair' },
+    { label: 'Baik / Layak pakai', value: 'baik' },
+    { label: 'Rusak / Perlu penanganan', value: 'rusak' },
 ];
 
 export default function DonatePage() {
@@ -35,18 +27,11 @@ export default function DonatePage() {
 
     const [namaBarang, setNamaBarang] = useState('');
     const [deskripsi, setDeskripsi] = useState('');
-    const [kategori, setKategori] = useState('');
     const [kondisi, setKondisi] = useState('');
-    const [beratKg, setBeratKg] = useState('');
     const [buktiFoto, setBuktiFoto] = useState('');
 
-    const isKategoriPakaian = kategori.toLowerCase() === 'pakaian';
     const isFormValid =
-        namaBarang.trim() !== '' &&
-        kategori.trim() !== '' &&
-        kondisi.trim() !== '' &&
-        beratKg.trim() !== '' &&
-        (isKategoriPakaian ? buktiFoto.trim() !== '' : true);
+        kondisi.trim() !== '';
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -93,11 +78,9 @@ export default function DonatePage() {
             }
 
             const payload = {
-                namaBarang,
+                namaBarang: namaBarang.trim() || undefined,
                 deskripsi,
-                kategori,
                 kondisi,
-                berat_kg: parseFloat(beratKg),
                 donatur_id: donaturId,
                 ...(buktiFoto.trim() ? { bukti_foto: buktiFoto.trim() } : {}),
             };
@@ -120,9 +103,7 @@ export default function DonatePage() {
             // Reset form
             setNamaBarang('');
             setDeskripsi('');
-            setKategori('');
             setKondisi('');
-            setBeratKg('');
             setBuktiFoto('');
 
             // Redirect after a short delay
@@ -148,48 +129,24 @@ export default function DonatePage() {
                     <ArrowLeft size={16} /> Kembali ke Dashboard
                 </Link>
                 <h1 className="text-2xl font-display font-bold text-stone-900">Donasi Barang Baru</h1>
-                <p className="text-stone-500 mt-1">Isi form di bawah untuk mendonasikan pakaian atau barang Anda.</p>
+                <p className="text-stone-500 mt-1">Isi informasi seperlunya. Nama, kategori, dan berat tidak wajib jika tidak Anda ketahui.</p>
             </div>
 
             {/* Form Card */}
             <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <Input
-                        label="Nama Barang *"
+                        label="Nama Barang (Opsional)"
                         id="donate-namaBarang"
-                        placeholder="Contoh: Jaket Musim Dingin"
+                        placeholder="Contoh: Jaket musim dingin"
                         value={namaBarang}
                         onChange={(e) => setNamaBarang(e.target.value)}
-                        required
                         disabled={isSubmitting}
                     />
 
                     <div className="flex flex-col gap-1.5 w-full">
-                        <label htmlFor="donate-kategori" className="text-sm font-bold text-stone-700 font-display">
-                            Kategori *
-                        </label>
-                        <select
-                            id="donate-kategori"
-                            value={kategori}
-                            onChange={(e) => setKategori(e.target.value)}
-                            required
-                            disabled={isSubmitting}
-                            className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-800 bg-white transition-all focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 appearance-none cursor-pointer"
-                        >
-                            <option value="" disabled>
-                                Pilih kategori...
-                            </option>
-                            {KATEGORI_OPTIONS.map((opt) => (
-                                <option key={opt} value={opt}>
-                                    {opt}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5 w-full">
                         <label htmlFor="donate-kondisi" className="text-sm font-bold text-stone-700 font-display">
-                            Kondisi *
+                            Kondisi barang
                         </label>
                         <select
                             id="donate-kondisi"
@@ -200,38 +157,20 @@ export default function DonatePage() {
                             className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-800 bg-white transition-all focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 appearance-none cursor-pointer"
                         >
                             <option value="" disabled>
-                                Pilih kondisi...
+                                Pilih kondisi barang...
                             </option>
                             {KONDISI_OPTIONS.map((opt) => (
-                                <option key={opt} value={opt}>
-                                    {opt}
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
                                 </option>
                             ))}
                         </select>
                     </div>
 
-                    <Input
-                        label="Berat (kg) *"
-                        id="donate-berat"
-                        type="number"
-                        step="0.1"
-                        min="0.1"
-                        placeholder="Contoh: 0.5"
-                        value={beratKg}
-                        onChange={(e) => setBeratKg(e.target.value)}
-                        required
-                        disabled={isSubmitting}
-                    />
-
                     <div className="flex flex-col gap-1.5 w-full">
                         <label className="text-sm font-bold text-stone-700 font-display">
-                            Bukti Foto {isKategoriPakaian && <span className="text-red-500">*</span>}
+                            Bukti Foto (Opsional)
                         </label>
-                        {isKategoriPakaian && !buktiFoto && (
-                            <span className="text-xs text-red-500 mb-1">
-                                Foto wajib diunggah untuk kategori pakaian.
-                            </span>
-                        )}
                         <input
                             type="file"
                             accept="image/*"
@@ -243,11 +182,10 @@ export default function DonatePage() {
 
                         <div
                             onClick={handleUploadClick}
-                            className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${isKategoriPakaian && !buktiFoto ? 'border-red-300 bg-red-50 hover:bg-red-100' : 'border-stone-200 bg-stone-50 hover:bg-stone-100'
-                                }`}
+                            className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors border-stone-200 bg-stone-50 hover:bg-stone-100"
                         >
                             {buktiFoto ? (
-                                <div className="relative w-full max-w-[200px] rounded-lg overflow-hidden border border-stone-200">
+                                <div className="relative w-full max-w-50 rounded-lg overflow-hidden border border-stone-200">
                                     <img src={buktiFoto} alt="Preview" className="w-full h-auto object-cover" />
                                     <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
                                         <span className="text-white text-xs font-semibold">Ganti Foto</span>
@@ -255,7 +193,7 @@ export default function DonatePage() {
                                 </div>
                             ) : (
                                 <>
-                                    <ImageIcon size={32} className={isKategoriPakaian ? 'text-red-400 mb-2' : 'text-stone-400 mb-2'} />
+                                    <ImageIcon size={32} className="text-stone-400 mb-2" />
                                     <span className="text-sm font-semibold text-stone-600">Klik untuk unggah foto</span>
                                 </>
                             )}
