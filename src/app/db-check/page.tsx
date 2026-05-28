@@ -76,9 +76,9 @@ export default function DatabaseCheckPage() {
           <ArrowLeft size={16} /> Kembali ke beranda
         </Link>
 
-        <section className="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+        <section className="overflow-hidden rounded-4xl border border-stone-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
           <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="bg-gradient-to-br from-green-950 via-green-800 to-[#4a7c59] p-8 text-white sm:p-10">
+            <div className="bg-linear-to-br from-green-950 via-green-800 to-[#4a7c59] p-8 text-white sm:p-10">
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-semibold backdrop-blur-md">
                 <Database size={16} /> Live Database Monitor
               </div>

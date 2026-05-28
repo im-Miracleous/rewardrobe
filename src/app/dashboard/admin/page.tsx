@@ -1,5 +1,5 @@
 // CODE-CITE:
-//   Title: Admin Dashboard - Antrian Moderasi Real-time
+//   Title: Admin Dashboard - Daftar Donasi Masuk Real-time
 //   Type: ai
 //   Value: Claude (claude.ai/code)
 //   Notes: Dashboard admin dengan fetch data real dari API, stat cards dinamis, tabel moderasi, dan tombol setujui/tolak
@@ -18,10 +18,11 @@ interface Donatur {
 
 interface BarangDonasi {
     id: number;
-    judul: string;
+    judul: string | null;
     deskripsi: string;
-    kategori: string;
-    berat_kg: number;
+    kondisi_user: string;
+    kategori: string | null;
+    berat_kg: number | null;
     foto_url: string | null;
     label_ai: string | null;
     status: string;
@@ -33,31 +34,16 @@ interface BarangDonasi {
     donatur: Donatur;
 }
 
-function getLabelBadge(label: string | null) {
-    switch (label) {
-        case 'layak_donasi':
-            return <Badge color="green">Layak Donasi</Badge>;
-        case 'perlu_perbaikan':
-            return <Badge color="yellow">Perlu Perbaikan</Badge>;
-        case 'daur_ulang':
-            return <Badge color="stone">Daur Ulang</Badge>;
+function getKondisiBadge(kondisi: string) {
+    switch (kondisi) {
+        case 'baik':
+            return <Badge color="green">Baik</Badge>;
+        case 'fair':
+            return <Badge color="yellow">Fair</Badge>;
+        case 'rusak':
+            return <Badge color="stone">Rusak</Badge>;
         default:
-            return <Badge color="blue">Belum Dinilai</Badge>;
-    }
-}
-
-function getStatusBadge(status: string) {
-    switch (status) {
-        case 'menunggu_verifikasi':
-            return <Badge color="yellow">Menunggu</Badge>;
-        case 'disetujui':
-            return <Badge color="green">Disetujui</Badge>;
-        case 'ditolak':
-            return <Badge color="stone">Ditolak</Badge>;
-        case 'tersalurkan':
-            return <Badge color="blue">Tersalurkan</Badge>;
-        default:
-            return <Badge color="stone">{status}</Badge>;
+            return <Badge color="blue">{kondisi}</Badge>;
     }
 }
 
@@ -76,7 +62,6 @@ export default function AdminDash() {
     const [barangList, setBarangList] = useState<BarangDonasi[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
-    const [actionLoading, setActionLoading] = useState<number | null>(null);
 
     const fetchBarang = async () => {
         try {
@@ -99,44 +84,8 @@ export default function AdminDash() {
         fetchBarang();
     }, []);
 
-    const handleUpdateStatus = async (barangId: number, newStatus: string) => {
-        setActionLoading(barangId);
-        try {
-            // Get admin user from localStorage
-            const userStr = localStorage.getItem('user');
-            const user = userStr ? JSON.parse(userStr) : null;
-            const verifiedBy = user?.id;
-
-            if (!verifiedBy) {
-                setError('Admin ID tidak ditemukan. Silakan login ulang.');
-                return;
-            }
-
-            const response = await fetch(`/api/barang-donasi/${barangId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus, verified_by: verifiedBy }),
-            });
-
-            const result = await response.json();
-            if (!response.ok) {
-                setError(result.error || 'Gagal mengubah status.');
-                return;
-            }
-
-            // Refresh the list
-            await fetchBarang();
-        } catch (err) {
-            console.error('Update status error:', err);
-            setError('Gagal mengubah status.');
-        } finally {
-            setActionLoading(null);
-        }
-    };
-
     // Compute stats from real data
     const menungguCount = barangList.filter((b) => b.status === 'menunggu_verifikasi').length;
-    const disetujuiCount = barangList.filter((b) => b.status === 'disetujui').length;
     const tersalurkanCount = barangList.filter((b) => b.status === 'tersalurkan').length;
     const pendingItems = barangList.filter((b) => b.status === 'menunggu_verifikasi');
 
@@ -144,13 +93,12 @@ export default function AdminDash() {
         <div className="space-y-8 animate-[fadeIn_0.3s_ease]">
             <div>
                 <h1 className="text-2xl font-display font-bold text-stone-900">Ringkasan Sistem</h1>
-                <p className="text-stone-500">Pantau aktivitas platform ReWardrobe hari ini.</p>
+                <p className="text-stone-500">Pantau donasi baru dan penjemputan yang perlu dijadwalkan hari ini.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                    { title: 'Menunggu Verifikasi', val: String(menungguCount), icon: <ShieldCheck size={24} />, color: 'text-orange-600', bg: 'bg-orange-100' },
-                    { title: 'Disetujui', val: String(disetujuiCount), icon: <Truck size={24} />, color: 'text-blue-600', bg: 'bg-blue-100' },
+                    { title: 'Menunggu Penjemputan', val: String(menungguCount), icon: <ShieldCheck size={24} />, color: 'text-orange-600', bg: 'bg-orange-100' },
                     { title: 'Total Tersalurkan', val: String(tersalurkanCount), icon: <CheckCircle size={24} />, color: 'text-green-600', bg: 'bg-green-100' },
                     { title: 'Total Donasi', val: String(barangList.length), icon: <User size={24} />, color: 'text-purple-600', bg: 'bg-purple-100' },
                 ].map((s, i) => (
@@ -166,9 +114,9 @@ export default function AdminDash() {
                 ))}
             </div>
 
-            <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+            <div id="penjemputan-barang" className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
                 <div className="p-6 border-b border-stone-100 flex justify-between items-center">
-                    <h3 className="font-display font-bold text-stone-900">Antrian Moderasi</h3>
+                    <h3 className="font-display font-bold text-stone-900">Daftar Donasi Masuk</h3>
                     <Button variant="outline" size="sm" onClick={fetchBarang}>Refresh</Button>
                 </div>
 
@@ -184,8 +132,8 @@ export default function AdminDash() {
                 ) : pendingItems.length === 0 ? (
                     <div className="p-12 text-center text-stone-400">
                         <ShieldCheck size={48} className="mx-auto mb-4 opacity-30" />
-                        <p className="font-semibold">Tidak ada barang menunggu verifikasi.</p>
-                        <p className="text-sm mt-1">Semua donasi sudah diproses.</p>
+                        <p className="font-semibold">Belum ada donasi baru yang perlu dijadwalkan.</p>
+                        <p className="text-sm mt-1">Saat donatur submit form, data akan muncul di sini untuk penjadwalan penjemputan.</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
@@ -193,27 +141,25 @@ export default function AdminDash() {
                             <thead>
                                 <tr className="bg-white border-b border-stone-200">
                                     <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Donatur</th>
-                                    <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Barang</th>
-                                    <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Label / Status</th>
+                                    <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Tipe Pakaian</th>
+                                    <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Kondisi Pakaian</th>
                                     <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Bukti Foto</th>
                                     <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Waktu Masuk</th>
-                                    <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider text-right">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {pendingItems.map((item) => (
                                     <tr key={item.id} className="border-b border-stone-100 hover:bg-stone-50 transition-colors">
                                         <td className="p-5 font-bold text-stone-800">{item.donatur?.nama ?? '-'}</td>
-                                        <td className="p-5 text-stone-600">{item.judul}</td>
+                                        <td className="p-5 text-stone-600">
+                                            <span className="font-semibold text-stone-800">{item.kategori ?? 'Tipe tidak disebutkan'}</span>
+                                        </td>
                                         <td className="p-5">
-                                            <div className="flex flex-col gap-1">
-                                                {getLabelBadge(item.label_ai)}
-                                                {getStatusBadge(item.status)}
-                                            </div>
+                                            {getKondisiBadge(item.kondisi_user)}
                                         </td>
                                         <td className="p-5">
                                             {item.foto_url ? (
-                                                <img src={item.foto_url} alt={item.judul} className="w-14 h-14 object-cover rounded-lg border border-stone-200" />
+                                                <img src={item.foto_url} alt={item.judul ?? 'Donasi'} className="w-14 h-14 object-cover rounded-lg border border-stone-200" />
                                             ) : (
                                                 <div className="w-14 h-14 bg-stone-100 rounded-lg border border-stone-200 flex items-center justify-center text-stone-400">
                                                     <ImageIcon size={20} />
@@ -221,24 +167,6 @@ export default function AdminDash() {
                                             )}
                                         </td>
                                         <td className="p-5 text-sm font-semibold text-stone-500">{timeAgo(item.created_at)}</td>
-                                        <td className="p-5 text-right">
-                                            <div className="flex gap-2 justify-end items-center">
-                                                <Button
-                                                    size="sm"
-                                                    disabled={actionLoading === item.id}
-                                                    onClick={() => handleUpdateStatus(item.id, 'disetujui')}
-                                                >
-                                                    {actionLoading === item.id ? 'Proses...' : 'Setujui'}
-                                                </Button>
-                                                <button
-                                                    className="text-sm font-semibold text-stone-500 hover:text-stone-800 px-3 disabled:opacity-50"
-                                                    disabled={actionLoading === item.id}
-                                                    onClick={() => handleUpdateStatus(item.id, 'ditolak')}
-                                                >
-                                                    Tolak
-                                                </button>
-                                            </div>
-                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Shirt, Package, ShieldCheck, Heart, Trophy, LogOut, Settings, User } from 'lucide-react';
+import { Home, Shirt, Package, Truck, QrCode, Heart, Trophy, History, ClipboardList, LogOut, Settings, User, LayoutDashboard } from 'lucide-react';
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -16,20 +16,20 @@ export default function Sidebar() {
 
     const menus: Record<string, { href: string; label: string; icon: React.ReactNode }[]> = {
         admin: [
-            { href: '/dashboard/admin', label: 'Dashboard', icon: <Package size={18} /> },
-            { href: '#', label: 'Verifikasi Barang', icon: <ShieldCheck size={18} /> },
-            { href: '#', label: 'Kelola Pengiriman', icon: <Package size={18} /> }, // Menggunakan icon package sesuai gambar
-            { href: '#', label: 'Inventory (QR)', icon: <Package size={18} /> },
+            { href: '/dashboard/admin', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+            { href: '/dashboard/admin#penjemputan-barang', label: 'Penjemputan Barang', icon: <Truck size={18} /> },
+            { href: '#', label: 'Kelola Pengiriman', icon: <Package size={18} /> },
+            { href: '#', label: 'Inventory (QR)', icon: <QrCode size={18} /> },
         ],
         donatur: [
-            { href: '/dashboard/donatur', label: 'Beranda Saya', icon: <Heart size={18} /> },
+            { href: '/dashboard/donatur', label: 'Beranda Saya', icon: <Home size={18} /> },
             { href: '/dashboard/donatur/donate', label: 'Donasi Baru', icon: <Shirt size={18} /> },
-            { href: '#', label: 'Riwayat Donasi', icon: <Shirt size={18} /> },
+            { href: '#', label: 'Riwayat Donasi', icon: <History size={18} /> },
             { href: '#', label: 'Poin & Leaderboard', icon: <Trophy size={18} /> },
         ],
         penerima: [
             { href: '/dashboard/penerima', label: 'Katalog Donasi', icon: <Shirt size={18} /> },
-            { href: '#', label: 'Permintaan Saya', icon: <Package size={18} /> },
+            { href: '#', label: 'Permintaan Saya', icon: <ClipboardList size={18} /> },
         ]
     };
 
