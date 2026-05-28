@@ -7,10 +7,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
+import { AUTH_COOKIE_NAME, parseAuthCookieValue } from '@/lib/auth';
 
 const patchSchema = z.object({
     status: z.enum(['menunggu_verifikasi', 'disetujui', 'ditolak', 'tersalurkan']),
-    verified_by: z.number().int().positive().optional(),
 });
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -34,34 +34,35 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
             );
         }
 
-        const { status, verified_by } = parsed.data;
+        const { status } = parsed.data;
+
+        const auth = parseAuthCookieValue(request.cookies.get(AUTH_COOKIE_NAME)?.value);
+        if (!auth) {
+            return NextResponse.json({ data: null, error: 'Tidak terautentikasi' }, { status: 401 });
+        }
+
+        const actor = await prisma.user.findUnique({
+            where: { id: auth.userId },
+            select: { id: true, role: true },
+        });
+
+        if (!actor || actor.role !== 'admin') {
+            return NextResponse.json({ data: null, error: 'Akses hanya untuk admin' }, { status: 403 });
+        }
 
         const existing = await prisma.barangDonasi.findUnique({ where: { id: barangId } });
         if (!existing) {
             return NextResponse.json({ data: null, error: 'Barang donasi tidak ditemukan' }, { status: 404 });
         }
 
-        // When approving or rejecting, require verified_by
         const needsVerifier = status === 'disetujui' || status === 'ditolak' || status === 'tersalurkan';
-        if (needsVerifier && !verified_by) {
-            return NextResponse.json(
-                { data: null, error: 'verified_by wajib diisi saat mengubah status menjadi disetujui, ditolak, atau tersalurkan' },
-                { status: 400 },
-            );
-        }
-
-        if (verified_by) {
-            const verifierExists = await prisma.user.findUnique({ where: { id: verified_by } });
-            if (!verifierExists) {
-                return NextResponse.json({ data: null, error: 'verified_by tidak ditemukan' }, { status: 404 });
-            }
-        }
-
         const updated = await prisma.barangDonasi.update({
             where: { id: barangId },
             data: {
                 status,
-                ...(verified_by ? { verified_by, verified_at: new Date() } : {}),
+                ...(status === 'disetujui' || status === 'ditolak' || status === 'tersalurkan'
+                    ? { verified_by: actor.id, verified_at: new Date() }
+                    : {}),
             },
         });
 

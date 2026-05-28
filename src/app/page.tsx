@@ -10,9 +10,9 @@ export default function LandingPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 px-6 overflow-hidden flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-[#052e16] via-[#166534] to-[#4a7c59]">
+      <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 px-6 overflow-hidden flex flex-col items-center justify-center min-h-screen bg-linear-to-br from-[#052e16] via-[#166534] to-[#4a7c59]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.05)_0%,transparent_60%)] pointer-events-none" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-size-[60px_60px] pointer-events-none" />
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 border border-white/20 rounded-full text-white/90 text-sm font-semibold mb-8 backdrop-blur-md">
@@ -23,7 +23,7 @@ export default function LandingPage() {
             Pakaianmu,<br /><span className="text-green-400">Harapan</span> Mereka.
           </h1>
           <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed">
-            ReWardrobe menghubungkan donatur pakaian dengan panti asuhan, komunitas, dan pengrajin — dengan teknologi AI untuk memastikan setiap pakaian tersalurkan ke tempat yang tepat.
+            ReWardrobe menghubungkan donatur pakaian dengan panti asuhan, komunitas, dan pengrajin melalui alur donasi yang ringan, terverifikasi, dan mudah dipakai.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth?view=register">
@@ -38,14 +38,14 @@ export default function LandingPage() {
           <div className="mt-16 relative flex justify-center animate-[float_4s_ease-in-out_infinite]">
             <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 max-w-sm text-center shadow-2xl">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-400/20 border border-green-400/40 rounded-full text-green-400 text-xs font-bold mb-4">
-                <CheckCircle size={14} /> AI Assessment Aktif
+                <CheckCircle size={14} /> Moderasi Aktif
               </div>
               <div className="text-6xl mb-2">👕</div>
-              <div className="text-sm text-white/80 mb-4">Jaket Denim — Ukuran L</div>
+              <div className="text-sm text-white/80 mb-4">Jaket Denim — Kondisi fair</div>
               <div className="bg-green-400/10 border border-green-400/30 rounded-xl p-3">
-                <div className="text-xs text-white/60 mb-1">Hasil Penilaian AI</div>
+                <div className="text-xs text-white/60 mb-1">Kondisi dari donatur</div>
                 <div className="text-lg font-bold font-display text-green-400 flex items-center justify-center gap-2">
-                  <CheckCircle size={18} /> Layak Donasi
+                  <CheckCircle size={18} /> Siap dimoderasi
                 </div>
               </div>
             </div>
@@ -63,7 +63,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: <ShieldCheck size={28} className="text-green-700" />, bg: 'bg-green-100', title: 'Smart AI Assessment', desc: 'AI kami menilai kondisi pakaian secara otomatis.' },
+              { icon: <ShieldCheck size={28} className="text-green-700" />, bg: 'bg-green-100', title: 'Self-Assessment Donatur', desc: 'Donatur mengisi kondisi barang secara langsung sebelum moderasi.' },
               { icon: <MapPin size={28} className="text-blue-700" />, bg: 'bg-blue-100', title: 'Pelacakan Real-time', desc: 'Pantau status donasimu dari awal hingga akhir.' },
               { icon: <Truck size={28} className="text-yellow-700" />, bg: 'bg-yellow-100', title: 'Integrasi Multi-kurir', desc: 'Pilih kurir favorit langsung dari aplikasi.' },
               { icon: <Trophy size={28} className="text-pink-700" />, bg: 'bg-pink-100', title: 'Gamifikasi & Poin', desc: 'Kumpulkan poin setiap donasi dan lihat peringkatmu.' },

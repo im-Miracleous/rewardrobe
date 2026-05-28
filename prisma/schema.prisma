@@ -37,10 +37,11 @@ model User {
 
 model BarangDonasi {
   id          Int          @id @default(autoincrement())
-  judul       String
+  judul       String?
   deskripsi   String
-  kategori    String
-  berat_kg    Float
+  kondisi_user String      @default("fair")
+  kategori    String?
+  berat_kg    Float?
   foto_url    String?
   label_ai    LabelAI?
   status      StatusBarang @default(menunggu_verifikasi)

@@ -33,9 +33,11 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 ## Current Progress
 **Miracle (2472019)**
 
-- 
-- 
-- 
+- Menyesuaikan dashboard admin agar mengikuti alur penjemputan barang, bukan verifikasi manual satu per satu.
+- Menghapus kolom status dan aksi setujui/tolak pada antrian admin supaya tampilan lebih fokus ke informasi donasi masuk.
+- Menghilangkan placeholder nama "Donasi tanpa nama" dan merapikan label tabel menjadi lebih relevan dengan tipe pakaian serta kondisi pakaian.
+- Memperbarui sidebar admin dari menu "Verifikasi Barang" menjadi "Penjemputan Barang" agar sesuai dengan proses operasional yang baru.
+- Menyesuaikan ikon menu sidebar supaya lebih semantik dengan fungsi masing-masing menu.
 
 **Christian (2472008)**
 
