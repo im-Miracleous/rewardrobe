@@ -201,13 +201,13 @@ export default function ImpactPage() {
 
                                 return (
                                     <div key={camp.id} className="bg-white rounded-2xl border border-stone-200 shadow-xs overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">
-                                        <div>
+                                        <Link href={`/dashboard/donatur/impact/${camp.id}`} className="block group">
                                             {/* Photo Header */}
-                                            <div className="h-44 bg-stone-100 relative">
+                                            <div className="h-44 bg-stone-100 relative overflow-hidden">
                                                 {camp.foto_url ? (
-                                                    <img src={camp.foto_url} alt={camp.judul} className="w-full h-full object-cover" />
+                                                    <img src={camp.foto_url} alt={camp.judul} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-stone-300">
+                                                    <div className="w-full h-full flex items-center justify-center text-stone-300 group-hover:scale-105 transition-transform duration-500">
                                                         <Globe size={48} />
                                                     </div>
                                                 )}
@@ -221,7 +221,7 @@ export default function ImpactPage() {
                                             {/* Content */}
                                             <div className="p-5 space-y-4">
                                                 <div>
-                                                    <h3 className="font-display font-bold text-stone-900 text-base leading-snug">{camp.judul}</h3>
+                                                    <h3 className="font-display font-bold text-stone-900 text-base leading-snug group-hover:text-green-700 transition-colors">{camp.judul}</h3>
                                                     <p className="text-stone-500 text-xs mt-1 line-clamp-3 leading-relaxed">{camp.deskripsi}</p>
                                                 </div>
 
@@ -264,7 +264,7 @@ export default function ImpactPage() {
                                                     )}
                                                 </div>
                                             </div>
-                                        </div>
+                                        </Link>
 
                                         {/* Actions */}
                                         <div className="px-5 pb-5 pt-2 flex gap-3 border-t border-stone-50 bg-stone-50/20">
