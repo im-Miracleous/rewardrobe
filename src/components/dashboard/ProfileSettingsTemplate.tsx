@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
@@ -10,6 +11,10 @@ interface ProfileSettingsTemplateProps {
 
 export default function ProfileSettingsTemplate({ role }: ProfileSettingsTemplateProps) {
     const [isEditing, setIsEditing] = useState(false);
+
+    const router = useRouter();
+    const [userId, setUserId] = useState<number | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [formData, setFormData] = useState({
         name: `John Doe (${role})`,
@@ -22,6 +27,40 @@ export default function ProfileSettingsTemplate({ role }: ProfileSettingsTemplat
     const [avatarUrl, setAvatarUrl] = useState(`https://api.dicebear.com/7.x/notionists/svg?seed=John Doe (${role})`);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState('');
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                setUserId(user.id);
+                try {
+                    const res = await fetch(`/api/users/${user.id}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const dbUser = data.user;
+                        setFormData({
+                            name: dbUser.nama || '',
+                            email: dbUser.email || '',
+                            phone: dbUser.no_telpon || '',
+                            currentPassword: '',
+                            newPassword: '',
+                        });
+                        if (dbUser.foto_profil) {
+                            setAvatarUrl(dbUser.foto_profil);
+                        } else {
+                            setAvatarUrl(`https://api.dicebear.com/7.x/notionists/svg?seed=${dbUser.nama}`);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch user data:", error);
+                }
+            }
+            setIsLoading(false);
+        };
+        
+        fetchUserData();
+    }, []);
 
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -40,12 +79,49 @@ export default function ProfileSettingsTemplate({ role }: ProfileSettingsTemplat
         setFormData({ ...formData, [e.target.id]: e.target.value });
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Here you would typically send the data to your backend
-        console.log('Saved profile:', formData);
-        setIsEditing(false);
+        if (!userId) return;
+
+        try {
+            const res = await fetch(`/api/users/${userId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nama: formData.name,
+                    email: formData.email,
+                    no_telpon: formData.phone,
+                    foto_profil: avatarUrl.startsWith('data:') ? avatarUrl : undefined,
+                    ...(formData.newPassword ? { password: formData.newPassword } : {})
+                }),
+            });
+            
+            if (res.ok) {
+                alert('Profil berhasil diperbarui!');
+                setIsEditing(false);
+                setFormData({ ...formData, currentPassword: '', newPassword: '' });
+                
+                // Update local storage so sidebar updates on next load
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    user.nama = formData.name;
+                    user.email = formData.email;
+                    localStorage.setItem('user', JSON.stringify(user));
+                }
+            } else {
+                const data = await res.json();
+                alert(`Gagal memperbarui profil: ${data.message || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            alert('Terjadi kesalahan pada jaringan.');
+        }
     };
+
+    if (isLoading) {
+        return <div className="p-8 text-stone-500 animate-pulse">Memuat data profil...</div>;
+    }
 
     return (
         <div className="space-y-8 max-w-4xl">
@@ -198,13 +274,25 @@ export default function ProfileSettingsTemplate({ role }: ProfileSettingsTemplat
                             <Button
                                 variant="danger"
                                 className={deleteConfirmation !== 'HAPUS AKUN' ? 'grayscale opacity-70 hover:!bg-red-500 cursor-not-allowed' : ''}
-                                onClick={() => {
+                                onClick={async () => {
                                     if (deleteConfirmation !== 'HAPUS AKUN') {
                                         alert('Verifikasi gagal! Pastikan Anda telah mengetik "HAPUS AKUN" dengan benar (kapital semua).');
                                     } else {
-                                        alert('Akun telah dihapus secara permanen.');
-                                        setIsDeleteModalOpen(false);
-                                        // Normally you would handle logout/redirect here
+                                        if (!userId) return;
+                                        try {
+                                            const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+                                            if (res.ok) {
+                                                alert('Akun telah dihapus secara permanen.');
+                                                setIsDeleteModalOpen(false);
+                                                localStorage.removeItem('user');
+                                                localStorage.removeItem('authToken');
+                                                router.replace('/auth/login');
+                                            } else {
+                                                alert('Gagal menghapus akun.');
+                                            }
+                                        } catch (err) {
+                                            console.error("Gagal menghapus akun:", err);
+                                        }
                                     }
                                 }}
                             >
