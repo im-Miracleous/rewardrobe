@@ -77,6 +77,47 @@ export async function GET(request: NextRequest) {
         // 6. User Rank
         const userRank = leaderboard.findIndex(u => u.id === donaturId) + 1;
 
+        // 7. Monthly donations (last 6 months)
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+        sixMonthsAgo.setDate(1);
+        sixMonthsAgo.setHours(0, 0, 0, 0);
+
+        const allBarang = await prisma.barangDonasi.findMany({
+            where: { donatur_id: donaturId, created_at: { gte: sixMonthsAgo } },
+            select: { created_at: true }
+        });
+        
+        const allUang = await prisma.donasiUang.findMany({
+            where: { donatur_id: donaturId, created_at: { gte: sixMonthsAgo } },
+            select: { created_at: true, nominal: true }
+        });
+
+        // Group by month
+        const monthlyStatsMap = new Map();
+        for (let i = 0; i < 6; i++) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            const key = d.toLocaleString('id-ID', { month: 'short', year: 'numeric' });
+            monthlyStatsMap.set(key, { name: key, pakaian: 0, dana: 0 });
+        }
+
+        allBarang.forEach(b => {
+            const key = new Date(b.created_at).toLocaleString('id-ID', { month: 'short', year: 'numeric' });
+            if (monthlyStatsMap.has(key)) {
+                monthlyStatsMap.get(key).pakaian += 1;
+            }
+        });
+
+        allUang.forEach(u => {
+            const key = new Date(u.created_at).toLocaleString('id-ID', { month: 'short', year: 'numeric' });
+            if (monthlyStatsMap.has(key)) {
+                monthlyStatsMap.get(key).dana += u.nominal;
+            }
+        });
+
+        const monthlyStats = Array.from(monthlyStatsMap.values()).reverse(); // chronological order
+
         return NextResponse.json({
             data: {
                 total_poin: totalPoin,
@@ -84,7 +125,8 @@ export async function GET(request: NextRequest) {
                 total_pakaian_item: totalPakaianItem,
                 total_uang_donasi: totalUangDonasi,
                 peringkat: userRank > 0 ? userRank : '-',
-                leaderboard: leaderboard.slice(0, 10) // top 10
+                leaderboard: leaderboard.slice(0, 10), // top 10
+                monthly_stats: monthlyStats
             },
             error: null
         });
