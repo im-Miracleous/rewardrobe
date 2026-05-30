@@ -250,8 +250,8 @@ export default function MoneyDetailPage() {
                     <div className="relative max-w-3xl max-h-[85vh] overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-stone-900 flex items-center justify-center">
                         <img src={donasi.bukti_transfer} alt="Zoom Bukti Transfer" className="max-w-full max-h-[80vh] object-contain" />
                         <button 
-                            onClick={() => setZoomPhoto(false)}
-                            className="absolute top-4 right-4 bg-white/25 hover:bg-white/40 transition-colors text-white font-bold px-3 py-1.5 rounded-full text-xs"
+                            className="absolute top-4 right-4 bg-stone-900/60 hover:bg-stone-900/80 backdrop-blur-md px-4 py-2 rounded-full text-white font-bold transition-colors text-xs z-10"
+                            onClick={(e) => { e.stopPropagation(); setZoomPhoto(false); }}
                         >
                             Tutup
                         </button>

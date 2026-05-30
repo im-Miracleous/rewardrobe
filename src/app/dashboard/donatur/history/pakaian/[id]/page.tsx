@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Shirt, Calendar, Tag, Info, CheckCircle2, Clock, Truck, ShieldCheck, MapPin, Package } from 'lucide-react';
+import { ArrowLeft, Shirt, Calendar, Tag, Info, CheckCircle2, Clock, Truck, ShieldCheck, MapPin, Package, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 
@@ -13,6 +13,7 @@ export default function ClothingDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [barang, setBarang] = useState<any | null>(null);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchDetail = async () => {
@@ -126,11 +127,18 @@ export default function ClothingDetailPage() {
             {/* Content Details */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Visual Image Preview */}
-                <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-4 overflow-hidden flex flex-col items-center justify-center min-h-[300px]">
+                <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden flex flex-col items-center justify-center min-h-[300px] h-full relative group">
                     {barang.foto_url ? (
-                        <div className="w-full rounded-xl overflow-hidden border border-stone-100 shadow-inner">
-                            <img src={barang.foto_url} alt="Foto Pakaian" className="w-full h-auto object-cover max-h-[450px]" />
-                        </div>
+                        <>
+                            <img src={barang.foto_url} alt="Foto Pakaian" className="absolute inset-0 w-full h-full object-cover" />
+                            <button 
+                                onClick={() => setIsImageModalOpen(true)}
+                                type="button"
+                                className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-xl border border-stone-200 text-xs font-bold text-stone-700 shadow-sm hover:text-green-600 hover:border-green-300 transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100 flex items-center gap-1.5"
+                            >
+                                Lihat Gambar
+                            </button>
+                        </>
                     ) : (
                         <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center text-stone-400">
                             <Shirt size={40} />
@@ -247,6 +255,28 @@ export default function ClothingDetailPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Image Modal */}
+            {isImageModalOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease]"
+                    onClick={() => setIsImageModalOpen(false)}
+                >
+                    <div className="relative max-w-3xl max-h-[85vh] overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-stone-900 flex items-center justify-center">
+                        <button 
+                            className="absolute top-4 right-4 bg-stone-900/60 hover:bg-stone-900/80 backdrop-blur-md px-4 py-2 rounded-full text-white font-bold transition-colors text-xs z-10"
+                            onClick={(e) => { e.stopPropagation(); setIsImageModalOpen(false); }}
+                        >
+                            Tutup
+                        </button>
+                        <img 
+                            src={barang.foto_url} 
+                            alt="Foto Pakaian Full" 
+                            className="w-auto h-auto max-w-full max-h-[85vh] object-contain"
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

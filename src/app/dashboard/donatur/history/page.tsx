@@ -284,16 +284,21 @@ export default function DonationHistoryPage() {
             {selectedPhoto && (
                 <div 
                     className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease]"
+                    className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease]"
                     onClick={() => setSelectedPhoto(null)}
                 >
                     <div className="relative max-w-3xl max-h-[85vh] overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-stone-900 flex items-center justify-center">
-                        <img src={selectedPhoto} alt="Pratinjau penuh" className="max-w-full max-h-[80vh] object-contain" />
                         <button 
-                            onClick={() => setSelectedPhoto(null)}
-                            className="absolute top-4 right-4 bg-white/25 hover:bg-white/40 transition-colors text-white font-bold px-3 py-1.5 rounded-full text-xs"
+                            className="absolute top-4 right-4 bg-stone-900/60 hover:bg-stone-900/80 backdrop-blur-md px-4 py-2 rounded-full text-white font-bold transition-colors text-xs z-[70]"
+                            onClick={(e) => { e.stopPropagation(); setSelectedPhoto(null); }}
                         >
                             Tutup
                         </button>
+                        <img 
+                            src={selectedPhoto} 
+                            alt="Pratinjau penuh" 
+                            className="w-auto h-auto max-w-full max-h-[85vh] object-contain" 
+                        />
                     </div>
                 </div>
             )}
