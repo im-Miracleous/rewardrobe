@@ -24,8 +24,8 @@ export default function Sidebar() {
         donatur: [
             { href: '/dashboard/donatur', label: 'Beranda Saya', icon: <Home size={18} /> },
             { href: '/dashboard/donatur/donate', label: 'Donasi Baru', icon: <Shirt size={18} /> },
-            { href: '#', label: 'Riwayat Donasi', icon: <History size={18} /> },
-            { href: '#', label: 'Poin & Leaderboard', icon: <Trophy size={18} /> },
+            { href: '/dashboard/donatur/history', label: 'Riwayat Donasi', icon: <History size={18} /> },
+            { href: '/dashboard/donatur/impact', label: 'Dampak & Tantangan', icon: <Trophy size={18} /> },
         ],
         penerima: [
             { href: '/dashboard/penerima', label: 'Katalog Donasi', icon: <Shirt size={18} /> },
@@ -69,7 +69,7 @@ export default function Sidebar() {
                 <div className="text-xs font-bold tracking-widest text-stone-400 uppercase mb-4 px-2 mt-2">Menu Utama</div>
                 <div className="space-y-1">
                     {navItems.map((item, idx) => {
-                        const isActive = pathname === item.href;
+                        const isActive = pathname === item.href || (item.href !== '/dashboard/donatur' && pathname.startsWith(item.href));
                         return (
                             <Link key={idx} href={item.href} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${isActive ? 'bg-green-50 text-green-700' : 'text-stone-600 hover:bg-stone-100'}`}>
                                 {item.icon} {item.label}

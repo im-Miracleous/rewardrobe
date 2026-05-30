@@ -1,0 +1,252 @@
+"use client";
+import React, { useEffect, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { ArrowLeft, Shirt, Calendar, Tag, Info, CheckCircle2, Clock, Truck, ShieldCheck, MapPin, Package } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import Link from 'next/link';
+
+type StatusType = 'menunggu_verifikasi' | 'disetujui' | 'ditolak' | 'tersalurkan';
+
+export default function ClothingDetailPage() {
+    const router = useRouter();
+    const { id } = useParams();
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [barang, setBarang] = useState<any | null>(null);
+
+    useEffect(() => {
+        const fetchDetail = async () => {
+            setIsLoading(true);
+            setError('');
+            try {
+                const res = await fetch(`/api/barang-donasi/${id}`);
+                const result = await res.json();
+                if (!res.ok) {
+                    setError(result.error || 'Gagal memuat rincian donasi pakaian.');
+                    return;
+                }
+                setBarang(result.data);
+            } catch (err) {
+                console.error(err);
+                setError('Terjadi kesalahan koneksi internet.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        if (id) fetchDetail();
+    }, [id]);
+
+    const getStatusBadge = (status: StatusType) => {
+        const styles = {
+            menunggu_verifikasi: 'bg-amber-50 text-amber-700 border-amber-200',
+            disetujui: 'bg-green-50 text-green-700 border-green-200',
+            ditolak: 'bg-red-50 text-red-700 border-red-200',
+            tersalurkan: 'bg-blue-50 text-blue-700 border-blue-200',
+        };
+
+        const labels = {
+            menunggu_verifikasi: 'Menunggu Verifikasi',
+            disetujui: 'Disetujui',
+            ditolak: 'Ditolak',
+            tersalurkan: 'Tersalurkan',
+        };
+
+        return (
+            <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-black border uppercase tracking-wider ${styles[status]}`}>
+                {labels[status]}
+            </span>
+        );
+    };
+
+    const formatDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('id-ID', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const formatKondisi = (val: string) => {
+        switch (val) {
+            case 'baik': return 'Baik / Layak Pakai';
+            case 'fair': return 'Fair / Cukup Layak';
+            case 'rusak': return 'Perlu Daur Ulang / Perbaikan';
+            default: return val;
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="text-center py-20 bg-white rounded-2xl border border-stone-200 shadow-sm flex flex-col items-center justify-center">
+                <Clock className="text-green-600 animate-spin mb-4" size={40} />
+                <p className="text-stone-500 font-medium">Memuat rincian pakaian...</p>
+            </div>
+        );
+    }
+
+    if (error || !barang) {
+        return (
+            <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center text-red-800 flex flex-col items-center justify-center max-w-xl mx-auto">
+                <Info size={40} className="mb-3 text-red-500" />
+                <h3 className="font-bold text-lg mb-1">Rincian Tidak Ditemukan</h3>
+                <p className="text-sm text-red-600 mb-4">{error || 'Data donasi pakaian tidak tersedia.'}</p>
+                <Link href="/dashboard/donatur/history">
+                    <Button variant="outline" size="sm">Kembali ke Riwayat</Button>
+                </Link>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-8 animate-[fadeIn_0.3s_ease]">
+            {/* Header */}
+            <div>
+                <Link
+                    href="/dashboard/donatur/history"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-stone-500 hover:text-stone-800 transition-colors mb-4"
+                >
+                    <ArrowLeft size={16} /> Kembali ke Riwayat
+                </Link>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-display font-bold text-stone-900 flex items-center gap-2">
+                            <Shirt className="text-green-600" size={24} /> Rincian Donasi Pakaian
+                        </h1>
+                        <p className="text-stone-500 mt-1">ID Donasi: #{barang.id}</p>
+                    </div>
+                    <div>
+                        {getStatusBadge(barang.status)}
+                    </div>
+                </div>
+            </div>
+
+            {/* Content Details */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Visual Image Preview */}
+                <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-4 overflow-hidden flex flex-col items-center justify-center min-h-[300px]">
+                    {barang.foto_url ? (
+                        <div className="w-full rounded-xl overflow-hidden border border-stone-100 shadow-inner">
+                            <img src={barang.foto_url} alt="Foto Pakaian" className="w-full h-auto object-cover max-h-[450px]" />
+                        </div>
+                    ) : (
+                        <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center text-stone-400">
+                            <Shirt size={40} />
+                        </div>
+                    )}
+                </div>
+
+                {/* Text Metadata */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 space-y-6">
+                        <div>
+                            <div className="text-xs font-bold text-stone-400 uppercase tracking-widest">Informasi Barang</div>
+                            <h2 className="text-xl font-display font-extrabold text-stone-900 mt-1">
+                                {barang.judul || `Pakaian - ${barang.kategori}`}
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="p-3 bg-stone-50 border border-stone-100 rounded-xl">
+                                <div className="text-[10px] font-bold text-stone-400 uppercase">Tipe/Kategori Pakaian</div>
+                                <div className="text-sm font-bold text-stone-800 mt-0.5">{barang.kategori || '-'}</div>
+                            </div>
+                            <div className="p-3 bg-stone-50 border border-stone-100 rounded-xl">
+                                <div className="text-[10px] font-bold text-stone-400 uppercase">Kondisi (Donatur)</div>
+                                <div className="text-sm font-bold text-stone-800 mt-0.5">{formatKondisi(barang.kondisi_user)}</div>
+                            </div>
+                            <div className="p-3 bg-stone-50 border border-stone-100 rounded-xl">
+                                <div className="text-[10px] font-bold text-stone-400 uppercase">Perkiraan Berat</div>
+                                <div className="text-sm font-bold text-stone-800 mt-0.5">{barang.berat_kg ? `${barang.berat_kg} Kg` : 'Belum diukur'}</div>
+                            </div>
+                            <div className="p-3 bg-stone-50 border border-stone-100 rounded-xl">
+                                <div className="text-[10px] font-bold text-stone-400 uppercase">Tanggal Diajukan</div>
+                                <div className="text-sm font-bold text-stone-800 mt-0.5">{formatDate(barang.created_at)}</div>
+                            </div>
+                        </div>
+
+                        {barang.campaign && (
+                            <div className="p-4 bg-green-50/50 border border-green-100 rounded-xl flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                    <Tag className="text-green-600" size={20} />
+                                    <div>
+                                        <div className="text-[10px] font-bold text-green-700 uppercase">Kampanye Terhubung</div>
+                                        <div className="text-sm font-bold text-green-950 font-display">{barang.campaign.judul}</div>
+                                    </div>
+                                </div>
+                                <Link href={`/dashboard/donatur/impact/${barang.campaign.id}`}>
+                                    <Button size="sm" variant="outline">Lihat Detail Kampanye</Button>
+                                </Link>
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <div className="text-xs font-bold text-stone-400 uppercase tracking-widest">Deskripsi / Catatan Donasi</div>
+                            <p className="text-sm text-stone-600 leading-relaxed bg-stone-50 p-4 rounded-xl border border-stone-150">
+                                {barang.deskripsi}
+                            </p>
+                        </div>
+
+                        {/* Verification Info */}
+                        {barang.verified_by && (
+                            <div className="p-4 bg-stone-50 border border-stone-200/50 rounded-xl flex items-center gap-3">
+                                <ShieldCheck className="text-green-600 shrink-0" size={24} />
+                                <div>
+                                    <div className="text-xs font-bold text-stone-700">Diverifikasi oleh {barang.verifier?.nama}</div>
+                                    <div className="text-xs text-stone-400">Status verifikasi diselesaikan pada {formatDate(barang.verified_at)}</div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Logistics Timeline */}
+                    <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 space-y-6">
+                        <h3 className="font-display font-extrabold text-stone-900 text-base flex items-center gap-2">
+                            <Truck className="text-green-600" size={20} /> Status Logistik & Pengiriman
+                        </h3>
+
+                        {barang.pengiriman && barang.pengiriman.length > 0 ? (
+                            <div className="relative pl-6 space-y-6 border-l-2 border-stone-100">
+                                {barang.pengiriman.map((ship: any) => (
+                                    <div key={ship.id} className="relative">
+                                        {/* Timeline Dot */}
+                                        <span className={`absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 bg-white ${ship.status === 'terkirim' ? 'border-green-500 bg-green-50' : 'border-blue-500 bg-blue-50'}`} />
+
+                                        <div className="p-4 bg-stone-50 border border-stone-100 rounded-xl space-y-2">
+                                            <div className="flex flex-wrap justify-between items-center gap-2">
+                                                <div className="text-xs font-bold text-stone-800 flex items-center gap-1.5">
+                                                    <Package size={14} className="text-stone-500" />
+                                                    {ship.tipe === 'donatur_ke_admin' ? 'Pengiriman ke Gudang Admin' : 'Penyaluran ke Penerima Manfaat'}
+                                                </div>
+                                                <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded-full ${ship.status === 'terkirim' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                    {ship.status === 'terkirim' ? 'Terkirim' : ship.status === 'dalam_pengiriman' ? 'Dalam Pengiriman' : 'Disiapkan'}
+                                                </span>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-2 text-xs text-stone-500">
+                                                <div>Kurir: <span className="font-bold text-stone-700">{ship.kurir || '-'}</span></div>
+                                                <div>No Resi: <span className="font-bold text-stone-700">{ship.resi || '-'}</span></div>
+                                            </div>
+                                            
+                                            <div className="text-[10px] text-stone-400">
+                                                Pembaruan Terakhir: {formatDate(ship.updated_at)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="p-6 border border-dashed border-stone-200 rounded-xl bg-stone-50/50 text-center text-sm text-stone-500 flex flex-col items-center justify-center">
+                                <Clock size={28} className="text-stone-300 mb-2" />
+                                <div className="font-bold text-stone-700">Belum ada pengiriman diproses</div>
+                                <p className="text-xs text-stone-400 mt-1">Menunggu tim admin memverifikasi kelayakan pakaian untuk menentukan kurir penjemputan.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

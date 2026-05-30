@@ -15,6 +15,44 @@ const patchSchema = z.object({
 
 type RouteParams = { params: Promise<{ id: string }> };
 
+export async function GET(request: NextRequest, { params }: RouteParams) {
+    try {
+        const { id } = await params;
+        const barangId = Number(id);
+
+        if (!Number.isInteger(barangId) || barangId <= 0) {
+            return NextResponse.json({ data: null, error: 'id tidak valid' }, { status: 400 });
+        }
+
+        const barang = await prisma.barangDonasi.findUnique({
+            where: { id: barangId },
+            include: {
+                campaign: {
+                    select: { id: true, judul: true }
+                },
+                donatur: {
+                    select: { id: true, nama: true, email: true }
+                },
+                verifier: {
+                    select: { id: true, nama: true }
+                },
+                pengiriman: {
+                    orderBy: { created_at: 'asc' }
+                }
+            }
+        });
+
+        if (!barang) {
+            return NextResponse.json({ data: null, error: 'Barang donasi tidak ditemukan' }, { status: 404 });
+        }
+
+        return NextResponse.json({ data: barang, error: null });
+    } catch (error) {
+        console.error('GET /api/barang-donasi/[id] error:', error);
+        return NextResponse.json({ data: null, error: 'Terjadi kesalahan pada server' }, { status: 500 });
+    }
+}
+
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
     try {
         const { id } = await params;
