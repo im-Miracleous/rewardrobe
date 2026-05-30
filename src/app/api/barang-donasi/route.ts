@@ -19,6 +19,7 @@ const createSchema = z.object({
     berat_kg: z.number().positive('Berat harus lebih dari 0').optional(),
     donatur_id: z.number().int().positive('donatur_id harus berupa integer positif'),
     bukti_foto: z.string().min(1, 'Bukti foto wajib diunggah'),
+    campaign_id: z.number().int().positive().optional().nullable(),
 });
 
 export async function GET(request: NextRequest) {
@@ -63,11 +64,18 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { tipePakaian, catatan, kategori, kondisi, berat_kg, donatur_id, bukti_foto } = parsed.data;
+        const { tipePakaian, catatan, kategori, kondisi, berat_kg, donatur_id, bukti_foto, campaign_id } = parsed.data;
 
         const donaturExists = await prisma.user.findUnique({ where: { id: donatur_id } });
         if (!donaturExists) {
             return NextResponse.json({ data: null, error: 'donatur_id tidak ditemukan' }, { status: 404 });
+        }
+
+        if (campaign_id) {
+            const campaignExists = await prisma.campaign.findUnique({ where: { id: campaign_id } });
+            if (!campaignExists) {
+                return NextResponse.json({ data: null, error: 'Kampanye tidak ditemukan' }, { status: 404 });
+            }
         }
 
         const fullDeskripsi = catatan
@@ -84,6 +92,7 @@ export async function POST(request: NextRequest) {
                 foto_url: bukti_foto || null,
                 status: 'menunggu_verifikasi',
                 donatur_id,
+                campaign_id: campaign_id || null,
             },
         });
 
