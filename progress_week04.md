@@ -29,7 +29,7 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 
 ## Current Progress
 **Miracle (2472019)**
-- **Fitur (donatur)**: Improve donation forms and financial history detail UI
+* **Fitur (donatur)**: Improve donation forms and financial history detail UI
 * **Fitur**: refine Donatur dashboard with statistical analysis and recharts visualization
 * **Fitur**: implement dynamic detail view pages for clothing and monetary donation history
 * **Perbaikan**: repaired impact dashboard campaign detail page linking + migrating to use table in Donation History page
@@ -52,3 +52,4 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 
 **Gavin (2472042)**
 - Melakukan *software testing*
+- Menulis ulang `Fitur.md` dengan fitur yang telah bekerja dan rasionalisasi bisnis
