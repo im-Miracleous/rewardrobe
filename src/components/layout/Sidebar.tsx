@@ -81,10 +81,10 @@ export default function Sidebar() {
 
             <div className="p-4 border-t border-stone-100">
                 {/* Profile Info Section (Sesuai Gambar) */}
-                <div className="flex items-center justify-between px-2 py-3 mb-2 rounded-xl hover:bg-stone-50 transition-colors cursor-pointer">
+                <Link href={`/dashboard/${role}/profile`} className="flex items-center justify-between px-2 py-3 mb-2 rounded-xl hover:bg-stone-50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-stone-400">
-                            <User size={20} />
+                        <div className="w-10 h-10 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center overflow-hidden">
+                            <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=John Doe (${role.charAt(0).toUpperCase() + role.slice(1)})`} alt="Avatar" className="w-full h-full object-cover" />
                         </div>
                         <div>
                             <div className="text-sm font-bold text-stone-800 leading-tight">User {role}</div>
@@ -92,7 +92,7 @@ export default function Sidebar() {
                         </div>
                     </div>
                     <Settings size={18} className="text-stone-400 hover:text-stone-600" />
-                </div>
+                </Link>
 
                 <button
                     type="button"
