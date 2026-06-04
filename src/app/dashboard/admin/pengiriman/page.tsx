@@ -1,11 +1,5 @@
-// CODE-CITE:
-//   Title: Admin Dashboard - Kelola Pengiriman
-//   Type: ai
-//   Value: Claude (claude.ai/code)
-//   Notes: Halaman manajemen pengiriman barang ke penerima (panti asuhan, komunitas, pengrajin) dengan tabel, filter tab, dan panel slide-out
-//   Lines Range: 1-450
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Package,
   Send,
@@ -18,145 +12,31 @@ import {
   ChevronRight,
   Search,
   Building2,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 
 type StatusPengiriman = 'disiapkan' | 'dalam_pengiriman' | 'terkirim';
-type TipePenerima = 'Panti Asuhan' | 'Komunitas' | 'Pengrajin';
 
 interface Pengiriman {
   id: number;
-  penerima: string;
-  tipePenerima: TipePenerima;
-  barangDikirim: string[];
+  barang_id: number;
+  penerima: { id: number; nama: string; kota: string; tipe: string };
+  barang_info: {
+      nama: string;
+      kategori: string;
+  };
   kurir: string;
-  noResi: string;
+  resi: string;
   status: StatusPengiriman;
-  tanggalKirim: string;
+  waktu_request: string;
 }
 
-const initialData: Pengiriman[] = [
-  {
-    id: 1,
-    penerima: 'Panti Asuhan Kasih Ibu',
-    tipePenerima: 'Panti Asuhan',
-    barangDikirim: ['Kaos Anak x5', 'Celana Jeans x3'],
-    kurir: 'JNE Express',
-    noResi: 'JNE20260601001',
-    status: 'terkirim',
-    tanggalKirim: '2026-05-28',
-  },
-  {
-    id: 2,
-    penerima: 'Komunitas Peduli Sesama',
-    tipePenerima: 'Komunitas',
-    barangDikirim: ['Jaket Hoodie x2', 'Kemeja Flannel x4'],
-    kurir: 'SiCepat',
-    noResi: 'SCP20260602001',
-    status: 'dalam_pengiriman',
-    tanggalKirim: '2026-06-01',
-  },
-  {
-    id: 3,
-    penerima: 'Pengrajin Batik Cirebon',
-    tipePenerima: 'Pengrajin',
-    barangDikirim: ['Kain Bekas x10', 'Rok Panjang x3'],
-    kurir: 'J&T Express',
-    noResi: 'JT20260603001',
-    status: 'disiapkan',
-    tanggalKirim: '2026-06-03',
-  },
-  {
-    id: 4,
-    penerima: 'Panti Asuhan Harapan Bangsa',
-    tipePenerima: 'Panti Asuhan',
-    barangDikirim: ['Seragam Sekolah x8', 'Kaos Kaki x12'],
-    kurir: 'Anteraja',
-    noResi: 'ATJ20260604001',
-    status: 'terkirim',
-    tanggalKirim: '2026-05-25',
-  },
-  {
-    id: 5,
-    penerima: 'Komunitas Seni Kota Lama',
-    tipePenerima: 'Komunitas',
-    barangDikirim: ['Dress Bekas x4', 'Blazer x2'],
-    kurir: 'JNE Express',
-    noResi: 'JNE20260605001',
-    status: 'dalam_pengiriman',
-    tanggalKirim: '2026-06-02',
-  },
-  {
-    id: 6,
-    penerima: 'Pengrajin Tas Rajut Bandung',
-    tipePenerima: 'Pengrajin',
-    barangDikirim: ['Kaos Polos Bekas x15'],
-    kurir: 'SiCepat',
-    noResi: 'SCP20260606001',
-    status: 'disiapkan',
-    tanggalKirim: '2026-06-04',
-  },
-  {
-    id: 7,
-    penerima: 'Panti Asuhan Budi Mulia',
-    tipePenerima: 'Panti Asuhan',
-    barangDikirim: ['Sweater Anak x6', 'Celana Pendek x4'],
-    kurir: 'J&T Express',
-    noResi: 'JT20260607001',
-    status: 'disiapkan',
-    tanggalKirim: '2026-06-04',
-  },
-  {
-    id: 8,
-    penerima: 'Komunitas Daur Ulang Jakarta',
-    tipePenerima: 'Komunitas',
-    barangDikirim: ['Jaket Denim x3', 'Kemeja Putih x5', 'Rok Mini x2'],
-    kurir: 'Anteraja',
-    noResi: 'ATJ20260608001',
-    status: 'terkirim',
-    tanggalKirim: '2026-05-30',
-  },
-  {
-    id: 9,
-    penerima: 'Pengrajin Kain Perca Yogya',
-    tipePenerima: 'Pengrajin',
-    barangDikirim: ['Kemeja Bekas x8', 'Celana Kain x6'],
-    kurir: 'JNE Express',
-    noResi: 'JNE20260609001',
-    status: 'dalam_pengiriman',
-    tanggalKirim: '2026-06-03',
-  },
-];
-
-const daftarPenerima = [
-  { nama: 'Panti Asuhan Kasih Ibu', tipe: 'Panti Asuhan' as TipePenerima },
-  { nama: 'Komunitas Peduli Sesama', tipe: 'Komunitas' as TipePenerima },
-  { nama: 'Pengrajin Batik Cirebon', tipe: 'Pengrajin' as TipePenerima },
-  { nama: 'Panti Asuhan Harapan Bangsa', tipe: 'Panti Asuhan' as TipePenerima },
-  { nama: 'Komunitas Seni Kota Lama', tipe: 'Komunitas' as TipePenerima },
-  { nama: 'Pengrajin Tas Rajut Bandung', tipe: 'Pengrajin' as TipePenerima },
-  { nama: 'Panti Asuhan Budi Mulia', tipe: 'Panti Asuhan' as TipePenerima },
-  { nama: 'Komunitas Daur Ulang Jakarta', tipe: 'Komunitas' as TipePenerima },
-  { nama: 'Pengrajin Kain Perca Yogya', tipe: 'Pengrajin' as TipePenerima },
-];
-
-const daftarBarang = [
-  'Kaos Anak x5',
-  'Celana Jeans x3',
-  'Jaket Hoodie x2',
-  'Kemeja Flannel x4',
-  'Kain Bekas x10',
-  'Rok Panjang x3',
-  'Seragam Sekolah x8',
-  'Kaos Kaki x12',
-  'Dress Bekas x4',
-  'Blazer x2',
-  'Kaos Polos Bekas x15',
-  'Sweater Anak x6',
-  'Celana Pendek x4',
-  'Jaket Denim x3',
-  'Kemeja Putih x5',
+const mockDaftarPenerima = [
+  { id: 101, nama: 'Panti Asuhan Kasih Ibu', tipe: 'Panti Asuhan' },
+  { id: 102, nama: 'Komunitas Peduli Sesama', tipe: 'Komunitas' },
+  { id: 103, nama: 'Pengrajin Batik Cirebon', tipe: 'Pengrajin' },
 ];
 
 type TabFilter = 'semua' | 'disiapkan' | 'dalam_pengiriman' | 'terkirim';
@@ -172,13 +52,15 @@ function getStatusBadge(status: StatusPengiriman) {
   }
 }
 
-function getTipeBadgeColor(tipe: TipePenerima): 'green' | 'blue' | 'stone' {
+function getTipeBadgeColor(tipe: string): 'green' | 'blue' | 'stone' {
   switch (tipe) {
     case 'Panti Asuhan':
       return 'green';
     case 'Komunitas':
       return 'blue';
     case 'Pengrajin':
+      return 'stone';
+    default:
       return 'stone';
   }
 }
@@ -193,7 +75,11 @@ function formatTanggal(dateStr: string): string {
 }
 
 export default function KelolaPengirimanPage() {
-  const [data, setData] = useState<Pengiriman[]>(initialData);
+  const [data, setData] = useState<Pengiriman[]>([]);
+  const [inventoryList, setInventoryList] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
   const [activeTab, setActiveTab] = useState<TabFilter>('semua');
   const [searchQuery, setSearchQuery] = useState('');
   const [showPanel, setShowPanel] = useState(false);
@@ -201,10 +87,38 @@ export default function KelolaPengirimanPage() {
   const itemsPerPage = 5;
 
   // Form state
-  const [formPenerima, setFormPenerima] = useState('');
-  const [formBarang, setFormBarang] = useState<string[]>([]);
+  const [formPenerimaId, setFormPenerimaId] = useState<number | ''>('');
+  const [formBarangIds, setFormBarangIds] = useState<number[]>([]);
   const [formKurir, setFormKurir] = useState('');
   const [formNoResi, setFormNoResi] = useState('');
+
+  const fetchData = async () => {
+      try {
+          setIsLoading(true);
+          const [resPengiriman, resInventory] = await Promise.all([
+              fetch('/api/admin/pengiriman'),
+              fetch('/api/admin/inventory')
+          ]);
+          
+          const jsonPengiriman = await resPengiriman.json();
+          const jsonInventory = await resInventory.json();
+
+          if (jsonPengiriman.data) setData(jsonPengiriman.data);
+          
+          // Only show items that are 'disetujui' (in warehouse), not 'tersalurkan'
+          if (jsonInventory.data) {
+              setInventoryList(jsonInventory.data.filter((i: any) => i.status === 'disetujui'));
+          }
+      } catch (err) {
+          console.error(err);
+      } finally {
+          setIsLoading(false);
+      }
+  };
+
+  useEffect(() => {
+      fetchData();
+  }, []);
 
   // Stats
   const totalPengiriman = data.length;
@@ -218,9 +132,9 @@ export default function KelolaPengirimanPage() {
     .filter(
       (d) =>
         searchQuery === '' ||
-        d.penerima.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.noResi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.kurir.toLowerCase().includes(searchQuery.toLowerCase())
+        d.penerima?.nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        d.resi?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        d.kurir?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
   // Pagination
@@ -230,40 +144,61 @@ export default function KelolaPengirimanPage() {
     currentPage * itemsPerPage
   );
 
-  function handleStatusChange(id: number, newStatus: StatusPengiriman) {
-    setData((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: newStatus } : item
-      )
-    );
+  async function handleStatusChange(id: number, newStatus: StatusPengiriman) {
+    setIsProcessing(true);
+    try {
+        const res = await fetch(`/api/admin/pengiriman/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) await fetchData();
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setIsProcessing(false);
+    }
   }
 
-  function handleSubmit() {
-    if (!formPenerima || formBarang.length === 0 || !formKurir || !formNoResi) return;
-    const penerima = daftarPenerima.find((p) => p.nama === formPenerima);
-    const newItem: Pengiriman = {
-      id: Math.max(...data.map((d) => d.id)) + 1,
-      penerima: formPenerima,
-      tipePenerima: penerima?.tipe ?? 'Komunitas',
-      barangDikirim: formBarang,
-      kurir: formKurir,
-      noResi: formNoResi,
-      status: 'disiapkan',
-      tanggalKirim: new Date().toISOString().split('T')[0],
-    };
-    setData((prev) => [newItem, ...prev]);
-    setFormPenerima('');
-    setFormBarang([]);
-    setFormKurir('');
-    setFormNoResi('');
-    setShowPanel(false);
-    setActiveTab('semua');
-    setCurrentPage(1);
+  async function handleSubmit() {
+    if (!formPenerimaId || formBarangIds.length === 0 || !formKurir || !formNoResi) return;
+    
+    setIsProcessing(true);
+    try {
+        const res = await fetch('/api/admin/pengiriman', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                penerima_id: formPenerimaId,
+                barang_ids: formBarangIds,
+                kurir: formKurir,
+                resi: formNoResi
+            })
+        });
+
+        if (res.ok) {
+            setFormPenerimaId('');
+            setFormBarangIds([]);
+            setFormKurir('');
+            setFormNoResi('');
+            setShowPanel(false);
+            setActiveTab('semua');
+            setCurrentPage(1);
+            await fetchData();
+        } else {
+            const err = await res.json();
+            alert(`Gagal membuat pengiriman: ${err.error}`);
+        }
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setIsProcessing(false);
+    }
   }
 
-  function toggleBarang(item: string) {
-    setFormBarang((prev) =>
-      prev.includes(item) ? prev.filter((b) => b !== item) : [...prev, item]
+  function toggleBarang(id: number) {
+    setFormBarangIds((prev) =>
+      prev.includes(id) ? prev.filter((b) => b !== id) : [...prev, id]
     );
   }
 
@@ -277,28 +212,28 @@ export default function KelolaPengirimanPage() {
   const stats = [
     {
       title: 'Total Pengiriman',
-      val: totalPengiriman,
+      val: isLoading ? "..." : totalPengiriman,
       icon: <Package size={24} />,
       color: 'text-purple-600',
       bg: 'bg-purple-100',
     },
     {
       title: 'Sedang Disiapkan',
-      val: sedangDisiapkan,
+      val: isLoading ? "..." : sedangDisiapkan,
       icon: <MapPin size={24} />,
       color: 'text-yellow-600',
       bg: 'bg-yellow-100',
     },
     {
       title: 'Dalam Pengiriman',
-      val: dalamPengiriman,
+      val: isLoading ? "..." : dalamPengiriman,
       icon: <Truck size={24} />,
       color: 'text-blue-600',
       bg: 'bg-blue-100',
     },
     {
       title: 'Terkirim',
-      val: terkirim,
+      val: isLoading ? "..." : terkirim,
       icon: <CheckCircle size={24} />,
       color: 'text-green-600',
       bg: 'bg-green-100',
@@ -388,41 +323,30 @@ export default function KelolaPengirimanPage() {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-h-[400px]">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-stone-50/60 border-b border-stone-200">
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  No
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Penerima
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Tipe Penerima
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Barang Dikirim
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Kurir
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  No. Resi
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Tanggal Kirim
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Aksi
-                </th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">No</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Penerima</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Tipe Penerima</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Barang Dikirim</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Kurir</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">No. Resi</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Status</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Tanggal Kirim</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {paginated.length === 0 ? (
+              {isLoading ? (
+                  <tr>
+                      <td colSpan={9} className="p-12 text-center">
+                          <Loader2 size={40} className="mx-auto mb-3 text-stone-300 animate-spin" />
+                          <p className="text-stone-400 font-semibold text-sm">Memuat data...</p>
+                      </td>
+                  </tr>
+              ) : paginated.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="p-12 text-center">
                     <Truck size={48} className="mx-auto mb-4 text-stone-300" />
@@ -446,25 +370,24 @@ export default function KelolaPengirimanPage() {
                           <Building2 size={16} />
                         </div>
                         <span className="font-bold text-stone-800 text-sm">
-                          {item.penerima}
+                          {item.penerima?.nama || '-'}
                         </span>
                       </div>
                     </td>
                     <td className="p-4">
-                      <Badge color={getTipeBadgeColor(item.tipePenerima)}>
-                        {item.tipePenerima}
-                      </Badge>
+                      {item.penerima && (
+                        <Badge color={getTipeBadgeColor(item.penerima.tipe || 'Komunitas')}>
+                          {item.penerima.tipe || 'Komunitas'}
+                        </Badge>
+                      )}
                     </td>
                     <td className="p-4">
                       <div className="flex flex-wrap gap-1">
-                        {item.barangDikirim.map((b, bi) => (
                           <span
-                            key={bi}
                             className="inline-block bg-stone-100 text-stone-600 text-xs font-medium px-2 py-0.5 rounded-md"
                           >
-                            {b}
+                            {item.barang_info.nama || item.barang_info.kategori}
                           </span>
-                        ))}
                       </div>
                     </td>
                     <td className="p-4 text-sm font-semibold text-stone-700">
@@ -472,18 +395,19 @@ export default function KelolaPengirimanPage() {
                     </td>
                     <td className="p-4">
                       <code className="text-xs font-mono bg-stone-100 text-stone-600 px-2 py-1 rounded-md">
-                        {item.noResi}
+                        {item.resi}
                       </code>
                     </td>
                     <td className="p-4">{getStatusBadge(item.status)}</td>
                     <td className="p-4 text-sm text-stone-600 font-medium">
-                      {formatTanggal(item.tanggalKirim)}
+                      {formatTanggal(item.waktu_request)}
                     </td>
                     <td className="p-4">
                       {item.status === 'disiapkan' && (
                         <Button
                           variant="primary"
                           size="sm"
+                          disabled={isProcessing}
                           onClick={() =>
                             handleStatusChange(item.id, 'dalam_pengiriman')
                           }
@@ -496,6 +420,7 @@ export default function KelolaPengirimanPage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          disabled={isProcessing}
                           onClick={() =>
                             handleStatusChange(item.id, 'terkirim')
                           }
@@ -574,15 +499,12 @@ export default function KelolaPengirimanPage() {
       {/* Slide-out Panel Overlay */}
       {showPanel && (
         <div className="fixed inset-0 z-50 flex justify-end">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-[fadeIn_0.2s_ease]"
             onClick={() => setShowPanel(false)}
           />
 
-          {/* Panel */}
           <div className="relative w-full max-w-lg bg-white shadow-2xl animate-[slideInRight_0.3s_ease] flex flex-col">
-            {/* Panel Header */}
             <div className="p-6 border-b border-stone-200 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-display font-bold text-stone-900">
@@ -600,71 +522,80 @@ export default function KelolaPengirimanPage() {
               </button>
             </div>
 
-            {/* Panel Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Penerima */}
               <div>
                 <label className="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">
-                  Penerima
+                  Penerima (Mock User)
                 </label>
                 <select
-                  value={formPenerima}
-                  onChange={(e) => setFormPenerima(e.target.value)}
+                  value={formPenerimaId}
+                  onChange={(e) => setFormPenerimaId(parseInt(e.target.value))}
                   className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-400 transition-all appearance-none"
                 >
                   <option value="">Pilih penerima...</option>
-                  {daftarPenerima.map((p) => (
-                    <option key={p.nama} value={p.nama}>
-                      {p.nama} — {p.tipe}
-                    </option>
-                  ))}
+                  {/* Just use some simple user ID placeholders, assuming they exist or create one if not, 
+                      Actually our DB has user 1,2 as donatur. Let's use any ID, or we can use ID 1,2 for demo */}
+                  <option value={1}>Panti Asuhan Kasih Ibu (Mock User ID 1)</option>
+                  <option value={2}>Komunitas Peduli Sesama (Mock User ID 2)</option>
                 </select>
+                <p className="text-[10px] text-stone-400 mt-1">
+                  Catatan: Menggunakan ID Donatur yang ada (1 & 2) sebagai simulasi akun Penerima untuk demo ini.
+                </p>
               </div>
 
               {/* Barang */}
               <div>
                 <label className="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">
-                  Pilih Barang dari Inventaris
+                  Pilih Barang dari Inventaris Gudang
                 </label>
                 <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 max-h-48 overflow-y-auto space-y-1">
-                  {daftarBarang.map((b) => (
-                    <label
-                      key={b}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors duration-150 ${
-                        formBarang.includes(b)
-                          ? 'bg-green-50 border border-green-200'
-                          : 'hover:bg-stone-100 border border-transparent'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formBarang.includes(b)}
-                        onChange={() => toggleBarang(b)}
-                        className="w-4 h-4 rounded border-stone-300 text-green-600 focus:ring-green-500/30"
-                      />
-                      <span className="text-sm text-stone-700 font-medium">
-                        {b}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                {formBarang.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {formBarang.map((b) => (
-                      <span
-                        key={b}
-                        className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full"
-                      >
-                        {b}
-                        <button
-                          type="button"
-                          onClick={() => toggleBarang(b)}
-                          className="hover:text-green-900 transition-colors"
+                  {inventoryList.length === 0 ? (
+                      <p className="text-sm text-stone-500 p-2 text-center">Gudang kosong (tidak ada barang disetujui).</p>
+                  ) : (
+                      inventoryList.map((b) => (
+                        <label
+                          key={b.id}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors duration-150 ${
+                            formBarangIds.includes(b.id)
+                              ? 'bg-green-50 border border-green-200'
+                              : 'hover:bg-stone-100 border border-transparent'
+                          }`}
                         >
-                          <X size={12} />
-                        </button>
-                      </span>
-                    ))}
+                          <input
+                            type="checkbox"
+                            checked={formBarangIds.includes(b.id)}
+                            onChange={() => toggleBarang(b.id)}
+                            className="w-4 h-4 rounded border-stone-300 text-green-600 focus:ring-green-500/30"
+                          />
+                          <span className="text-sm text-stone-700 font-medium truncate flex-1">
+                            {b.judul || b.kategori} (ID: {b.id})
+                          </span>
+                        </label>
+                      ))
+                  )}
+                </div>
+                {formBarangIds.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {formBarangIds.map((id) => {
+                        const item = inventoryList.find(i => i.id === id);
+                        if (!item) return null;
+                        return (
+                          <span
+                            key={id}
+                            className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full"
+                          >
+                            {item.judul || item.kategori}
+                            <button
+                              type="button"
+                              onClick={() => toggleBarang(id)}
+                              className="hover:text-green-900 transition-colors"
+                            >
+                              <X size={12} />
+                            </button>
+                          </span>
+                        )
+                    })}
                   </div>
                 )}
               </div>
@@ -714,10 +645,11 @@ export default function KelolaPengirimanPage() {
                 className="flex-1"
                 onClick={handleSubmit}
                 disabled={
-                  !formPenerima ||
-                  formBarang.length === 0 ||
+                  !formPenerimaId ||
+                  formBarangIds.length === 0 ||
                   !formKurir ||
-                  !formNoResi
+                  !formNoResi ||
+                  isProcessing
                 }
               >
                 <Send size={16} />

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   QrCode,
   Search,
@@ -15,39 +15,28 @@ import {
   X,
   Tag,
   Truck,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+// ─── Data Types ────────────────────────────────────────────────────────────────
 
 interface InventoryItem {
-  id: string;
-  nama: string;
-  kategori: string;
-  kondisi: "Baik" | "Fair";
-  donatur: string;
-  hasQR: boolean;
-  status: "gudang" | "siap" | "tersalurkan";
-  tanggalMasuk: string;
-  ukuran: string;
+  id: number;
+  judul: string | null;
+  kategori: string | null;
+  kondisi: string | null;
+  deskripsi: string;
+  foto_url: string | null;
+  donatur: { id: number; nama: string };
+  status: "menunggu_verifikasi" | "disetujui" | "ditolak" | "tersalurkan";
+  created_at: string;
+  updated_at: string;
+  qr_code?: string;
 }
 
-const MOCK_ITEMS: InventoryItem[] = [
-  { id: "INV-001", nama: "Jaket Denim Biru", kategori: "Jaket", kondisi: "Baik", donatur: "Rina Amelia", hasQR: true, status: "siap", tanggalMasuk: "2026-05-28", ukuran: "M" },
-  { id: "INV-002", nama: "Kaos Polos Putih", kategori: "Atasan", kondisi: "Baik", donatur: "Budi Santoso", hasQR: true, status: "gudang", tanggalMasuk: "2026-05-29", ukuran: "L" },
-  { id: "INV-003", nama: "Celana Jeans Hitam", kategori: "Bawahan", kondisi: "Fair", donatur: "Siti Nurhaliza", hasQR: false, status: "gudang", tanggalMasuk: "2026-05-30", ukuran: "32" },
-  { id: "INV-004", nama: "Kemeja Flanel Merah", kategori: "Atasan", kondisi: "Baik", donatur: "Ahmad Fauzi", hasQR: true, status: "tersalurkan", tanggalMasuk: "2026-05-25", ukuran: "XL" },
-  { id: "INV-005", nama: "Hoodie Abu-abu", kategori: "Jaket", kondisi: "Baik", donatur: "Dewi Kartika", hasQR: false, status: "gudang", tanggalMasuk: "2026-05-31", ukuran: "M" },
-  { id: "INV-006", nama: "Rok Midi Coklat", kategori: "Bawahan", kondisi: "Fair", donatur: "Lina Marlina", hasQR: true, status: "siap", tanggalMasuk: "2026-05-27", ukuran: "S" },
-  { id: "INV-007", nama: "Blazer Hitam Formal", kategori: "Jaket", kondisi: "Baik", donatur: "Hendra Wijaya", hasQR: false, status: "gudang", tanggalMasuk: "2026-06-01", ukuran: "L" },
-  { id: "INV-008", nama: "Kaos Lengan Panjang", kategori: "Atasan", kondisi: "Fair", donatur: "Maya Sari", hasQR: true, status: "gudang", tanggalMasuk: "2026-06-02", ukuran: "M" },
-  { id: "INV-009", nama: "Celana Pendek Kargo", kategori: "Bawahan", kondisi: "Baik", donatur: "Rizky Pratama", hasQR: false, status: "gudang", tanggalMasuk: "2026-06-02", ukuran: "34" },
-  { id: "INV-010", nama: "Cardigan Rajut Cream", kategori: "Atasan", kondisi: "Baik", donatur: "Anisa Putri", hasQR: true, status: "siap", tanggalMasuk: "2026-05-26", ukuran: "S" },
-];
-
-const KATEGORI_OPTIONS = ["Semua", "Jaket", "Atasan", "Bawahan"];
-const KONDISI_OPTIONS = ["Semua", "Baik", "Fair"];
+const KATEGORI_OPTIONS = ["Semua", "Pakaian Pria", "Pakaian Wanita", "Pakaian Anak", "Sepatu", "Aksesoris"];
 const ITEMS_PER_PAGE = 6;
 
 // ─── QR Code SVG (mock) ──────────────────────────────────────────────────────
@@ -90,20 +79,28 @@ function MockQRCode() {
 
 // ─── Clothing Placeholder ────────────────────────────────────────────────────
 
-function ClothingPlaceholder({ kategori }: { kategori: string }) {
+function ClothingPlaceholder({ kategori, foto_url }: { kategori: string | null; foto_url: string | null }) {
+  if (foto_url) {
+      return (
+          <div className="w-full h-44 bg-stone-100 flex items-center justify-center overflow-hidden">
+              <img src={foto_url} alt="Foto Barang" className="w-full h-full object-cover" />
+          </div>
+      );
+  }
+
   const bgColors: Record<string, string> = {
-    Jaket: "from-blue-50 to-blue-100",
-    Atasan: "from-emerald-50 to-emerald-100",
-    Bawahan: "from-amber-50 to-amber-100",
+    "Pakaian Pria": "from-blue-50 to-blue-100",
+    "Pakaian Wanita": "from-emerald-50 to-emerald-100",
+    "Pakaian Anak": "from-amber-50 to-amber-100",
   };
   const iconColors: Record<string, string> = {
-    Jaket: "text-blue-400",
-    Atasan: "text-emerald-400",
-    Bawahan: "text-amber-400",
+    "Pakaian Pria": "text-blue-400",
+    "Pakaian Wanita": "text-emerald-400",
+    "Pakaian Anak": "text-amber-400",
   };
   return (
-    <div className={`w-full h-44 bg-gradient-to-br ${bgColors[kategori] ?? "from-stone-50 to-stone-100"} flex items-center justify-center`}>
-      <Shirt size={48} className={`${iconColors[kategori] ?? "text-stone-300"} opacity-70`} />
+    <div className={`w-full h-44 bg-gradient-to-br ${kategori ? (bgColors[kategori] ?? "from-stone-50 to-stone-100") : "from-stone-50 to-stone-100"} flex items-center justify-center`}>
+      <Shirt size={48} className={`${kategori ? (iconColors[kategori] ?? "text-stone-300") : "text-stone-300"} opacity-70`} />
     </div>
   );
 }
@@ -111,25 +108,44 @@ function ClothingPlaceholder({ kategori }: { kategori: string }) {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function InventoryPage() {
-  const [items, setItems] = useState<InventoryItem[]>(MOCK_ITEMS);
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
   const [kategoriFilter, setKategoriFilter] = useState("Semua");
-  const [kondisiFilter, setKondisiFilter] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
 
   // QR modal state
   const [qrModal, setQrModal] = useState<InventoryItem | null>(null);
 
+  const fetchData = async () => {
+    try {
+        setIsLoading(true);
+        const res = await fetch('/api/admin/inventory');
+        const json = await res.json();
+        if (json.data) {
+            setItems(json.data);
+        }
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   // ── Filtering ────────────────────────────────────────────────────────────
   const filtered = items.filter((item) => {
     const matchSearch =
-      item.nama.toLowerCase().includes(search.toLowerCase()) ||
-      item.id.toLowerCase().includes(search.toLowerCase()) ||
-      item.donatur.toLowerCase().includes(search.toLowerCase());
+      (item.judul || "").toLowerCase().includes(search.toLowerCase()) ||
+      item.id.toString().includes(search.toLowerCase()) ||
+      item.donatur?.nama?.toLowerCase().includes(search.toLowerCase());
     const matchKategori = kategoriFilter === "Semua" || item.kategori === kategoriFilter;
-    const matchKondisi = kondisiFilter === "Semua" || item.kondisi === kondisiFilter;
-    return matchSearch && matchKategori && matchKondisi;
+    return matchSearch && matchKategori;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
@@ -143,34 +159,32 @@ export default function InventoryPage() {
 
   // ── Stats ────────────────────────────────────────────────────────────────
   const totalGudang = items.length;
-  const siapSalurkan = items.filter((i) => i.status === "siap").length;
-  const menungguQR = items.filter((i) => !i.hasQR).length;
+  const siapSalurkan = items.filter((i) => i.status === "disetujui").length; // Di gudang artinya disetujui
   const tersalurkan = items.filter((i) => i.status === "tersalurkan").length;
-
-  // ── Actions ──────────────────────────────────────────────────────────────
-  const handleGenerateQR = (item: InventoryItem) => {
-    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, hasQR: true } : i)));
-    setQrModal({ ...item, hasQR: true });
-  };
-
-  const handleMarkSiap = (id: string) => {
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status: "siap" } : i)));
-  };
 
   const statusLabel = (s: string) => {
     switch (s) {
-      case "siap": return "Siap Disalurkan";
+      case "disetujui": return "Siap Disalurkan";
       case "tersalurkan": return "Tersalurkan";
-      default: return "Di Gudang";
+      default: return "Lainnya";
     }
   };
 
   const statusBadgeColor = (s: string): "green" | "blue" | "stone" => {
     switch (s) {
-      case "siap": return "green";
+      case "disetujui": return "green";
       case "tersalurkan": return "blue";
       default: return "stone";
     }
+  };
+
+  const kondisiBadgeColor = (s: string | null) => {
+      switch (s?.toLowerCase()) {
+          case 'baik': return 'green';
+          case 'cukup': return 'yellow';
+          case 'kurang': return 'red';
+          default: return 'stone';
+      }
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -178,17 +192,16 @@ export default function InventoryPage() {
     <div className="space-y-8 animate-[fadeIn_0.3s_ease]">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-display font-bold text-stone-900">Inventory &amp; Katalog</h1>
-        <p className="text-stone-500">Kelola stok gudang, generate QR code, dan tandai barang siap disalurkan.</p>
+        <h1 className="text-2xl font-display font-bold text-stone-900">Inventory &amp; Katalog Gudang</h1>
+        <p className="text-stone-500">Kelola stok gudang, lihat QR code item siap disalurkan dan tersalurkan.</p>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {[
-          { title: "Total Item di Gudang", val: totalGudang, icon: <Package size={24} />, color: "text-purple-600", bg: "bg-purple-100" },
-          { title: "Siap Disalurkan", val: siapSalurkan, icon: <CheckCircle size={24} />, color: "text-green-600", bg: "bg-green-100" },
-          { title: "Menunggu QR", val: menungguQR, icon: <QrCode size={24} />, color: "text-orange-600", bg: "bg-orange-100" },
-          { title: "Sudah Tersalurkan", val: tersalurkan, icon: <Truck size={24} />, color: "text-blue-600", bg: "bg-blue-100" },
+          { title: "Total Item", val: isLoading ? "..." : totalGudang, icon: <Package size={24} />, color: "text-purple-600", bg: "bg-purple-100" },
+          { title: "Siap Disalurkan", val: isLoading ? "..." : siapSalurkan, icon: <CheckCircle size={24} />, color: "text-green-600", bg: "bg-green-100" },
+          { title: "Sudah Tersalurkan", val: isLoading ? "..." : tersalurkan, icon: <Truck size={24} />, color: "text-blue-600", bg: "bg-blue-100" },
         ].map((s, i) => (
           <div key={i} className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex items-center gap-5 hover:shadow-md transition-shadow duration-200">
             <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${s.bg} ${s.color}`}>
@@ -232,20 +245,6 @@ export default function InventoryPage() {
               </select>
             </div>
 
-            {/* Condition filter */}
-            <div className="flex items-center gap-2">
-              <Tag size={16} className="text-stone-400" />
-              <select
-                value={kondisiFilter}
-                onChange={(e) => updateFilter(setKondisiFilter, e.target.value)}
-                className="px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-400 transition-all cursor-pointer"
-              >
-                {KONDISI_OPTIONS.map((k) => (
-                  <option key={k} value={k}>{k}</option>
-                ))}
-              </select>
-            </div>
-
             {/* View toggle */}
             <div className="flex items-center bg-stone-100 rounded-xl p-1 ml-auto">
               <button
@@ -271,7 +270,12 @@ export default function InventoryPage() {
       </div>
 
       {/* Content Area */}
-      {filtered.length === 0 ? (
+      {isLoading ? (
+          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-16 text-center">
+              <Loader2 size={48} className="mx-auto mb-4 text-stone-300 animate-spin" />
+              <p className="font-semibold text-stone-500">Memuat data inventaris...</p>
+          </div>
+      ) : filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-16 text-center">
           <Package size={48} className="mx-auto mb-4 text-stone-300" />
           <p className="font-semibold text-stone-500">Tidak ada item yang cocok</p>
@@ -283,22 +287,15 @@ export default function InventoryPage() {
           {paginated.map((item) => (
             <div
               key={item.id}
-              className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+              className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group flex flex-col"
             >
               {/* Image placeholder */}
-              <div className="relative overflow-hidden">
-                <ClothingPlaceholder kategori={item.kategori} />
-                {/* QR indicator overlay */}
+              <div className="relative overflow-hidden shrink-0">
+                <ClothingPlaceholder kategori={item.kategori} foto_url={item.foto_url} />
                 <div className="absolute top-3 right-3">
-                  {item.hasQR ? (
-                    <div className="bg-green-500 text-white p-1.5 rounded-lg shadow-md">
+                    <div className="bg-green-500 text-white p-1.5 rounded-lg shadow-md cursor-pointer hover:bg-green-600 transition-colors" onClick={() => setQrModal(item)}>
                       <QrCode size={16} />
                     </div>
-                  ) : (
-                    <div className="bg-orange-400 text-white p-1.5 rounded-lg shadow-md animate-pulse">
-                      <QrCode size={16} />
-                    </div>
-                  )}
                 </div>
                 {/* Status badge overlay */}
                 <div className="absolute top-3 left-3">
@@ -307,42 +304,33 @@ export default function InventoryPage() {
               </div>
 
               {/* Card content */}
-              <div className="p-5 space-y-3">
-                <div className="flex items-start justify-between gap-2">
+              <div className="p-5 flex flex-col flex-1">
+                <div className="flex items-start justify-between gap-2 mb-3">
                   <div>
-                    <h3 className="font-display font-bold text-stone-900 leading-tight">{item.nama}</h3>
-                    <p className="text-xs text-stone-400 mt-0.5 font-mono">{item.id}</p>
+                    <h3 className="font-display font-bold text-stone-900 leading-tight">{item.judul || item.kategori || "Barang Donasi"}</h3>
+                    <p className="text-xs text-stone-400 mt-0.5 font-mono">ID: {item.id}</p>
                   </div>
-                  <Badge color={item.kondisi === "Baik" ? "green" : "yellow"}>{item.kondisi}</Badge>
+                  {item.kondisi && <Badge color={kondisiBadgeColor(item.kondisi)}>{item.kondisi}</Badge>}
                 </div>
 
-                <div className="flex items-center gap-4 text-xs text-stone-500">
+                <div className="flex items-center gap-4 text-xs text-stone-500 mb-2">
                   <span className="flex items-center gap-1">
-                    <Shirt size={12} /> {item.kategori}
+                    <Shirt size={12} /> {item.kategori || "Pakaian"}
                   </span>
-                  <span>Ukuran {item.ukuran}</span>
                 </div>
 
-                <div className="text-xs text-stone-400">
-                  Donatur: <span className="text-stone-600 font-semibold">{item.donatur}</span>
+                <div className="text-xs text-stone-400 mb-2">
+                  Donatur: <span className="text-stone-600 font-semibold">{item.donatur?.nama}</span>
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-2 pt-2 border-t border-stone-100">
-                  {item.hasQR ? (
+                <div className="text-xs text-stone-500 mb-4 line-clamp-2">
+                    {item.deskripsi}
+                </div>
+
+                <div className="mt-auto pt-4 border-t border-stone-100 flex gap-2">
                     <Button variant="outline" size="sm" className="flex-1 !text-xs" onClick={() => setQrModal(item)}>
                       <Eye size={14} /> Lihat QR
                     </Button>
-                  ) : (
-                    <Button variant="primary" size="sm" className="flex-1 !text-xs" onClick={() => handleGenerateQR(item)}>
-                      <QrCode size={14} /> Generate QR
-                    </Button>
-                  )}
-                  {item.status === "gudang" && (
-                    <Button variant="ghost" size="sm" className="!text-xs" onClick={() => handleMarkSiap(item.id)}>
-                      <CheckCircle size={14} /> Siap
-                    </Button>
-                  )}
                 </div>
               </div>
             </div>
@@ -360,8 +348,7 @@ export default function InventoryPage() {
                   <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Kondisi</th>
                   <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Donatur</th>
                   <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Status</th>
-                  <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">QR</th>
-                  <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Aksi</th>
+                  <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">QR / Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -369,51 +356,27 @@ export default function InventoryPage() {
                   <tr key={item.id} className="border-b border-stone-100 hover:bg-stone-50 transition-colors">
                     <td className="p-5">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-stone-400">
-                          <Shirt size={18} />
+                        <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-stone-400 overflow-hidden">
+                          {item.foto_url ? <img src={item.foto_url} alt="Item" className="w-full h-full object-cover" /> : <Shirt size={18} />}
                         </div>
                         <div>
-                          <div className="font-bold text-stone-800 text-sm">{item.nama}</div>
-                          <div className="text-xs text-stone-400 font-mono">{item.id}</div>
+                          <div className="font-bold text-stone-800 text-sm">{item.judul || item.kategori}</div>
+                          <div className="text-xs text-stone-400 font-mono">ID: {item.id}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="p-5 text-sm text-stone-600">{item.kategori}</td>
+                    <td className="p-5 text-sm text-stone-600">{item.kategori || "-"}</td>
                     <td className="p-5">
-                      <Badge color={item.kondisi === "Baik" ? "green" : "yellow"}>{item.kondisi}</Badge>
+                      {item.kondisi ? <Badge color={kondisiBadgeColor(item.kondisi)}>{item.kondisi}</Badge> : "-"}
                     </td>
-                    <td className="p-5 text-sm text-stone-600">{item.donatur}</td>
+                    <td className="p-5 text-sm text-stone-600">{item.donatur?.nama}</td>
                     <td className="p-5">
                       <Badge color={statusBadgeColor(item.status)}>{statusLabel(item.status)}</Badge>
                     </td>
                     <td className="p-5">
-                      {item.hasQR ? (
-                        <span className="inline-flex items-center gap-1 text-green-600 text-xs font-bold">
-                          <CheckCircle size={14} /> Ada
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-orange-500 text-xs font-bold">
-                          <QrCode size={14} /> Belum
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-5">
-                      <div className="flex items-center gap-2">
-                        {item.hasQR ? (
-                          <Button variant="ghost" size="sm" className="!text-xs" onClick={() => setQrModal(item)}>
-                            <Eye size={14} /> Lihat QR
-                          </Button>
-                        ) : (
-                          <Button variant="primary" size="sm" className="!text-xs" onClick={() => handleGenerateQR(item)}>
-                            <QrCode size={14} /> Generate
-                          </Button>
-                        )}
-                        {item.status === "gudang" && (
-                          <Button variant="ghost" size="sm" className="!text-xs" onClick={() => handleMarkSiap(item.id)}>
-                            <CheckCircle size={14} />
-                          </Button>
-                        )}
-                      </div>
+                      <Button variant="ghost" size="sm" className="!text-xs" onClick={() => setQrModal(item)}>
+                        <QrCode size={14} /> Lihat QR
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -463,12 +426,9 @@ export default function InventoryPage() {
       {/* ── QR Code Modal ──────────────────────────────────────────────────── */}
       {qrModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setQrModal(null)} />
 
-          {/* Modal card */}
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-[fadeIn_0.2s_ease]">
-            {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-stone-100">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
@@ -476,7 +436,7 @@ export default function InventoryPage() {
                 </div>
                 <div>
                   <h3 className="font-display font-bold text-stone-900">QR Code Item</h3>
-                  <p className="text-xs text-stone-400">{qrModal.id}</p>
+                  <p className="text-xs text-stone-400">ID: {qrModal.id}</p>
                 </div>
               </div>
               <button
@@ -487,41 +447,34 @@ export default function InventoryPage() {
               </button>
             </div>
 
-            {/* QR Code */}
             <div className="p-8 flex flex-col items-center">
               <div className="p-6 bg-white border-2 border-stone-200 rounded-2xl shadow-inner">
                 <MockQRCode />
               </div>
               <p className="mt-4 text-xs text-stone-400 font-mono text-center select-all">
-                RW-{qrModal.id}-{qrModal.kategori.toUpperCase().slice(0, 3)}-2026
+                {qrModal.qr_code || `QR-RWD-${qrModal.id}-GUDANG`}
               </p>
             </div>
 
-            {/* Item details */}
             <div className="mx-6 mb-6 bg-stone-50 rounded-xl p-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-stone-400">Nama Item</span>
-                <span className="font-bold text-stone-800">{qrModal.nama}</span>
+                <span className="font-bold text-stone-800">{qrModal.judul || qrModal.kategori || "-"}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-stone-400">Kategori</span>
-                <span className="font-semibold text-stone-600">{qrModal.kategori}</span>
+                <span className="font-semibold text-stone-600">{qrModal.kategori || "-"}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-stone-400">Kondisi</span>
-                <Badge color={qrModal.kondisi === "Baik" ? "green" : "yellow"}>{qrModal.kondisi}</Badge>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-stone-400">Ukuran</span>
-                <span className="font-semibold text-stone-600">{qrModal.ukuran}</span>
+                {qrModal.kondisi ? <Badge color={kondisiBadgeColor(qrModal.kondisi)}>{qrModal.kondisi}</Badge> : <span>-</span>}
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-stone-400">Donatur</span>
-                <span className="font-semibold text-stone-600">{qrModal.donatur}</span>
+                <span className="font-semibold text-stone-600">{qrModal.donatur?.nama}</span>
               </div>
             </div>
 
-            {/* Footer actions */}
             <div className="flex gap-3 p-6 border-t border-stone-100 bg-stone-50/50">
               <Button variant="outline" size="sm" className="flex-1">
                 <Printer size={16} /> Cetak QR

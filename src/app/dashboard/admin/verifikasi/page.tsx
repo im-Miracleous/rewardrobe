@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ShieldCheck,
   Search,
@@ -13,203 +13,29 @@ import {
   X,
   Banknote,
   Shirt,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
 // ── Types ───────────────────────────────────────────────────────────────────
-type DonationStatus = "menunggu_verifikasi" | "disetujui" | "ditolak";
+type DonationStatus = "menunggu_verifikasi" | "disetujui" | "ditolak" | "tersalurkan";
 type DonationType = "pakaian" | "uang";
 
 interface Donation {
   id: number;
-  donatur: string;
-  email: string;
-  kota: string;
+  donatur: { id: number; nama: string; kota: string | null; email: string };
   tipe: DonationType;
   detail: string;
-  kondisi?: string; // pakaian only
-  nominal?: number; // uang only
+  kondisi?: string; 
+  deskripsi: string;
+  nominal?: number;
   bukti_foto: string | null;
   status: DonationStatus;
-  alasan_tolak?: string;
+  campaign: string | null;
   waktu_masuk: string;
+  created_at: string;
 }
-
-// ── Mock Data ───────────────────────────────────────────────────────────────
-const MOCK_DONATIONS: Donation[] = [
-  {
-    id: 1,
-    donatur: "Andi Pratama",
-    email: "andi@mail.com",
-    kota: "Bandung",
-    tipe: "pakaian",
-    detail: "Kemeja flannel pria ukuran L, warna merah kotak-kotak",
-    kondisi: "baik",
-    bukti_foto: "/placeholder-shirt.jpg",
-    status: "menunggu_verifikasi",
-    waktu_masuk: "2026-06-04T10:15:00Z",
-  },
-  {
-    id: 2,
-    donatur: "Siti Rahmawati",
-    email: "siti.r@mail.com",
-    kota: "Jakarta",
-    tipe: "uang",
-    detail: "Donasi untuk pembelian pakaian anak-anak panti asuhan",
-    nominal: 250000,
-    bukti_foto: "/placeholder-transfer.jpg",
-    status: "menunggu_verifikasi",
-    waktu_masuk: "2026-06-04T09:30:00Z",
-  },
-  {
-    id: 3,
-    donatur: "Budi Santoso",
-    email: "budi.s@mail.com",
-    kota: "Surabaya",
-    tipe: "pakaian",
-    detail: "3 potong celana jeans wanita ukuran M, kondisi masih bagus",
-    kondisi: "baik",
-    bukti_foto: "/placeholder-jeans.jpg",
-    status: "disetujui",
-    waktu_masuk: "2026-06-03T14:22:00Z",
-  },
-  {
-    id: 4,
-    donatur: "Diana Kusuma",
-    email: "diana.k@mail.com",
-    kota: "Yogyakarta",
-    tipe: "uang",
-    detail: "Sumbangan untuk program ReWardrobe",
-    nominal: 500000,
-    bukti_foto: "/placeholder-transfer2.jpg",
-    status: "disetujui",
-    waktu_masuk: "2026-06-03T11:00:00Z",
-  },
-  {
-    id: 5,
-    donatur: "Eko Wijaya",
-    email: "eko.w@mail.com",
-    kota: "Semarang",
-    tipe: "pakaian",
-    detail: "Jaket hoodie abu-abu ukuran XL, ada sedikit noda",
-    kondisi: "fair",
-    bukti_foto: null,
-    status: "ditolak",
-    alasan_tolak: "Foto bukti tidak dilampirkan",
-    waktu_masuk: "2026-06-02T16:45:00Z",
-  },
-  {
-    id: 6,
-    donatur: "Fitri Anggraeni",
-    email: "fitri.a@mail.com",
-    kota: "Malang",
-    tipe: "pakaian",
-    detail: "5 kaos polos anak-anak berbagai ukuran, baru dipakai 2x",
-    kondisi: "baik",
-    bukti_foto: "/placeholder-kaos.jpg",
-    status: "menunggu_verifikasi",
-    waktu_masuk: "2026-06-04T08:10:00Z",
-  },
-  {
-    id: 7,
-    donatur: "Galih Permana",
-    email: "galih.p@mail.com",
-    kota: "Bandung",
-    tipe: "uang",
-    detail: "Donasi bulanan untuk operasional penyaluran",
-    nominal: 150000,
-    bukti_foto: "/placeholder-transfer3.jpg",
-    status: "menunggu_verifikasi",
-    waktu_masuk: "2026-06-04T07:55:00Z",
-  },
-  {
-    id: 8,
-    donatur: "Hana Safitri",
-    email: "hana.s@mail.com",
-    kota: "Depok",
-    tipe: "pakaian",
-    detail: "Dress batik wanita ukuran S, kondisi sangat baik",
-    kondisi: "baik",
-    bukti_foto: "/placeholder-batik.jpg",
-    status: "disetujui",
-    waktu_masuk: "2026-06-02T13:30:00Z",
-  },
-  {
-    id: 9,
-    donatur: "Irfan Hakim",
-    email: "irfan.h@mail.com",
-    kota: "Bekasi",
-    tipe: "uang",
-    detail: "Transfer donasi untuk beli seragam sekolah",
-    nominal: 1000000,
-    bukti_foto: "/placeholder-transfer4.jpg",
-    status: "disetujui",
-    waktu_masuk: "2026-06-01T09:15:00Z",
-  },
-  {
-    id: 10,
-    donatur: "Joko Widodo",
-    email: "joko.w@mail.com",
-    kota: "Solo",
-    tipe: "pakaian",
-    detail: "Sepatu olahraga bekas, ukuran 42",
-    kondisi: "rusak",
-    bukti_foto: "/placeholder-sepatu.jpg",
-    status: "ditolak",
-    alasan_tolak: "Kondisi pakaian terlalu rusak untuk disalurkan",
-    waktu_masuk: "2026-06-01T15:20:00Z",
-  },
-  {
-    id: 11,
-    donatur: "Kartika Dewi",
-    email: "kartika.d@mail.com",
-    kota: "Tangerang",
-    tipe: "pakaian",
-    detail: "2 stel seragam SD lengkap, ukuran 8-9 tahun",
-    kondisi: "fair",
-    bukti_foto: "/placeholder-seragam.jpg",
-    status: "menunggu_verifikasi",
-    waktu_masuk: "2026-06-04T06:20:00Z",
-  },
-  {
-    id: 12,
-    donatur: "Lina Marlina",
-    email: "lina.m@mail.com",
-    kota: "Bogor",
-    tipe: "uang",
-    detail: "Donasi darurat untuk korban bencana",
-    nominal: 750000,
-    bukti_foto: "/placeholder-transfer5.jpg",
-    status: "menunggu_verifikasi",
-    waktu_masuk: "2026-06-04T05:00:00Z",
-  },
-  {
-    id: 13,
-    donatur: "Muhammad Rizki",
-    email: "rizki.m@mail.com",
-    kota: "Medan",
-    tipe: "pakaian",
-    detail: "Sweater rajut wanita ukuran M, warna cream",
-    kondisi: "baik",
-    bukti_foto: "/placeholder-sweater.jpg",
-    status: "disetujui",
-    waktu_masuk: "2026-05-31T10:00:00Z",
-  },
-  {
-    id: 14,
-    donatur: "Nita Puspita",
-    email: "nita.p@mail.com",
-    kota: "Makassar",
-    tipe: "uang",
-    detail: "Infaq untuk program pakaian layak pakai",
-    nominal: 300000,
-    bukti_foto: null,
-    status: "ditolak",
-    alasan_tolak: "Bukti transfer tidak valid / tidak terbaca",
-    waktu_masuk: "2026-05-30T12:40:00Z",
-  },
-];
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 const TABS = [
@@ -257,12 +83,16 @@ function getStatusBadge(status: DonationStatus) {
       return <Badge color="yellow">Menunggu</Badge>;
     case "disetujui":
       return <Badge color="green">Disetujui</Badge>;
+    case "tersalurkan":
+      return <Badge color="blue">Tersalurkan</Badge>;
     case "ditolak":
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold font-display bg-red-100 text-red-700">
           Ditolak
         </span>
       );
+    default:
+      return <Badge color="stone">{status}</Badge>;
   }
 }
 
@@ -283,7 +113,10 @@ function getKondisiBadge(kondisi: string) {
 const ITEMS_PER_PAGE = 6;
 
 export default function VerifikasiDonasiPage() {
-  const [donations, setDonations] = useState<Donation[]>(MOCK_DONATIONS);
+  const [donations, setDonations] = useState<Donation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
   const [activeTab, setActiveTab] = useState<TabKey>("semua");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -291,20 +124,37 @@ export default function VerifikasiDonasiPage() {
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
+  const fetchData = async () => {
+    try {
+        setIsLoading(true);
+        const res = await fetch('/api/admin/verifikasi');
+        const json = await res.json();
+        if (json.data) setDonations(json.data);
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   // ── Stats ───────────────────────────────────────────────────────────────
   const stats = {
     total: donations.length,
     menunggu: donations.filter((d) => d.status === "menunggu_verifikasi").length,
-    disetujui: donations.filter((d) => d.status === "disetujui").length,
+    disetujui: donations.filter((d) => d.status === "disetujui" || d.status === "tersalurkan").length,
     ditolak: donations.filter((d) => d.status === "ditolak").length,
   };
 
   // ── Filtered list ───────────────────────────────────────────────────────
   const filtered = donations.filter((d) => {
-    const matchTab = activeTab === "semua" || d.status === activeTab;
+    const matchTab = activeTab === "semua" || d.status === activeTab || (activeTab === "disetujui" && d.status === "tersalurkan");
     const matchSearch =
       searchQuery.trim() === "" ||
-      d.donatur.toLowerCase().includes(searchQuery.toLowerCase());
+      d.donatur?.nama?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchTab && matchSearch;
   });
 
@@ -315,23 +165,41 @@ export default function VerifikasiDonasiPage() {
   );
 
   // ── Handlers ────────────────────────────────────────────────────────────
-  function handleApprove(id: number) {
-    setDonations((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, status: "disetujui" as DonationStatus } : d))
-    );
+  async function handleApprove(id: number, tipe: DonationType) {
+    setIsProcessing(true);
+    try {
+        const res = await fetch('/api/admin/verifikasi', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, tipe, status: 'disetujui' })
+        });
+        if (res.ok) await fetchData();
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setIsProcessing(false);
+    }
   }
 
-  function handleReject(id: number) {
+  async function handleReject(id: number, tipe: DonationType) {
     if (!rejectReason.trim()) return;
-    setDonations((prev) =>
-      prev.map((d) =>
-        d.id === id
-          ? { ...d, status: "ditolak" as DonationStatus, alasan_tolak: rejectReason }
-          : d
-      )
-    );
-    setRejectingId(null);
-    setRejectReason("");
+    setIsProcessing(true);
+    try {
+        const res = await fetch('/api/admin/verifikasi', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, tipe, status: 'ditolak', alasan_penolakan: rejectReason })
+        });
+        if (res.ok) {
+            setRejectingId(null);
+            setRejectReason("");
+            await fetchData();
+        }
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setIsProcessing(false);
+    }
   }
 
   function handleTabChange(tab: TabKey) {
@@ -362,28 +230,28 @@ export default function VerifikasiDonasiPage() {
         {[
           {
             title: "Total Masuk",
-            val: stats.total,
+            val: isLoading ? "..." : stats.total,
             icon: <Filter size={22} />,
             color: "text-blue-600",
             bg: "bg-blue-100",
           },
           {
             title: "Menunggu Verifikasi",
-            val: stats.menunggu,
+            val: isLoading ? "..." : stats.menunggu,
             icon: <ShieldCheck size={22} />,
             color: "text-yellow-600",
             bg: "bg-yellow-100",
           },
           {
-            title: "Disetujui",
-            val: stats.disetujui,
+            title: "Disetujui & Tersalurkan",
+            val: isLoading ? "..." : stats.disetujui,
             icon: <CheckCircle size={22} />,
             color: "text-green-600",
             bg: "bg-green-100",
           },
           {
             title: "Ditolak",
-            val: stats.ditolak,
+            val: isLoading ? "..." : stats.ditolak,
             icon: <XCircle size={22} />,
             color: "text-red-600",
             bg: "bg-red-100",
@@ -455,41 +323,30 @@ export default function VerifikasiDonasiPage() {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-h-[400px]">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-stone-50/60">
-                <th className="p-4 pl-6 text-xs font-bold text-stone-400 uppercase tracking-wider w-12">
-                  No
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Donatur
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Tipe
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Detail
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Kondisi / Nominal
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Bukti Foto
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Waktu Masuk
-                </th>
-                <th className="p-4 pr-6 text-xs font-bold text-stone-400 uppercase tracking-wider">
-                  Aksi
-                </th>
+                <th className="p-4 pl-6 text-xs font-bold text-stone-400 uppercase tracking-wider w-12">No</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Donatur</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Tipe</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Detail</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Kondisi / Nominal</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Bukti Foto</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Status</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Waktu Masuk</th>
+                <th className="p-4 pr-6 text-xs font-bold text-stone-400 uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {paginated.length === 0 ? (
+              {isLoading ? (
+                  <tr>
+                      <td colSpan={9} className="p-12 text-center">
+                          <Loader2 size={40} className="mx-auto mb-3 text-stone-300 animate-spin" />
+                          <p className="text-stone-400 font-semibold text-sm">Memuat data...</p>
+                      </td>
+                  </tr>
+              ) : paginated.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="p-12 text-center">
                     <ShieldCheck
@@ -503,7 +360,7 @@ export default function VerifikasiDonasiPage() {
                 </tr>
               ) : (
                 paginated.map((item, idx) => (
-                  <React.Fragment key={item.id}>
+                  <React.Fragment key={item.id + item.tipe}>
                     <tr
                       className="border-b border-stone-100 hover:bg-stone-50/70 transition-colors duration-150 cursor-pointer group"
                       onClick={() =>
@@ -512,22 +369,17 @@ export default function VerifikasiDonasiPage() {
                         )
                       }
                     >
-                      {/* No */}
                       <td className="p-4 pl-6 text-sm font-semibold text-stone-400">
                         {(currentPage - 1) * ITEMS_PER_PAGE + idx + 1}
                       </td>
-
-                      {/* Donatur */}
                       <td className="p-4">
                         <div className="font-bold text-stone-800 text-sm">
-                          {item.donatur}
+                          {item.donatur?.nama}
                         </div>
                         <div className="text-xs text-stone-400 mt-0.5">
-                          {item.kota}
+                          {item.donatur?.kota || "-"}
                         </div>
                       </td>
-
-                      {/* Tipe */}
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           {item.tipe === "pakaian" ? (
@@ -544,60 +396,42 @@ export default function VerifikasiDonasiPage() {
                           </span>
                         </div>
                       </td>
-
-                      {/* Detail */}
                       <td className="p-4 max-w-[200px]">
                         <p className="text-sm text-stone-600 truncate">
-                          {item.detail}
+                          {item.deskripsi}
                         </p>
                       </td>
-
-                      {/* Kondisi / Nominal */}
                       <td className="p-4">
                         {item.tipe === "pakaian" && item.kondisi ? (
                           getKondisiBadge(item.kondisi)
-                        ) : item.nominal ? (
+                        ) : item.kondisi ? (
                           <span className="text-sm font-bold text-emerald-700">
-                            {formatCurrency(item.nominal)}
+                            {formatCurrency(item.kondisi as any)}
                           </span>
                         ) : (
                           <span className="text-sm text-stone-400">-</span>
                         )}
                       </td>
-
-                      {/* Bukti Foto */}
                       <td className="p-4">
                         {item.bukti_foto ? (
                           <div className="w-11 h-11 bg-stone-100 rounded-lg border border-stone-200 flex items-center justify-center overflow-hidden group-hover:border-green-300 transition-colors">
-                            <ImageIcon
-                              size={18}
-                              className="text-stone-400"
-                            />
+                              <img src={item.bukti_foto} alt="bukti" className="w-full h-full object-cover" />
                           </div>
                         ) : (
                           <div className="w-11 h-11 bg-stone-50 rounded-lg border border-dashed border-stone-200 flex items-center justify-center">
-                            <ImageIcon
-                              size={16}
-                              className="text-stone-300"
-                            />
+                            <ImageIcon size={16} className="text-stone-300" />
                           </div>
                         )}
                       </td>
-
-                      {/* Status */}
                       <td className="p-4">{getStatusBadge(item.status)}</td>
-
-                      {/* Waktu Masuk */}
                       <td className="p-4">
                         <div className="text-sm text-stone-700 font-medium">
-                          {timeAgo(item.waktu_masuk)}
+                          {timeAgo(item.created_at)}
                         </div>
                         <div className="text-[11px] text-stone-400 mt-0.5">
-                          {formatDate(item.waktu_masuk)}
+                          {formatDate(item.created_at)}
                         </div>
                       </td>
-
-                      {/* Aksi */}
                       <td
                         className="p-4 pr-6"
                         onClick={(e) => e.stopPropagation()}
@@ -607,7 +441,8 @@ export default function VerifikasiDonasiPage() {
                             <Button
                               variant="primary"
                               size="sm"
-                              onClick={() => handleApprove(item.id)}
+                              onClick={() => handleApprove(item.id, item.tipe)}
+                              disabled={isProcessing}
                               className="!px-3 !py-1.5 !text-xs !rounded-lg"
                             >
                               <CheckCircle size={13} />
@@ -622,6 +457,7 @@ export default function VerifikasiDonasiPage() {
                                 );
                                 setRejectReason("");
                               }}
+                              disabled={isProcessing}
                               className="!px-3 !py-1.5 !text-xs !rounded-lg"
                             >
                               <XCircle size={13} />
@@ -643,8 +479,6 @@ export default function VerifikasiDonasiPage() {
                         )}
                       </td>
                     </tr>
-
-                    {/* Inline reject reason input */}
                     {rejectingId === item.id && (
                       <tr className="bg-red-50/60 animate-[fadeIn_0.2s_ease]">
                         <td colSpan={9} className="px-6 py-4">
@@ -655,7 +489,7 @@ export default function VerifikasiDonasiPage() {
                               value={rejectReason}
                               onChange={(e) => setRejectReason(e.target.value)}
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") handleReject(item.id);
+                                if (e.key === "Enter") handleReject(item.id, item.tipe);
                               }}
                               className="flex-1 px-4 py-2.5 rounded-xl border border-red-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-red-400/30 focus:border-red-300 transition-all"
                               autoFocus
@@ -663,8 +497,8 @@ export default function VerifikasiDonasiPage() {
                             <Button
                               variant="danger"
                               size="sm"
-                              onClick={() => handleReject(item.id)}
-                              disabled={!rejectReason.trim()}
+                              disabled={!rejectReason.trim() || isProcessing}
+                              onClick={() => handleReject(item.id, item.tipe)}
                               className="!rounded-xl"
                             >
                               Konfirmasi Tolak
@@ -694,9 +528,7 @@ export default function VerifikasiDonasiPage() {
           <p className="text-sm text-stone-400">
             Menampilkan{" "}
             <span className="font-bold text-stone-600">
-              {filtered.length === 0
-                ? 0
-                : (currentPage - 1) * ITEMS_PER_PAGE + 1}
+              {filtered.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1}
             </span>
             -
             <span className="font-bold text-stone-600">
@@ -748,190 +580,76 @@ export default function VerifikasiDonasiPage() {
             className="bg-white rounded-2xl shadow-2xl border border-stone-200 w-full max-w-lg overflow-hidden animate-[fadeIn_0.25s_ease]"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-stone-100">
               <div className="flex items-center gap-3">
-                <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    selectedDonation.tipe === "pakaian"
-                      ? "bg-purple-100 text-purple-600"
-                      : "bg-emerald-100 text-emerald-600"
-                  }`}
-                >
-                  {selectedDonation.tipe === "pakaian" ? (
-                    <Shirt size={20} />
-                  ) : (
-                    <Banknote size={20} />
-                  )}
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedDonation.tipe === "pakaian" ? "bg-purple-100 text-purple-600" : "bg-emerald-100 text-emerald-600"}`}>
+                  {selectedDonation.tipe === "pakaian" ? <Shirt size={20} /> : <Banknote size={20} />}
                 </div>
                 <div>
-                  <h3 className="font-display font-bold text-stone-900">
-                    Detail Donasi
-                  </h3>
-                  <p className="text-xs text-stone-400">
-                    ID #{selectedDonation.id}
-                  </p>
+                  <h3 className="font-display font-bold text-stone-900">Detail Donasi</h3>
+                  <p className="text-xs text-stone-400">ID #{selectedDonation.id}</p>
                 </div>
               </div>
-              <button
-                onClick={() => setSelectedDonation(null)}
-                className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
-              >
+              <button onClick={() => setSelectedDonation(null)} className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors">
                 <X size={20} />
               </button>
             </div>
-
-            {/* Modal Body */}
             <div className="p-6 space-y-5">
-              {/* Foto bukti */}
               <div className="w-full h-48 rounded-xl bg-stone-100 border border-stone-200 flex items-center justify-center overflow-hidden">
                 {selectedDonation.bukti_foto ? (
-                  <div className="flex flex-col items-center gap-2 text-stone-400">
-                    <ImageIcon size={40} className="opacity-50" />
-                    <span className="text-xs font-medium">
-                      {selectedDonation.bukti_foto}
-                    </span>
-                  </div>
+                  <img src={selectedDonation.bukti_foto} alt="Foto Bukti" className="w-full h-full object-cover" />
                 ) : (
                   <div className="flex flex-col items-center gap-2 text-stone-300">
                     <ImageIcon size={40} />
-                    <span className="text-xs font-medium">
-                      Tidak ada foto
-                    </span>
+                    <span className="text-xs font-medium">Tidak ada foto</span>
                   </div>
                 )}
               </div>
-
-              {/* Info Grid */}
+              {selectedDonation.status === "ditolak" && selectedDonation.deskripsi.includes("ALASAN PENOLAKAN") && (
+                <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex gap-3">
+                  <XCircle size={20} className="text-red-500 shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-bold text-red-800">Alasan Penolakan</h4>
+                    <p className="text-sm text-red-600 mt-1">
+                      {selectedDonation.deskripsi.split("ALASAN PENOLAKAN:")[1]}
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">
-                    Donatur
-                  </p>
-                  <p className="text-sm font-bold text-stone-800">
-                    {selectedDonation.donatur}
-                  </p>
-                  <p className="text-xs text-stone-400">
-                    {selectedDonation.email}
-                  </p>
+                  <div className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">Donatur</div>
+                  <div className="text-sm font-semibold text-stone-800">{selectedDonation.donatur?.nama}</div>
+                  <div className="text-xs text-stone-500">{selectedDonation.donatur?.email}</div>
+                  <div className="text-xs text-stone-500">{selectedDonation.donatur?.kota || "-"}</div>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">
-                    Kota
-                  </p>
-                  <p className="text-sm font-bold text-stone-800">
-                    {selectedDonation.kota}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">
-                    Tipe
-                  </p>
-                  <p className="text-sm font-semibold text-stone-700 capitalize">
-                    {selectedDonation.tipe}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">
-                    Status
-                  </p>
-                  {getStatusBadge(selectedDonation.status)}
-                </div>
-                {selectedDonation.tipe === "pakaian" && selectedDonation.kondisi && (
-                  <div>
-                    <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">
-                      Kondisi
-                    </p>
-                    {getKondisiBadge(selectedDonation.kondisi)}
-                  </div>
-                )}
-                {selectedDonation.tipe === "uang" && selectedDonation.nominal && (
-                  <div>
-                    <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">
-                      Nominal
-                    </p>
-                    <p className="text-sm font-bold text-emerald-700">
-                      {formatCurrency(selectedDonation.nominal)}
-                    </p>
-                  </div>
-                )}
-                <div className="col-span-2">
-                  <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">
-                    Waktu Masuk
-                  </p>
-                  <p className="text-sm text-stone-700">
-                    {formatDate(selectedDonation.waktu_masuk)}
-                  </p>
+                  <div className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">Status</div>
+                  <div className="mt-1">{getStatusBadge(selectedDonation.status)}</div>
+                  <div className="text-xs text-stone-400 mt-1.5">{formatDate(selectedDonation.created_at)}</div>
                 </div>
               </div>
-
-              {/* Deskripsi */}
-              <div>
-                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1.5">
-                  Deskripsi
-                </p>
-                <p className="text-sm text-stone-600 leading-relaxed bg-stone-50 rounded-xl p-4 border border-stone-100">
-                  {selectedDonation.detail}
+              <div className="pt-4 border-t border-stone-100">
+                <div className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2">Deskripsi Donasi</div>
+                <p className="text-sm text-stone-700 whitespace-pre-wrap leading-relaxed">
+                  {selectedDonation.deskripsi.split("ALASAN PENOLAKAN")[0]}
                 </p>
               </div>
-
-              {/* Alasan Tolak */}
-              {selectedDonation.status === "ditolak" &&
-                selectedDonation.alasan_tolak && (
-                  <div>
-                    <p className="text-xs font-bold text-red-400 uppercase tracking-wider mb-1.5">
-                      Alasan Penolakan
-                    </p>
-                    <p className="text-sm text-red-600 leading-relaxed bg-red-50 rounded-xl p-4 border border-red-100">
-                      {selectedDonation.alasan_tolak}
-                    </p>
-                  </div>
-                )}
             </div>
-
-            {/* Modal Footer – Action for pending items */}
             {selectedDonation.status === "menunggu_verifikasi" && (
-              <div className="p-6 border-t border-stone-100 flex items-center gap-3">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => {
-                    handleApprove(selectedDonation.id);
-                    setSelectedDonation({
-                      ...selectedDonation,
-                      status: "disetujui",
-                    });
-                  }}
-                >
-                  <CheckCircle size={16} />
+              <div className="p-6 bg-stone-50 border-t border-stone-100 flex items-center justify-end gap-3">
+                <Button variant="ghost" onClick={() => setSelectedDonation(null)}>Tutup</Button>
+                <Button variant="danger" disabled={isProcessing} onClick={() => {
+                  setRejectingId(selectedDonation.id);
+                  setSelectedDonation(null);
+                }}>
+                  Tolak
+                </Button>
+                <Button variant="primary" disabled={isProcessing} onClick={() => {
+                  handleApprove(selectedDonation.id, selectedDonation.tipe);
+                  setSelectedDonation(null);
+                }}>
                   Setujui Donasi
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => {
-                    setSelectedDonation(null);
-                    setRejectingId(selectedDonation.id);
-                  }}
-                >
-                  <XCircle size={16} />
-                  Tolak Donasi
-                </Button>
-              </div>
-            )}
-
-            {/* Close button for non-pending */}
-            {selectedDonation.status !== "menunggu_verifikasi" && (
-              <div className="p-6 border-t border-stone-100">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => setSelectedDonation(null)}
-                >
-                  Tutup
                 </Button>
               </div>
             )}

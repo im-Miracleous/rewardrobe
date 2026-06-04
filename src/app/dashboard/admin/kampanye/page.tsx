@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Megaphone,
   Plus,
@@ -14,6 +14,7 @@ import {
   Upload,
   CheckCircle,
   RotateCcw,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -29,96 +30,17 @@ interface Kampanye {
   target_barang: number | null;
   terkumpul_barang: number;
   jumlah_partisipan: number;
-  tanggal_dibuat: string;
+  created_at: string;
   gradient: string;
 }
 
-/* ── Mock Data ─────────────────────────────────────── */
-const initialKampanye: Kampanye[] = [
-  {
-    id: 1,
-    judul: "Baju Hangat untuk Cianjur",
-    deskripsi:
-      "Kampanye donasi pakaian hangat untuk korban bencana gempa Cianjur. Kami mengumpulkan jaket, sweater, dan selimut layak pakai untuk disalurkan ke pengungsi.",
-    status: "aktif",
-    target_dana: 5000000,
-    terkumpul_dana: 2500000,
-    target_barang: 100,
-    terkumpul_barang: 45,
-    jumlah_partisipan: 32,
-    tanggal_dibuat: "2026-04-15",
-    gradient: "from-emerald-500 to-teal-600",
-  },
-  {
-    id: 2,
-    judul: "Donasi Lebaran 2024",
-    deskripsi:
-      "Berbagi kebahagiaan di hari raya dengan menyumbangkan pakaian layak pakai kepada keluarga kurang mampu di seluruh Indonesia.",
-    status: "aktif",
-    target_dana: 10000000,
-    terkumpul_dana: 7800000,
-    target_barang: 200,
-    terkumpul_barang: 156,
-    jumlah_partisipan: 89,
-    tanggal_dibuat: "2026-03-01",
-    gradient: "from-amber-500 to-orange-600",
-  },
-  {
-    id: 3,
-    judul: "Seragam untuk Panti Asuhan Kasih",
-    deskripsi:
-      "Mengumpulkan seragam sekolah bekas layak pakai untuk anak-anak di Panti Asuhan Kasih, Bandung. Ukuran SD hingga SMA.",
-    status: "aktif",
-    target_dana: null,
-    terkumpul_dana: 0,
-    target_barang: 50,
-    terkumpul_barang: 28,
-    jumlah_partisipan: 15,
-    tanggal_dibuat: "2026-05-10",
-    gradient: "from-violet-500 to-purple-600",
-  },
-  {
-    id: 4,
-    judul: "Pakaian Bayi untuk Posyandu",
-    deskripsi:
-      "Donasi pakaian bayi dan balita untuk dibagikan melalui jaringan Posyandu di daerah pedesaan Jawa Barat. Prioritas pakaian baru atau kondisi sangat baik.",
-    status: "aktif",
-    target_dana: 3000000,
-    terkumpul_dana: 1200000,
-    target_barang: 80,
-    terkumpul_barang: 34,
-    jumlah_partisipan: 22,
-    tanggal_dibuat: "2026-05-20",
-    gradient: "from-pink-500 to-rose-600",
-  },
-  {
-    id: 5,
-    judul: "Kampanye Musim Hujan 2025",
-    deskripsi:
-      "Pengumpulan jas hujan, payung, dan jaket anti-air untuk masyarakat terdampak banjir di kawasan Jakarta Utara.",
-    status: "selesai",
-    target_dana: 8000000,
-    terkumpul_dana: 8000000,
-    target_barang: 150,
-    terkumpul_barang: 163,
-    jumlah_partisipan: 74,
-    tanggal_dibuat: "2025-11-01",
-    gradient: "from-sky-500 to-blue-600",
-  },
-  {
-    id: 6,
-    judul: "Baju Kerja untuk Pencari Kerja",
-    deskripsi:
-      "Menyediakan pakaian formal layak pakai bagi para pencari kerja dari keluarga kurang mampu agar tampil percaya diri saat wawancara.",
-    status: "selesai",
-    target_dana: 4000000,
-    terkumpul_dana: 4500000,
-    target_barang: 60,
-    terkumpul_barang: 60,
-    jumlah_partisipan: 41,
-    tanggal_dibuat: "2025-09-15",
-    gradient: "from-stone-500 to-stone-700",
-  },
+const gradientsList = [
+  "from-emerald-500 to-teal-600",
+  "from-amber-500 to-orange-600",
+  "from-violet-500 to-purple-600",
+  "from-pink-500 to-rose-600",
+  "from-sky-500 to-blue-600",
+  "from-cyan-500 to-teal-600",
 ];
 
 /* ── Helpers ────────────────────────────────────────── */
@@ -134,14 +56,16 @@ function formatTanggal(dateStr: string) {
   });
 }
 
-function persen(current: number, target: number) {
-  if (target === 0) return 0;
+function persen(current: number, target: number | null) {
+  if (!target || target === 0) return 0;
   return Math.min(Math.round((current / target) * 100), 100);
 }
 
 /* ── Component ─────────────────────────────────────── */
 export default function KelolaKampanyePage() {
-  const [kampanyeList, setKampanyeList] = useState<Kampanye[]>(initialKampanye);
+  const [kampanyeList, setKampanyeList] = useState<Kampanye[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<"semua" | "aktif" | "selesai">("semua");
   const [showModal, setShowModal] = useState(false);
 
@@ -150,6 +74,31 @@ export default function KelolaKampanyePage() {
   const [formDeskripsi, setFormDeskripsi] = useState("");
   const [formTargetDana, setFormTargetDana] = useState("");
   const [formTargetBarang, setFormTargetBarang] = useState("");
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/api/campaigns');
+      const json = await res.json();
+      if (json.data) {
+        // assign random gradient for UI purpose, backend doesn't store this
+        const mapped = json.data.map((c: any, i: number) => ({
+           ...c,
+           jumlah_partisipan: 0, // In backend we didn't fetch fully, keeping it 0 or mock
+           gradient: gradientsList[i % gradientsList.length]
+        }));
+        setKampanyeList(mapped);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   /* derived data */
   const filtered =
@@ -168,73 +117,87 @@ export default function KelolaKampanyePage() {
   ];
 
   /* actions */
-  const toggleStatus = (id: number) => {
-    setKampanyeList((prev) =>
-      prev.map((k) =>
-        k.id === id
-          ? { ...k, status: k.status === "aktif" ? "selesai" : "aktif" }
-          : k
-      )
-    );
+  const toggleStatus = async (id: number, currentStatus: string) => {
+    setIsProcessing(true);
+    try {
+        const newStatus = currentStatus === 'aktif' ? 'selesai' : 'aktif';
+        const res = await fetch(`/api/campaigns/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) {
+            await fetchData();
+        }
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setIsProcessing(false);
+    }
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!formJudul.trim()) return;
-    const gradients = [
-      "from-emerald-500 to-teal-600",
-      "from-amber-500 to-orange-600",
-      "from-violet-500 to-purple-600",
-      "from-pink-500 to-rose-600",
-      "from-sky-500 to-blue-600",
-      "from-cyan-500 to-teal-600",
-    ];
-    const newK: Kampanye = {
-      id: Date.now(),
-      judul: formJudul.trim(),
-      deskripsi: formDeskripsi.trim() || "Tidak ada deskripsi.",
-      status: "aktif",
-      target_dana: formTargetDana ? Number(formTargetDana) : null,
-      terkumpul_dana: 0,
-      target_barang: formTargetBarang ? Number(formTargetBarang) : null,
-      terkumpul_barang: 0,
-      jumlah_partisipan: 0,
-      tanggal_dibuat: new Date().toISOString().split("T")[0],
-      gradient: gradients[Math.floor(Math.random() * gradients.length)],
-    };
-    setKampanyeList((prev) => [newK, ...prev]);
-    setFormJudul("");
-    setFormDeskripsi("");
-    setFormTargetDana("");
-    setFormTargetBarang("");
-    setShowModal(false);
+    
+    setIsProcessing(true);
+    try {
+        const payload = {
+            judul: formJudul.trim(),
+            deskripsi: formDeskripsi.trim() || "Tidak ada deskripsi.",
+            target_dana: formTargetDana ? Number(formTargetDana) : null,
+            target_barang: formTargetBarang ? Number(formTargetBarang) : null,
+        };
+
+        const res = await fetch('/api/campaigns', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            setFormJudul("");
+            setFormDeskripsi("");
+            setFormTargetDana("");
+            setFormTargetBarang("");
+            setShowModal(false);
+            await fetchData();
+        } else {
+            const data = await res.json();
+            alert(`Gagal membuat kampanye: ${data.error}`);
+        }
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setIsProcessing(false);
+    }
   };
 
   /* ── Stats ─────────────────────────────────────── */
   const stats = [
     {
       title: "Kampanye Aktif",
-      value: String(aktifCount),
+      value: isLoading ? "..." : String(aktifCount),
       icon: <Megaphone size={24} />,
       color: "text-green-600",
       bg: "bg-green-100",
     },
     {
       title: "Total Kampanye",
-      value: String(kampanyeList.length),
+      value: isLoading ? "..." : String(kampanyeList.length),
       icon: <Target size={24} />,
       color: "text-blue-600",
       bg: "bg-blue-100",
     },
     {
       title: "Total Dana Terkumpul",
-      value: formatRupiah(totalDana),
+      value: isLoading ? "..." : formatRupiah(totalDana),
       icon: <Banknote size={24} />,
       color: "text-amber-600",
       bg: "bg-amber-100",
     },
     {
       title: "Total Barang Terkumpul",
-      value: `${totalBarang} Item`,
+      value: isLoading ? "..." : `${totalBarang} Item`,
       icon: <Package size={24} />,
       color: "text-purple-600",
       bg: "bg-purple-100",
@@ -272,7 +235,7 @@ export default function KelolaKampanyePage() {
               {s.icon}
             </div>
             <div className="min-w-0">
-              <div className="text-2xl font-display font-extrabold text-stone-900 truncate">
+              <div className="text-xl lg:text-2xl font-display font-extrabold text-stone-900 truncate">
                 {s.value}
               </div>
               <div className="text-xs font-bold text-stone-500 uppercase tracking-wider mt-1">
@@ -301,7 +264,12 @@ export default function KelolaKampanyePage() {
       </div>
 
       {/* ── Campaign Grid ──────────────────────────── */}
-      {filtered.length === 0 ? (
+      {isLoading ? (
+          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-16 text-center">
+             <Loader2 size={48} className="mx-auto mb-4 text-stone-300 animate-spin" />
+             <p className="font-semibold text-stone-500">Memuat data kampanye...</p>
+          </div>
+      ) : filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-16 text-center">
           <Megaphone
             size={48}
@@ -319,34 +287,31 @@ export default function KelolaKampanyePage() {
           {filtered.map((k, idx) => (
             <div
               key={k.id}
-              className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group"
+              className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group flex flex-col"
               style={{ animationDelay: `${idx * 60}ms` }}
             >
               {/* Hero Image Area */}
               <div
-                className={`relative h-44 bg-gradient-to-br ${k.gradient} overflow-hidden`}
+                className={`relative h-44 bg-gradient-to-br ${k.gradient} overflow-hidden shrink-0`}
               >
-                {/* Decorative shapes */}
                 <div className="absolute inset-0 opacity-20">
                   <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/30" />
                   <div className="absolute bottom-4 left-8 w-24 h-24 rounded-full bg-white/20" />
                   <div className="absolute top-12 left-1/2 w-16 h-16 rounded-lg rotate-45 bg-white/15" />
                 </div>
 
-                {/* Status badge */}
                 <div className="absolute top-4 right-4">
                   <Badge color={k.status === "aktif" ? "green" : "stone"}>
                     {k.status === "aktif" ? "Aktif" : "Selesai"}
                   </Badge>
                 </div>
 
-                {/* Icon */}
                 <div className="absolute bottom-4 left-6 flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white">
                     <Megaphone size={22} />
                   </div>
                   <div className="text-white">
-                    <div className="text-lg font-display font-bold leading-tight drop-shadow-md">
+                    <div className="text-lg font-display font-bold leading-tight drop-shadow-md pr-4 line-clamp-2">
                       {k.judul}
                     </div>
                   </div>
@@ -354,14 +319,12 @@ export default function KelolaKampanyePage() {
               </div>
 
               {/* Body */}
-              <div className="p-6 space-y-5">
-                {/* Description */}
-                <p className="text-sm text-stone-600 leading-relaxed line-clamp-2">
+              <div className="p-6 flex flex-col flex-1">
+                <p className="text-sm text-stone-600 leading-relaxed line-clamp-2 mb-4">
                   {k.deskripsi}
                 </p>
 
-                {/* Progress Bars */}
-                <div className="space-y-4">
+                <div className="space-y-4 mb-4">
                   {k.target_dana !== null && (
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
@@ -418,10 +381,10 @@ export default function KelolaKampanyePage() {
                 </div>
 
                 {/* Meta row */}
-                <div className="flex items-center gap-5 pt-1 text-xs text-stone-400 font-semibold">
+                <div className="flex items-center gap-5 pt-1 text-xs text-stone-400 font-semibold mb-3">
                   <span className="flex items-center gap-1.5">
                     <Calendar size={13} />
-                    {formatTanggal(k.tanggal_dibuat)}
+                    {formatTanggal(k.created_at)}
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Users size={13} />
@@ -436,7 +399,7 @@ export default function KelolaKampanyePage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-3 pt-2 border-t border-stone-100">
+                <div className="flex items-center gap-3 pt-4 border-t border-stone-100 mt-auto">
                   <Button variant="outline" size="sm">
                     <Eye size={15} />
                     Lihat Detail
@@ -445,7 +408,8 @@ export default function KelolaKampanyePage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => toggleStatus(k.id)}
+                      disabled={isProcessing}
+                      onClick={() => toggleStatus(k.id, k.status)}
                     >
                       <CheckCircle size={15} />
                       Tutup Kampanye
@@ -454,7 +418,8 @@ export default function KelolaKampanyePage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => toggleStatus(k.id)}
+                      disabled={isProcessing}
+                      onClick={() => toggleStatus(k.id, k.status)}
                     >
                       <RotateCcw size={15} />
                       Reaktivasi
@@ -470,15 +435,12 @@ export default function KelolaKampanyePage() {
       {/* ── Creation Modal ─────────────────────────── */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-[fadeIn_0.2s_ease]"
             onClick={() => setShowModal(false)}
           />
 
-          {/* Modal */}
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-[fadeIn_0.3s_ease] border border-stone-200">
-            {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-stone-100">
               <div>
                 <h2 className="text-lg font-display font-bold text-stone-900">
@@ -496,9 +458,7 @@ export default function KelolaKampanyePage() {
               </button>
             </div>
 
-            {/* Body */}
-            <div className="p-6 space-y-5">
-              {/* Judul */}
+            <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
               <div>
                 <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">
                   Judul Kampanye <span className="text-red-500">*</span>
@@ -512,7 +472,6 @@ export default function KelolaKampanyePage() {
                 />
               </div>
 
-              {/* Deskripsi */}
               <div>
                 <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">
                   Deskripsi
@@ -526,7 +485,6 @@ export default function KelolaKampanyePage() {
                 />
               </div>
 
-              {/* Target Dana & Barang */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">
@@ -554,7 +512,6 @@ export default function KelolaKampanyePage() {
                 </div>
               </div>
 
-              {/* Upload Foto */}
               <div>
                 <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">
                   Upload Foto Kampanye
@@ -574,12 +531,12 @@ export default function KelolaKampanyePage() {
               </div>
             </div>
 
-            {/* Footer */}
             <div className="flex items-center justify-end gap-3 p-6 border-t border-stone-100">
               <Button
                 variant="ghost"
                 size="md"
                 onClick={() => setShowModal(false)}
+                disabled={isProcessing}
               >
                 Batal
               </Button>
@@ -587,10 +544,10 @@ export default function KelolaKampanyePage() {
                 variant="primary"
                 size="md"
                 onClick={handleCreate}
-                disabled={!formJudul.trim()}
+                disabled={!formJudul.trim() || isProcessing}
               >
                 <TrendingUp size={16} />
-                Buat Kampanye
+                {isProcessing ? 'Menyimpan...' : 'Buat Kampanye'}
               </Button>
             </div>
           </div>

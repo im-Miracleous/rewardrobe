@@ -1,9 +1,3 @@
-// CODE-CITE:
-//   Title: Admin Dashboard - Command Center with Quick Actions
-//   Type: ai
-//   Value: Claude (claude.ai/code)
-//   Notes: Redesigned admin dashboard with stat cards, quick actions grid, recent donations preview, and activity feed
-//   Lines Range: 1-300
 "use client";
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -37,6 +31,15 @@ interface BarangDonasi {
     created_at: string;
     updated_at: string;
     donatur: Donatur;
+}
+
+interface DashboardStats {
+    menungguVerifikasi: number;
+    penjemputanAktif: number;
+    inventoryGudang: number;
+    pengirimanAktif: number;
+    kampanyeAktif: number;
+    totalTersalurkan: number;
 }
 
 function getKondisiBadge(kondisi: string) {
@@ -92,12 +95,22 @@ const quickActions = [
     {
         href: '/dashboard/admin/penjemputan',
         icon: <Truck size={24} />,
-        title: 'Penjemputan Barang',
+        title: 'Penjemputan',
         desc: 'Jadwalkan penjemputan dari donatur',
         color: 'text-blue-600',
         bg: 'bg-blue-50',
         border: 'border-blue-200',
         hoverBg: 'hover:bg-blue-50',
+    },
+    {
+        href: '/dashboard/admin/pengiriman',
+        icon: <Package size={24} />,
+        title: 'Pengiriman',
+        desc: 'Kelola distribusi ke panti & komunitas',
+        color: 'text-rose-600',
+        bg: 'bg-rose-50',
+        border: 'border-rose-200',
+        hoverBg: 'hover:bg-rose-50',
     },
     {
         href: '/dashboard/admin/inventory',
@@ -122,21 +135,24 @@ const quickActions = [
 ];
 
 export default function AdminDash() {
-    const [barangList, setBarangList] = useState<BarangDonasi[]>([]);
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [recentItems, setRecentItems] = useState<BarangDonasi[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
 
-    const fetchBarang = async () => {
+    const fetchDashboardData = async () => {
+        setIsLoading(true);
         try {
-            const response = await fetch('/api/barang-donasi');
+            const response = await fetch('/api/admin/dashboard');
             const result = await response.json();
             if (result.data) {
-                setBarangList(result.data);
+                setStats(result.data.stats);
+                setRecentItems(result.data.recentDonations);
             } else {
-                setError(result.error || 'Gagal memuat data');
+                setError(result.error || 'Gagal memuat data dashboard');
             }
         } catch (err) {
-            console.error('Fetch barang error:', err);
+            console.error('Fetch dashboard error:', err);
             setError('Gagal memuat data dari server.');
         } finally {
             setIsLoading(false);
@@ -144,84 +160,79 @@ export default function AdminDash() {
     };
 
     useEffect(() => {
-        fetchBarang();
+        fetchDashboardData();
     }, []);
-
-    // Compute stats from real data
-    const menungguCount = barangList.filter((b) => b.status === 'menunggu_verifikasi').length;
-    const disetujuiCount = barangList.filter((b) => b.status === 'disetujui').length;
-    const tersalurkanCount = barangList.filter((b) => b.status === 'tersalurkan').length;
-    const recentItems = barangList
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 5);
 
     return (
         <div className="space-y-8 animate-[fadeIn_0.3s_ease]">
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-display font-bold text-stone-900">Ringkasan Sistem</h1>
-                <p className="text-stone-500">Pantau donasi baru dan penjemputan yang perlu dijadwalkan hari ini.</p>
+                <p className="text-stone-500">Pantau seluruh aktivitas operasional platform ReWardrobe hari ini.</p>
             </div>
 
-            {/* Stat Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-                {[
-                    {
-                        title: 'Menunggu Verifikasi',
-                        val: String(menungguCount),
-                        icon: <AlertCircle size={22} />,
-                        color: 'text-amber-600',
-                        bg: 'bg-amber-100',
-                        accent: menungguCount > 0 ? 'ring-2 ring-amber-200' : '',
-                    },
-                    {
-                        title: 'Disetujui',
-                        val: String(disetujuiCount),
-                        icon: <CheckCircle size={22} />,
-                        color: 'text-green-600',
-                        bg: 'bg-green-100',
-                        accent: '',
-                    },
-                    {
-                        title: 'Total Tersalurkan',
-                        val: String(tersalurkanCount),
-                        icon: <Package size={22} />,
-                        color: 'text-blue-600',
-                        bg: 'bg-blue-100',
-                        accent: '',
-                    },
-                    {
-                        title: 'Total Donasi',
-                        val: String(barangList.length),
-                        icon: <TrendingUp size={22} />,
-                        color: 'text-purple-600',
-                        bg: 'bg-purple-100',
-                        accent: '',
-                    },
-                ].map((s, i) => (
-                    <div key={i} className={`bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex items-center gap-4 transition-all hover:shadow-md ${s.accent}`}>
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${s.bg} ${s.color}`}>
-                            {s.icon}
-                        </div>
-                        <div>
-                            <div className="text-2xl font-display font-extrabold text-stone-900">{isLoading ? '...' : s.val}</div>
-                            <div className="text-[11px] font-bold text-stone-400 uppercase tracking-wider mt-0.5">{s.title}</div>
-                        </div>
+            {/* Main Stat Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className={`bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center transition-all hover:shadow-md ${stats?.menungguVerifikasi ? 'ring-2 ring-amber-200' : ''}`}>
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
+                        <ShieldCheck size={20} />
                     </div>
-                ))}
+                    <div className="text-2xl font-display font-extrabold text-stone-900 leading-none mb-1">{isLoading ? '-' : stats?.menungguVerifikasi}</div>
+                    <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Menunggu<br/>Verifikasi</div>
+                </div>
+
+                <div className={`bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center transition-all hover:shadow-md ${stats?.penjemputanAktif ? 'ring-2 ring-blue-200' : ''}`}>
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
+                        <Truck size={20} />
+                    </div>
+                    <div className="text-2xl font-display font-extrabold text-stone-900 leading-none mb-1">{isLoading ? '-' : stats?.penjemputanAktif}</div>
+                    <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Penjemputan<br/>Aktif</div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center transition-all hover:shadow-md">
+                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
+                        <QrCode size={20} />
+                    </div>
+                    <div className="text-2xl font-display font-extrabold text-stone-900 leading-none mb-1">{isLoading ? '-' : stats?.inventoryGudang}</div>
+                    <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Item Di<br/>Gudang</div>
+                </div>
+
+                <div className={`bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center transition-all hover:shadow-md ${stats?.pengirimanAktif ? 'ring-2 ring-rose-200' : ''}`}>
+                    <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mb-3">
+                        <Package size={20} />
+                    </div>
+                    <div className="text-2xl font-display font-extrabold text-stone-900 leading-none mb-1">{isLoading ? '-' : stats?.pengirimanAktif}</div>
+                    <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Pengiriman<br/>Aktif</div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center transition-all hover:shadow-md">
+                    <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center mb-3">
+                        <Megaphone size={20} />
+                    </div>
+                    <div className="text-2xl font-display font-extrabold text-stone-900 leading-none mb-1">{isLoading ? '-' : stats?.kampanyeAktif}</div>
+                    <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Kampanye<br/>Aktif</div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center transition-all hover:shadow-md">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center mb-3">
+                        <TrendingUp size={20} />
+                    </div>
+                    <div className="text-2xl font-display font-extrabold text-stone-900 leading-none mb-1">{isLoading ? '-' : stats?.totalTersalurkan}</div>
+                    <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Total<br/>Tersalurkan</div>
+                </div>
             </div>
 
             {/* Quick Actions */}
             <div>
                 <h2 className="text-sm font-bold tracking-widest text-stone-400 uppercase mb-4">Aksi Cepat</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     {quickActions.map((action, i) => (
                         <Link key={i} href={action.href} className={`group bg-white p-5 rounded-2xl border border-stone-200 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 ${action.hoverBg}`}>
                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${action.bg} ${action.color} mb-4 group-hover:scale-110 transition-transform`}>
                                 {action.icon}
                             </div>
                             <h3 className="font-display font-bold text-stone-900 text-sm mb-1">{action.title}</h3>
-                            <p className="text-xs text-stone-500">{action.desc}</p>
+                            <p className="text-xs text-stone-500 line-clamp-2 leading-relaxed">{action.desc}</p>
                             <div className="flex items-center gap-1 mt-3 text-xs font-bold text-green-600 group-hover:gap-2 transition-all">
                                 Buka <ArrowRight size={14} />
                             </div>
@@ -235,14 +246,14 @@ export default function AdminDash() {
                 <div className="p-6 border-b border-stone-100 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <h3 className="font-display font-bold text-stone-900">Donasi Masuk Terbaru</h3>
-                        {menungguCount > 0 && (
+                        {stats && stats.menungguVerifikasi > 0 && (
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-700">
-                                <AlertCircle size={12} /> {menungguCount} perlu ditinjau
+                                <AlertCircle size={12} /> {stats.menungguVerifikasi} perlu ditinjau
                             </span>
                         )}
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={fetchBarang}>Refresh</Button>
+                        <Button variant="outline" size="sm" onClick={fetchDashboardData}>Refresh</Button>
                         <Link href="/dashboard/admin/verifikasi">
                             <Button variant="ghost" size="sm">Lihat Semua <ArrowRight size={14} /></Button>
                         </Link>
@@ -287,7 +298,7 @@ export default function AdminDash() {
                                         <td className="p-4">
                                             <div className="flex items-center gap-1.5 text-sm font-semibold text-stone-700">
                                                 <Shirt size={14} className="text-stone-400" />
-                                                {item.kategori ?? 'Pakaian'}
+                                                {item.judul || item.kategori || 'Pakaian'}
                                             </div>
                                         </td>
                                         <td className="p-4">
