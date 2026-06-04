@@ -197,12 +197,6 @@ export default function DonaturDash() {
                                         </span>
                                         {getStatusBadge(donation.status)}
                                     </div>
-                                    <div className="text-xs text-stone-500 line-clamp-1 mt-0.5">
-                                        {donation.status === 'menunggu_verifikasi' && 'Sedang dalam antrean verifikasi admin.'}
-                                        {donation.status === 'disetujui' && 'Telah diverifikasi. Donasi Anda siap disalurkan.'}
-                                        {donation.status === 'tersalurkan' && 'Berhasil disalurkan penuh ke penerima manfaat.'}
-                                        {donation.status === 'ditolak' && 'Donasi dibatalkan/ditolak.'}
-                                    </div>
                                 </div>
                                 <Link href={`/dashboard/donatur/history/${donation.type}/${donation.id}`} className="text-xs font-bold text-stone-500 hover:text-green-600 transition-colors flex items-center gap-1 shrink-0 bg-white px-3 py-1.5 rounded-lg border border-stone-200 hover:border-green-300">
                                     Detail
