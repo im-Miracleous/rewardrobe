@@ -11,6 +11,9 @@ async function main() {
     await prisma.pengiriman.deleteMany();
     await prisma.permintaan.deleteMany();
     await prisma.barangDonasi.deleteMany();
+    await prisma.partisipasiCampaign.deleteMany();
+    await prisma.donasiUang.deleteMany();
+    await prisma.campaign.deleteMany();
 
     // --- Users (upsert) ---
     const admin = await prisma.user.upsert({
@@ -49,6 +52,38 @@ async function main() {
         create: { nama: 'Komunitas Peduli Sesama', email: 'penerima2@example.com', password: defaultPassword, role: 'penerima', tipe: 'komunitas', no_telpon: '089876543211', alamat_lengkap: 'Jl. Sosial No. 7', kota: 'Semarang' },
     });
 
+    // --- Campaigns ---
+    const campaign1 = await prisma.campaign.create({
+        data: {
+            judul: 'Green Wardrobe Challenge',
+            deskripsi: 'Tantangan mengumpulkan pakaian katun bekas layak pakai untuk didaur ulang menjadi produk baru bernilai tinggi.',
+            target_barang: 50,
+            foto_url: 'https://images.unsplash.com/photo-1532453268499-10d8709d098b?auto=format&fit=crop&w=600&q=80',
+            status: 'aktif',
+        },
+    });
+
+    const campaign2 = await prisma.campaign.create({
+        data: {
+            judul: 'Bantu Korban Banjir Ciliwung',
+            deskripsi: 'Mari bantu meringankan beban warga terdampak banjir di bantaran Ciliwung dengan mendonasikan pakaian hangat atau dana logistik.',
+            target_dana: 10000000,
+            target_barang: 100,
+            foto_url: 'https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=600&q=80',
+            status: 'aktif',
+        },
+    });
+
+    const campaign3 = await prisma.campaign.create({
+        data: {
+            judul: 'Dukung Pengrajin Lokal',
+            deskripsi: 'Program pemberdayaan pengrajin lokal untuk menjahit ulang pakaian tidak layak pakai menjadi kerajinan tangan. Donasi dana digunakan untuk mesin jahit dan pelatihan.',
+            target_dana: 5000000,
+            foto_url: 'https://images.unsplash.com/photo-1506806732259-39c2d0268443?auto=format&fit=crop&w=600&q=80',
+            status: 'aktif',
+        },
+    });
+
     // --- BarangDonasi ---
     const verifiedAt = new Date('2026-05-10T08:00:00Z');
 
@@ -75,6 +110,7 @@ async function main() {
             label_ai: 'perlu_perbaikan',
             status: 'menunggu_verifikasi',
             donatur_id: donatur.id,
+            campaign_id: campaign1.id,
         },
     });
 
@@ -183,7 +219,46 @@ async function main() {
         ],
     });
 
-    console.log('Seed selesai: 6 users, 4 barang_donasi, 3 permintaan, 3 pengiriman, 3 log_poin, 3 notifikasi');
+    // --- DonasiUang ---
+    await prisma.donasiUang.create({
+        data: {
+            nominal: 150000,
+            bukti_transfer: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
+            catatan: 'Semoga membantu untuk pembelian mesin jahit.',
+            status: 'disetujui',
+            donatur_id: donatur.id,
+            campaign_id: campaign3.id,
+            verified_by: admin.id,
+            verified_at: verifiedAt,
+        },
+    });
+
+    await prisma.donasiUang.create({
+        data: {
+            nominal: 50000,
+            bukti_transfer: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
+            catatan: 'Donasi umum finansial',
+            status: 'menunggu_verifikasi',
+            donatur_id: donatur2.id,
+        },
+    });
+
+    // --- PartisipasiCampaign ---
+    await prisma.partisipasiCampaign.create({
+        data: {
+            user_id: donatur.id,
+            campaign_id: campaign1.id,
+        },
+    });
+
+    await prisma.partisipasiCampaign.create({
+        data: {
+            user_id: donatur.id,
+            campaign_id: campaign3.id,
+        },
+    });
+
+    console.log('Seed selesai: 6 users, 4 barang_donasi, 3 permintaan, 3 pengiriman, 3 log_poin, 3 notifikasi, 3 campaigns, 2 donasi_uang');
 }
 
 main()

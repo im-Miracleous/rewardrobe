@@ -15,9 +15,10 @@ export default function DashboardLayout({
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
     let title = 'Dashboard';
-    if (pathname.includes('/admin')) title = 'Admin Dashboard';
-    if (pathname.includes('/donatur')) title = 'Donatur Dashboard';
-    if (pathname.includes('/penerima')) title = 'Penerima Dashboard';
+    let role = 'admin';
+    if (pathname.includes('/admin')) { title = 'Admin Dashboard'; role = 'admin'; }
+    if (pathname.includes('/donatur')) { title = 'Donatur Dashboard'; role = 'donatur'; }
+    if (pathname.includes('/penerima')) { title = 'Penerima Dashboard'; role = 'penerima'; }
 
     useEffect(() => {
         const user = localStorage.getItem('user');
@@ -45,7 +46,7 @@ export default function DashboardLayout({
                             <Bell size={20} className="text-stone-600" />
                             <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
                         </button>
-                        <Button size="sm">Profil</Button>
+                        <Button size="sm" onClick={() => router.push(`/dashboard/${role}/profile`)}>Profil</Button>
                     </div>
                 </header>
                 <div className="p-8 flex-1">

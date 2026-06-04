@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Home, Shirt, Package, Truck, QrCode, Heart, Trophy, History, ClipboardList, LogOut, Settings, User, LayoutDashboard } from 'lucide-react';
@@ -8,6 +8,28 @@ export default function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [userName, setUserName] = useState('');
+    const [avatarUrl, setAvatarUrl] = useState('');
+
+    useEffect(() => {
+        const loadUserData = () => {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                setUserName(user.nama || '');
+                if (user.foto_profil) {
+                    setAvatarUrl(user.foto_profil);
+                } else {
+                    setAvatarUrl(`https://api.dicebear.com/7.x/notionists/svg?seed=${user.nama}`);
+                }
+            }
+        };
+        loadUserData();
+
+        // Optional: listen for storage events to update across tabs
+        window.addEventListener('storage', loadUserData);
+        return () => window.removeEventListener('storage', loadUserData);
+    }, []);
 
     // Menentukan role dari URL
     let role = 'admin';
@@ -24,8 +46,8 @@ export default function Sidebar() {
         donatur: [
             { href: '/dashboard/donatur', label: 'Beranda Saya', icon: <Home size={18} /> },
             { href: '/dashboard/donatur/donate', label: 'Donasi Baru', icon: <Shirt size={18} /> },
-            { href: '#', label: 'Riwayat Donasi', icon: <History size={18} /> },
-            { href: '#', label: 'Poin & Leaderboard', icon: <Trophy size={18} /> },
+            { href: '/dashboard/donatur/history', label: 'Riwayat Donasi', icon: <History size={18} /> },
+            { href: '/dashboard/donatur/impact', label: 'Dampak & Tantangan', icon: <Trophy size={18} /> },
         ],
         penerima: [
             { href: '/dashboard/penerima', label: 'Katalog Donasi', icon: <Shirt size={18} /> },
@@ -69,7 +91,7 @@ export default function Sidebar() {
                 <div className="text-xs font-bold tracking-widest text-stone-400 uppercase mb-4 px-2 mt-2">Menu Utama</div>
                 <div className="space-y-1">
                     {navItems.map((item, idx) => {
-                        const isActive = pathname === item.href;
+                        const isActive = pathname === item.href || (item.href !== '/dashboard/donatur' && pathname.startsWith(item.href));
                         return (
                             <Link key={idx} href={item.href} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${isActive ? 'bg-green-50 text-green-700' : 'text-stone-600 hover:bg-stone-100'}`}>
                                 {item.icon} {item.label}
@@ -81,18 +103,18 @@ export default function Sidebar() {
 
             <div className="p-4 border-t border-stone-100">
                 {/* Profile Info Section (Sesuai Gambar) */}
-                <div className="flex items-center justify-between px-2 py-3 mb-2 rounded-xl hover:bg-stone-50 transition-colors cursor-pointer">
+                <Link href={`/dashboard/${role}/profile`} className="flex items-center justify-between px-2 py-3 mb-2 rounded-xl hover:bg-stone-50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-stone-400">
-                            <User size={20} />
+                        <div className="w-10 h-10 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center overflow-hidden shrink-0">
+                            <img src={avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=John Doe (${role.charAt(0).toUpperCase() + role.slice(1)})`} alt="Avatar" className="w-full h-full object-cover" />
                         </div>
-                        <div>
-                            <div className="text-sm font-bold text-stone-800 leading-tight">User {role}</div>
+                        <div className="overflow-hidden">
+                            <div className="text-sm font-bold text-stone-800 leading-tight truncate w-24">{userName || `User ${role}`}</div>
                             <div className="text-xs text-stone-400 capitalize leading-tight">{role}</div>
                         </div>
                     </div>
                     <Settings size={18} className="text-stone-400 hover:text-stone-600" />
-                </div>
+                </Link>
 
                 <button
                     type="button"

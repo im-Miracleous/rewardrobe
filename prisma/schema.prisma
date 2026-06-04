@@ -31,6 +31,9 @@ model User {
   permintaan     Permintaan[]
   log_poin       LogPoin[]
   notifikasi     Notifikasi[]
+  donasi_uang    DonasiUang[]   @relation("DonasiUang_donatur")
+  donasi_uang_diverif DonasiUang[] @relation("DonasiUang_verifier")
+  partisipasi_campaign PartisipasiCampaign[]
 
   @@map("users")
 }
@@ -48,11 +51,13 @@ model BarangDonasi {
   donatur_id  Int
   verified_by Int?
   verified_at DateTime?
+  campaign_id Int?
   created_at  DateTime     @default(now())
   updated_at  DateTime     @updatedAt
 
   donatur    User         @relation("BarangDonasi_donatur", fields: [donatur_id], references: [id])
   verifier   User?        @relation("BarangDonasi_verifier", fields: [verified_by], references: [id])
+  campaign   Campaign?    @relation(fields: [campaign_id], references: [id])
   permintaan Permintaan[]
   pengiriman Pengiriman[]
 
@@ -154,4 +159,57 @@ enum StatusPengiriman {
   disiapkan
   dalam_pengiriman
   terkirim
+}
+
+model Campaign {
+  id             Int                   @id @default(autoincrement())
+  judul          String
+  deskripsi      String
+  target_dana    Float?                // Target dana (nominal Rupiah), null jika hanya pakaian
+  terkumpul_dana Float                 @default(0)
+  target_barang  Int?                  // Target jumlah pakaian, null jika hanya uang
+  terkumpul_barang Int                @default(0)
+  foto_url       String?
+  status         String                @default("aktif") // "aktif" | "selesai"
+  created_at     DateTime              @default(now())
+  updated_at     DateTime              @updatedAt
+
+  barang_donasi  BarangDonasi[]
+  donasi_uang    DonasiUang[]
+  partisipan     PartisipasiCampaign[]
+
+  @@map("campaigns")
+}
+
+model PartisipasiCampaign {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  campaign_id Int
+  created_at  DateTime @default(now())
+
+  user     User     @relation(fields: [user_id], references: [id])
+  campaign Campaign @relation(fields: [campaign_id], references: [id])
+
+  @@unique([user_id, campaign_id])
+  @@map("partisipasi_campaign")
+}
+
+model DonasiUang {
+  id             Int          @id @default(autoincrement())
+  nominal        Float
+  bukti_transfer String
+  catatan        String?
+  status         StatusBarang @default(menunggu_verifikasi)
+  donatur_id     Int
+  campaign_id    Int?
+  verified_by    Int?
+  verified_at    DateTime?
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+
+  donatur  User      @relation("DonasiUang_donatur", fields: [donatur_id], references: [id])
+  verifier User?     @relation("DonasiUang_verifier", fields: [verified_by], references: [id])
+  campaign Campaign? @relation(fields: [campaign_id], references: [id])
+
+  @@map("donasi_uang")
 }

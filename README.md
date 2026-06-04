@@ -148,6 +148,35 @@ npx prisma studio
 
 Jika halaman `db-check` menampilkan status `Connected`, berarti Next.js app sudah berhasil terhubung ke PostgreSQL lewat Prisma.
 
+## Update Kode & Migrasi Database
+
+Jika ada pembaruan kode dari repositori (terdapat fitur baru atau pembaruan struktur database), ikuti langkah-langkah berikut agar aplikasi dapat berjalan dengan lancar:
+
+### 1. Pull Pembaruan Kode
+Pastikan Anda berada di branch utama (misal: `main`) dan ambil perubahan terbaru dengan Git:
+```bash
+git pull origin main
+```
+
+### 2. Install/Update Dependency
+Jika terdapat penambahan atau perubahan pada file `package.json`, Anda harus menginstal dependensi terbaru:
+```bash
+npm install
+```
+
+### 3. Migrasi Database (Jika ada perubahan skema)
+Jika update tersebut berisi perubahan pada `prisma/schema.prisma`, maka struktur database lokal Anda harus diselaraskan. Jalankan:
+```bash
+npx prisma migrate dev
+```
+*Catatan:* Command ini akan menyinkronkan database dengan skema terbaru dan secara otomatis menjalankan `npx prisma generate` untuk memperbarui Prisma Client.
+
+### 4. Jalankan Aplikasi
+Setelah kode dan database tersinkronisasi, jalankan aplikasi seperti biasa:
+```bash
+npm run dev
+```
+
 ---
 
 ## 👀 Problem

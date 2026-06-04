@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { RoleUser, TipePenerima } from '@prisma/client';
 import prisma from '@/lib/prisma';
+import { hashPassword } from '@/lib/auth';
 
 function isRoleUser(value: unknown): value is RoleUser {
   return value === 'admin' || value === 'donatur' || value === 'penerima';
@@ -53,12 +54,17 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     tipe?: TipePenerima | null;
   };
 
+  let hashedPassword;
+  if (body.password) {
+    hashedPassword = await hashPassword(body.password);
+  }
+
   const updatedUser = await prisma.user.update({
     where: { id: userId },
     data: {
       ...(body.nama !== undefined ? { nama: body.nama } : {}),
       ...(body.email !== undefined ? { email: body.email } : {}),
-      ...(body.password !== undefined ? { password: body.password } : {}),
+      ...(hashedPassword !== undefined ? { password: hashedPassword } : {}),
       ...(body.no_telpon !== undefined ? { no_telpon: body.no_telpon } : {}),
       ...(body.alamat_lengkap !== undefined ? { alamat_lengkap: body.alamat_lengkap } : {}),
       ...(body.kota !== undefined ? { kota: body.kota } : {}),
