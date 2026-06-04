@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(mkdir -p \"C:\\\\Users\\\\gavin\\\\Documents\\\\GitHub\\\\rewardrobe\\\\src\\\\app\\\\api\\\\barang-donasi\\\\[id]\")",
-      "Bash(npx tsc *)",
-      "Bash(npm run *)"
-    ]
-  }
-}
