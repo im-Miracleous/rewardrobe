@@ -66,6 +66,10 @@ Setelah itu, jika pelru sample data, lakukan seeding untuk dengan menjalankan:
 ```bash
 npm run db:seed
 ```
+atau
+``` bash
+npx prisma db seed
+```
 
 ### 4. Jalankan aplikasi
 
