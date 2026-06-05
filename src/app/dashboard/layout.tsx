@@ -16,9 +16,22 @@ export default function DashboardLayout({
 
     let title = 'Dashboard';
     let role = 'admin';
-    if (pathname.includes('/admin')) { title = 'Admin Dashboard'; role = 'admin'; }
-    if (pathname.includes('/donatur')) { title = 'Donatur Dashboard'; role = 'donatur'; }
-    if (pathname.includes('/penerima')) { title = 'Penerima Dashboard'; role = 'penerima'; }
+    if (pathname.includes('/admin')) { role = 'admin'; }
+    if (pathname.includes('/donatur')) { role = 'donatur'; }
+    if (pathname.includes('/penerima')) { role = 'penerima'; }
+
+    // Resolve page title from pathname
+    const titleMap: Record<string, string> = {
+        '/dashboard/admin': 'Admin Dashboard',
+        '/dashboard/admin/verifikasi': 'Verifikasi Donasi',
+        '/dashboard/admin/penjemputan': 'Penjemputan Barang',
+        '/dashboard/admin/pengiriman': 'Kelola Pengiriman',
+        '/dashboard/admin/inventory': 'Inventory & Katalog (QR)',
+        '/dashboard/admin/kampanye': 'Kelola Kampanye',
+        '/dashboard/donatur': 'Donatur Dashboard',
+        '/dashboard/penerima': 'Penerima Dashboard',
+    };
+    title = titleMap[pathname] || (role === 'admin' ? 'Admin Dashboard' : role === 'donatur' ? 'Donatur Dashboard' : 'Penerima Dashboard');
 
     useEffect(() => {
         const user = localStorage.getItem('user');

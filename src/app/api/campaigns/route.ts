@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
@@ -33,6 +34,10 @@ export async function GET(request: NextRequest) {
             const terkumpulBarang = c.barang_donasi.length;
             const joined = userId ? (c.partisipan as any[]).length > 0 : false;
 
+            // Total participants calculation (mocked for now, or based on partisipan count if we include it)
+            // But we didn't include full partisipan array. Let's just mock it or query it.
+            // For now, let's keep it simple.
+
             return {
                 id: c.id,
                 judul: c.judul,
@@ -52,6 +57,43 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ data: formattedCampaigns, error: null });
     } catch (error) {
         console.error('GET /api/campaigns error:', error);
+        return NextResponse.json({ data: null, error: 'Terjadi kesalahan pada server' }, { status: 500 });
+    }
+}
+
+const postSchema = z.object({
+    judul: z.string().min(1),
+    deskripsi: z.string().min(1),
+    target_dana: z.number().optional().nullable(),
+    target_barang: z.number().optional().nullable(),
+    foto_url: z.string().optional().nullable()
+});
+
+export async function POST(request: NextRequest) {
+    try {
+        const body = await request.json();
+        const parsed = postSchema.safeParse(body);
+
+        if (!parsed.success) {
+            return NextResponse.json({ data: null, error: parsed.error.issues.map(i => i.message).join(', ') }, { status: 400 });
+        }
+
+        const data = parsed.data;
+
+        const newCampaign = await prisma.campaign.create({
+            data: {
+                judul: data.judul,
+                deskripsi: data.deskripsi,
+                target_dana: data.target_dana || null,
+                target_barang: data.target_barang || null,
+                foto_url: data.foto_url || null,
+                status: 'aktif'
+            }
+        });
+
+        return NextResponse.json({ data: newCampaign, error: null }, { status: 201 });
+    } catch (error) {
+        console.error('POST /api/campaigns error:', error);
         return NextResponse.json({ data: null, error: 'Terjadi kesalahan pada server' }, { status: 500 });
     }
 }

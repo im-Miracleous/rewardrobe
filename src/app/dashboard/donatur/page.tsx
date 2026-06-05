@@ -150,8 +150,8 @@ export default function DonaturDash() {
                                 <YAxis yAxisId="right" orientation="right" tickFormatter={(v) => `Rp${v/1000}k`} tick={{ fontSize: 12, fill: '#78716c' }} tickLine={false} axisLine={false} />
                                 <Tooltip 
                                     contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    formatter={(value: number, name: string) => {
-                                        if (name === 'dana') return [`Rp ${value.toLocaleString('id-ID')}`, 'Donasi Uang'];
+                                    formatter={(value: any, name: any) => {
+                                        if (name === 'dana') return [`Rp ${(value as number).toLocaleString('id-ID')}`, 'Donasi Uang'];
                                         return [`${value} Item`, 'Donasi Pakaian'];
                                     }}
                                 />
