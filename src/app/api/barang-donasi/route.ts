@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = request.nextUrl;
         const statusParam = searchParams.get('status');
+        const tersedia = searchParams.get('tersedia') === 'true';
 
         const statusResult = statusParam ? StatusBarangEnum.safeParse(statusParam) : null;
 
@@ -36,11 +37,21 @@ export async function GET(request: NextRequest) {
             );
         }
 
+        const where: Record<string, unknown> = statusResult?.success ? { status: statusResult.data } : {};
+
+        // tersedia=true: hanya barang yang sudah dijemput admin (penjemputan terkirim)
+        if (tersedia) {
+            where.pengiriman = {
+                some: { tipe: 'donatur_ke_admin', status: 'terkirim' },
+            };
+        }
+
         const barangList = await prisma.barangDonasi.findMany({
-            where: statusResult?.success ? { status: statusResult.data } : undefined,
+            where,
             include: {
                 donatur: { select: { id: true, nama: true, kota: true } },
                 verifier: { select: { id: true, nama: true } },
+                campaign: { select: { id: true, judul: true } },
             },
             orderBy: { created_at: 'desc' },
         });
@@ -71,29 +82,47 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ data: null, error: 'donatur_id tidak ditemukan' }, { status: 404 });
         }
 
+        let needsVerification = false;
         if (campaign_id) {
-            const campaignExists = await prisma.campaign.findUnique({ where: { id: campaign_id } });
-            if (!campaignExists) {
+            const campaign = await prisma.campaign.findUnique({ where: { id: campaign_id } });
+            if (!campaign) {
                 return NextResponse.json({ data: null, error: 'Kampanye tidak ditemukan' }, { status: 404 });
             }
+            needsVerification = campaign.verification_required;
         }
+
+        const finalStatus = needsVerification ? 'menunggu_verifikasi' : 'disetujui';
 
         const fullDeskripsi = catatan
             ? `Kondisi menurut donatur: ${kondisi}\n\nCatatan: ${catatan}`
             : `Kondisi menurut donatur: ${kondisi}`;
 
-        const barang = await prisma.barangDonasi.create({
-            data: {
-                judul: null,
-                deskripsi: fullDeskripsi,
-                kondisi_user: kondisi,
-                kategori: tipePakaian,
-                berat_kg: berat_kg ?? null,
-                foto_url: bukti_foto || null,
-                status: 'menunggu_verifikasi',
-                donatur_id,
-                campaign_id: campaign_id || null,
-            },
+        const barang = await prisma.$transaction(async (tx) => {
+            const created = await tx.barangDonasi.create({
+                data: {
+                    judul: null,
+                    deskripsi: fullDeskripsi,
+                    kondisi_user: kondisi,
+                    kategori: tipePakaian,
+                    berat_kg: berat_kg ?? null,
+                    foto_url: bukti_foto || null,
+                    status: finalStatus,
+                    donatur_id,
+                    campaign_id: campaign_id || null,
+                },
+            });
+
+            if (finalStatus === 'disetujui') {
+                await tx.pengiriman.create({
+                    data: {
+                        barang_id: created.id,
+                        tipe: 'donatur_ke_admin',
+                        status: 'disiapkan',
+                    },
+                });
+            }
+
+            return created;
         });
 
         return NextResponse.json({ data: barang, error: null }, { status: 201 });

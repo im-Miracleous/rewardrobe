@@ -1,22 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
+import { AUTH_COOKIE_NAME, parseAuthCookieValue } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
     try {
-        // Fetch both BarangDonasi and DonasiUang
+        // Fetch BarangDonasi yang menunggu verifikasi (hanya kampanye dengan verification_required=true)
         const pakaianList = await prisma.barangDonasi.findMany({
+            where: { status: 'menunggu_verifikasi' },
             include: {
                 donatur: { select: { id: true, nama: true, kota: true, email: true } },
-                campaign: { select: { judul: true } }
+                campaign: { select: { judul: true, requirement: true, verification_required: true } }
             },
             orderBy: { created_at: 'desc' }
         });
 
+        // DonasiUang tetap diverifikasi semua yang menunggu
         const uangList = await prisma.donasiUang.findMany({
+            where: { status: 'menunggu_verifikasi' },
             include: {
                 donatur: { select: { id: true, nama: true, kota: true, email: true } },
-                campaign: { select: { judul: true } }
+                campaign: { select: { judul: true, requirement: true, verification_required: true } }
             },
             orderBy: { created_at: 'desc' }
         });
@@ -29,10 +33,12 @@ export async function GET(request: NextRequest) {
             kategori: p.kategori,
             kondisi: p.kondisi_user,
             deskripsi: p.deskripsi,
-            foto_url: p.foto_url,
+            bukti_foto: p.foto_url,
             status: p.status,
             created_at: p.created_at,
-            campaign: p.campaign?.judul || null
+            campaign: p.campaign?.judul || null,
+            requirement: p.campaign?.requirement || null,
+            verification_required: p.campaign?.verification_required ?? false,
         }));
 
         const normalizedUang = uangList.map(u => ({
@@ -40,12 +46,14 @@ export async function GET(request: NextRequest) {
             tipe: 'uang',
             donatur: u.donatur,
             kategori: 'Donasi Dana',
-            kondisi: u.nominal, // nominal instead of condition
+            kondisi: u.nominal,
             deskripsi: u.catatan || 'Tidak ada catatan',
-            foto_url: u.bukti_transfer,
+            bukti_foto: u.bukti_transfer,
             status: u.status,
             created_at: u.created_at,
-            campaign: u.campaign?.judul || null
+            campaign: u.campaign?.judul || null,
+            requirement: u.campaign?.requirement || null,
+            verification_required: u.campaign?.verification_required ?? false,
         }));
 
         // Combine and sort by created_at desc
@@ -65,11 +73,19 @@ const patchSchema = z.object({
     tipe: z.enum(['pakaian', 'uang']),
     status: z.enum(['disetujui', 'ditolak']),
     alasan_penolakan: z.string().optional(),
-    admin_id: z.number().int().positive().optional().default(1) // Default admin ID for now
 });
 
 export async function PATCH(request: NextRequest) {
     try {
+        const auth = parseAuthCookieValue(request.cookies.get(AUTH_COOKIE_NAME)?.value);
+        if (!auth) {
+            return NextResponse.json({ data: null, error: 'Tidak terautentikasi' }, { status: 401 });
+        }
+        if (auth.role !== 'admin') {
+            return NextResponse.json({ data: null, error: 'Akses hanya untuk admin' }, { status: 403 });
+        }
+        const admin_id = auth.userId;
+
         const body = await request.json();
         const parsed = patchSchema.safeParse(body);
 
@@ -77,7 +93,7 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ data: null, error: parsed.error.issues.map(i => i.message).join(', ') }, { status: 400 });
         }
 
-        const { id, tipe, status, alasan_penolakan, admin_id } = parsed.data;
+        const { id, tipe, status, alasan_penolakan } = parsed.data;
 
         let result;
 

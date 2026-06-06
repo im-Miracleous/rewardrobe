@@ -53,7 +53,7 @@ export default function Sidebar() {
         ],
         penerima: [
             { href: '/dashboard/penerima', label: 'Katalog Donasi', icon: <Shirt size={18} /> },
-            { href: '#', label: 'Permintaan Saya', icon: <ClipboardList size={18} /> },
+            { href: '/dashboard/penerima/permintaan', label: 'Permintaan Saya', icon: <ClipboardList size={18} /> },
         ]
     };
 

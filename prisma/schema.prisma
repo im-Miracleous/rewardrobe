@@ -169,9 +169,11 @@ model Campaign {
   terkumpul_dana Float                 @default(0)
   target_barang  Int?                  // Target jumlah pakaian, null jika hanya uang
   terkumpul_barang Int                @default(0)
-  foto_url       String?
-  status         String                @default("aktif") // "aktif" | "selesai"
-  created_at     DateTime              @default(now())
+  foto_url              String?
+  status                String                @default("aktif") // "aktif" | "selesai"
+  requirement           String?               // Persyaratan pakaian, null = bebas (tidak perlu verifikasi)
+  verification_required Boolean               @default(false)
+  created_at            DateTime              @default(now())
   updated_at     DateTime              @updatedAt
 
   barang_donasi  BarangDonasi[]

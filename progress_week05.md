@@ -1,7 +1,7 @@
 # Progress Report — Week 4
 **Project:** ReWardrobe  
 
-**Branch:** https://github.com/im-Miracleous/rewardrobe/tree/Week05
+**Branch:** https://github.com/im-Miracleous/rewardrobe/tree/Week04
 
 **Kelompok:**
 - 2472019 — Miracle Steven Gerrald (Ketua)
@@ -29,9 +29,18 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 
 ## Current Progress
 **Miracle (2472019)**
+* Fitur: Ditambahkan admin APIs dan pembaharuan UI admin dashboard
+* Refaktor (admin): memperbaiki dashboard UI admin + dibuat desain baru admin inventory & campaign page
 
 **Christian (2472008)**
+- Menyempurnakan dokumen `README.md` dengan menambahkan perintah alternatif untuk melakukan migration
+- Mendokumentasikan progress dalam file `progress_week05.md`
 
 **Henry (2472029)**
+- Memperbaiki *User Experience*: Menukar urutan dropdown kelayakan baju menjadi berurutan Baik-Fair-Buruk, karena sebelumnya Fair-Baik-Buruk agak membingungkan
 
 **Gavin (2472042)**
+- Menganalisis alur bisnis dan logika verifikasi seluruh codebase
+- Mengimplementasikan logika conditional: donasi tanpa kampanye atau kampanye bebas
+  langsung auto-approve; kampanye berequirement masuk antrian verifikasi admin
+- Memperbarui seeder untuk demonstrasi semua 6 kasus bisnis
