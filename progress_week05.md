@@ -1,11 +1,11 @@
-# Progress Report — Week 4
+# Progress Report — Week 5
 **Project:** ReWardrobe  
 
-**Branch:** https://github.com/im-Miracleous/rewardrobe/tree/Week04
+**Branch:** https://github.com/im-Miracleous/rewardrobe/tree/Week05
 
 **Kelompok:**
-- 2472019 — Miracle Steven Gerrald (Ketua)
 - 2472008 — Christian Anthony Hermawan
+- 2472019 — Miracle Steven Gerrald
 - 2472029 — Henry Ferdynand Budiana
 - 2472042 — Gavin Malik Setiawan
 ## Tools Used
@@ -28,13 +28,13 @@ Satu interface registrasi menghasilkan objek `User` yang berbeda sesuai role yan
 `barang_donasi` bertindak sebagai **Publisher**, sedangkan `users` (Donatur & Penerima) bertindak sebagai **Subscriber**. Setiap kali status barang berubah, sistem otomatis mengirim notifikasi ke semua pengguna yang relevan tanpa ketergantungan langsung antar komponen (*loose coupling*).
 
 ## Current Progress
-**Miracle (2472019)**
-* Fitur: Ditambahkan admin APIs dan pembaharuan UI admin dashboard
-* Refaktor (admin): memperbaiki dashboard UI admin + dibuat desain baru admin inventory & campaign page
-
 **Christian (2472008)**
 - Menyempurnakan dokumen `README.md` dengan menambahkan perintah alternatif untuk melakukan migration
 - Mendokumentasikan progress dalam file `progress_week05.md`
+
+**Miracle (2472019)**
+* Fitur: Ditambahkan admin APIs dan pembaharuan UI admin dashboard
+* Refaktor (admin): memperbaiki dashboard UI admin + dibuat desain baru admin inventory & campaign page
 
 **Henry (2472029)**
 - Memperbaiki *User Experience*: Menukar urutan dropdown kelayakan baju menjadi berurutan Baik-Fair-Buruk, karena sebelumnya Fair-Baik-Buruk agak membingungkan
