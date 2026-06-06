@@ -30,6 +30,8 @@ interface Kampanye {
   target_barang: number | null;
   terkumpul_barang: number;
   jumlah_partisipan: number;
+  requirement: string | null;
+  verification_required: boolean;
   created_at: string;
   gradient: string;
 }
@@ -74,6 +76,8 @@ export default function KelolaKampanyePage() {
   const [formDeskripsi, setFormDeskripsi] = useState("");
   const [formTargetDana, setFormTargetDana] = useState("");
   const [formTargetBarang, setFormTargetBarang] = useState("");
+  const [formRequirement, setFormRequirement] = useState("");
+  const [formVerificationRequired, setFormVerificationRequired] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -146,6 +150,8 @@ export default function KelolaKampanyePage() {
             deskripsi: formDeskripsi.trim() || "Tidak ada deskripsi.",
             target_dana: formTargetDana ? Number(formTargetDana) : null,
             target_barang: formTargetBarang ? Number(formTargetBarang) : null,
+            requirement: formRequirement.trim() || null,
+            verification_required: formVerificationRequired,
         };
 
         const res = await fetch('/api/campaigns', {
@@ -159,6 +165,8 @@ export default function KelolaKampanyePage() {
             setFormDeskripsi("");
             setFormTargetDana("");
             setFormTargetBarang("");
+            setFormRequirement("");
+            setFormVerificationRequired(false);
             setShowModal(false);
             await fetchData();
         } else {
@@ -380,6 +388,19 @@ export default function KelolaKampanyePage() {
                   )}
                 </div>
 
+                {/* Requirement info */}
+                {k.requirement && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
+                    <p className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1">Persyaratan Pakaian</p>
+                    <p className="text-xs text-amber-800 leading-relaxed">{k.requirement}</p>
+                  </div>
+                )}
+                {k.verification_required && (
+                  <div className="mb-3">
+                    <Badge color="yellow">Verifikasi Admin Wajib</Badge>
+                  </div>
+                )}
+
                 {/* Meta row */}
                 <div className="flex items-center gap-5 pt-1 text-xs text-stone-400 font-semibold mb-3">
                   <span className="flex items-center gap-1.5">
@@ -510,6 +531,33 @@ export default function KelolaKampanyePage() {
                     className="w-full px-4 py-3 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">
+                  Persyaratan Pakaian
+                </label>
+                <textarea
+                  value={formRequirement}
+                  onChange={(e) => setFormRequirement(e.target.value)}
+                  placeholder="Contoh: Pakaian harus bersih, layak pakai, bukan pakaian dalam. Opsional — kosongkan jika bebas."
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all resize-none"
+                />
+              </div>
+
+              <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <input
+                  type="checkbox"
+                  id="verif-required"
+                  checked={formVerificationRequired}
+                  onChange={(e) => setFormVerificationRequired(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-stone-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                />
+                <label htmlFor="verif-required" className="cursor-pointer">
+                  <p className="text-sm font-bold text-amber-800">Verifikasi Admin Wajib</p>
+                  <p className="text-xs text-amber-700 mt-0.5">Centang ini jika admin perlu memeriksa setiap donasi sebelum masuk katalog (misal: kampanye bantu korban bencana).</p>
+                </label>
               </div>
 
               <div>

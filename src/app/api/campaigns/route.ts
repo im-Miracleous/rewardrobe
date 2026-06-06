@@ -48,6 +48,8 @@ export async function GET(request: NextRequest) {
                 terkumpul_barang: terkumpulBarang,
                 foto_url: c.foto_url,
                 status: c.status,
+                requirement: c.requirement,
+                verification_required: c.verification_required,
                 joined,
                 created_at: c.created_at,
                 updated_at: c.updated_at
@@ -66,7 +68,9 @@ const postSchema = z.object({
     deskripsi: z.string().min(1),
     target_dana: z.number().optional().nullable(),
     target_barang: z.number().optional().nullable(),
-    foto_url: z.string().optional().nullable()
+    foto_url: z.string().optional().nullable(),
+    requirement: z.string().optional().nullable(),
+    verification_required: z.boolean().optional().default(false),
 });
 
 export async function POST(request: NextRequest) {
@@ -87,7 +91,9 @@ export async function POST(request: NextRequest) {
                 target_dana: data.target_dana || null,
                 target_barang: data.target_barang || null,
                 foto_url: data.foto_url || null,
-                status: 'aktif'
+                status: 'aktif',
+                requirement: data.requirement || null,
+                verification_required: data.verification_required ?? false,
             }
         });
 

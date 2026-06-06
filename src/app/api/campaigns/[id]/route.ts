@@ -3,7 +3,9 @@ import { z } from 'zod';
 import prisma from '@/lib/prisma';
 
 const patchSchema = z.object({
-    status: z.enum(['aktif', 'selesai']),
+    status: z.enum(['aktif', 'selesai']).optional(),
+    requirement: z.string().nullable().optional(),
+    verification_required: z.boolean().optional(),
 });
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -19,11 +21,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             return NextResponse.json({ data: null, error: parsed.error.issues.map(i => i.message).join(', ') }, { status: 400 });
         }
 
-        const { status } = parsed.data;
+        const updateData: Record<string, unknown> = {};
+        if (parsed.data.status !== undefined) updateData.status = parsed.data.status;
+        if (parsed.data.requirement !== undefined) updateData.requirement = parsed.data.requirement;
+        if (parsed.data.verification_required !== undefined) updateData.verification_required = parsed.data.verification_required;
 
         const campaign = await prisma.campaign.update({
             where: { id },
-            data: { status }
+            data: updateData
         });
 
         return NextResponse.json({ data: campaign, error: null });

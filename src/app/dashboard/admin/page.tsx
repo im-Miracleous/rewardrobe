@@ -132,6 +132,16 @@ const quickActions = [
         border: 'border-green-200',
         hoverBg: 'hover:bg-green-50',
     },
+    {
+        href: '/dashboard/admin/permintaan',
+        icon: <CheckCircle size={24} />,
+        title: 'Permintaan Penerima',
+        desc: 'Review & setujui permintaan barang',
+        color: 'text-teal-600',
+        bg: 'bg-teal-50',
+        border: 'border-teal-200',
+        hoverBg: 'hover:bg-teal-50',
+    },
 ];
 
 export default function AdminDash() {

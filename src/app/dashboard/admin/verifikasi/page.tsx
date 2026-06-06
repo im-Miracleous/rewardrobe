@@ -27,12 +27,14 @@ interface Donation {
   donatur: { id: number; nama: string; kota: string | null; email: string };
   tipe: DonationType;
   detail: string;
-  kondisi?: string; 
+  kondisi?: string;
   deskripsi: string;
   nominal?: number;
   bukti_foto: string | null;
   status: DonationStatus;
   campaign: string | null;
+  requirement: string | null;
+  verification_required: boolean;
   waktu_masuk: string;
   created_at: string;
 }
@@ -400,6 +402,14 @@ export default function VerifikasiDonasiPage() {
                         <p className="text-sm text-stone-600 truncate">
                           {item.deskripsi}
                         </p>
+                        {item.campaign && (
+                          <p className="text-xs text-green-700 mt-1">📢 {item.campaign}</p>
+                        )}
+                        {item.requirement && (
+                          <p className="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg mt-1">
+                            Syarat: {item.requirement}
+                          </p>
+                        )}
                       </td>
                       <td className="p-4">
                         {item.tipe === "pakaian" && item.kondisi ? (
