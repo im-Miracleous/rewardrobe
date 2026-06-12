@@ -150,8 +150,8 @@ export default function DonaturDash() {
                                 <YAxis yAxisId="right" orientation="right" tickFormatter={(v) => `Rp${v/1000}k`} tick={{ fontSize: 12, fill: '#78716c' }} tickLine={false} axisLine={false} />
                                 <Tooltip 
                                     contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    formatter={(value: number, name: string) => {
-                                        if (name === 'dana') return [`Rp ${value.toLocaleString('id-ID')}`, 'Donasi Uang'];
+                                    formatter={(value: any, name: any) => {
+                                        if (name === 'dana') return [`Rp ${(value as number).toLocaleString('id-ID')}`, 'Donasi Uang'];
                                         return [`${value} Item`, 'Donasi Pakaian'];
                                     }}
                                 />
@@ -196,12 +196,6 @@ export default function DonaturDash() {
                                             {donation.type}
                                         </span>
                                         {getStatusBadge(donation.status)}
-                                    </div>
-                                    <div className="text-xs text-stone-500 line-clamp-1 mt-0.5">
-                                        {donation.status === 'menunggu_verifikasi' && 'Sedang dalam antrean verifikasi admin.'}
-                                        {donation.status === 'disetujui' && 'Telah diverifikasi. Donasi Anda siap disalurkan.'}
-                                        {donation.status === 'tersalurkan' && 'Berhasil disalurkan penuh ke penerima manfaat.'}
-                                        {donation.status === 'ditolak' && 'Donasi dibatalkan/ditolak.'}
                                     </div>
                                 </div>
                                 <Link href={`/dashboard/donatur/history/${donation.type}/${donation.id}`} className="text-xs font-bold text-stone-500 hover:text-green-600 transition-colors flex items-center gap-1 shrink-0 bg-white px-3 py-1.5 rounded-lg border border-stone-200 hover:border-green-300">

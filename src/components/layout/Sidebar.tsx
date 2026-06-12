@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Shirt, Package, Truck, QrCode, Heart, Trophy, History, ClipboardList, LogOut, Settings, User, LayoutDashboard } from 'lucide-react';
+import { Home, Shirt, Package, Truck, QrCode, Heart, Trophy, History, ClipboardList, LogOut, Settings, User, LayoutDashboard, ShieldCheck, Megaphone } from 'lucide-react';
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -39,9 +39,11 @@ export default function Sidebar() {
     const menus: Record<string, { href: string; label: string; icon: React.ReactNode }[]> = {
         admin: [
             { href: '/dashboard/admin', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-            { href: '/dashboard/admin#penjemputan-barang', label: 'Penjemputan Barang', icon: <Truck size={18} /> },
-            { href: '#', label: 'Kelola Pengiriman', icon: <Package size={18} /> },
-            { href: '#', label: 'Inventory (QR)', icon: <QrCode size={18} /> },
+            { href: '/dashboard/admin/verifikasi', label: 'Verifikasi Donasi', icon: <ShieldCheck size={18} /> },
+            { href: '/dashboard/admin/penjemputan', label: 'Penjemputan Barang', icon: <Truck size={18} /> },
+            { href: '/dashboard/admin/pengiriman', label: 'Kelola Pengiriman', icon: <Package size={18} /> },
+            { href: '/dashboard/admin/inventory', label: 'Inventory (QR)', icon: <QrCode size={18} /> },
+            { href: '/dashboard/admin/kampanye', label: 'Kelola Kampanye', icon: <Megaphone size={18} /> },
         ],
         donatur: [
             { href: '/dashboard/donatur', label: 'Beranda Saya', icon: <Home size={18} /> },
@@ -51,7 +53,7 @@ export default function Sidebar() {
         ],
         penerima: [
             { href: '/dashboard/penerima', label: 'Katalog Donasi', icon: <Shirt size={18} /> },
-            { href: '#', label: 'Permintaan Saya', icon: <ClipboardList size={18} /> },
+            { href: '/dashboard/penerima/permintaan', label: 'Permintaan Saya', icon: <ClipboardList size={18} /> },
         ]
     };
 
@@ -91,7 +93,10 @@ export default function Sidebar() {
                 <div className="text-xs font-bold tracking-widest text-stone-400 uppercase mb-4 px-2 mt-2">Menu Utama</div>
                 <div className="space-y-1">
                     {navItems.map((item, idx) => {
-                        const isActive = pathname === item.href || (item.href !== '/dashboard/donatur' && pathname.startsWith(item.href));
+                        const isDashboardRoot = item.href === '/dashboard/admin' || item.href === '/dashboard/donatur' || item.href === '/dashboard/penerima';
+                        const isActive = isDashboardRoot
+                            ? pathname === item.href
+                            : pathname.startsWith(item.href);
                         return (
                             <Link key={idx} href={item.href} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${isActive ? 'bg-green-50 text-green-700' : 'text-stone-600 hover:bg-stone-100'}`}>
                                 {item.icon} {item.label}

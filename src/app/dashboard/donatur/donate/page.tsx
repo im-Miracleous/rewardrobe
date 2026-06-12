@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/Input';
 import Link from 'next/link';
 
 const KONDISI_OPTIONS = [
-    { label: 'Fair / Cukup layak', value: 'fair' },
     { label: 'Baik / Layak pakai', value: 'baik' },
+    { label: 'Fair / Cukup layak', value: 'fair' },
     { label: 'Rusak / Perlu penanganan', value: 'rusak' },
 ];
 
