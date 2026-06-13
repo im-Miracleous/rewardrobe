@@ -12,7 +12,8 @@ import {
   ChevronRight,
   Search,
   Building2,
-  Loader2
+  Loader2,
+  Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -286,23 +287,22 @@ export default function KelolaPengirimanPage() {
       <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
         {/* Tabs + Search */}
         <div className="p-5 border-b border-stone-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center gap-1 bg-stone-100 rounded-xl p-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => {
-                  setActiveTab(tab.key);
-                  setCurrentPage(1);
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  activeTab === tab.key
-                    ? 'bg-white text-stone-900 shadow-sm'
-                    : 'text-stone-500 hover:text-stone-700'
-                }`}
+          <div className="flex items-center gap-2">
+              <Filter size={16} className="text-stone-400" />
+              <select
+                  value={activeTab}
+                  onChange={(e) => {
+                      setActiveTab(e.target.value as TabFilter);
+                      setCurrentPage(1);
+                  }}
+                  className="px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm font-semibold text-stone-700 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-400 transition-all cursor-pointer min-w-[180px]"
               >
-                {tab.label}
-              </button>
-            ))}
+                  {tabs.map((tab) => (
+                      <option key={tab.key} value={tab.key}>
+                          {tab.label}
+                      </option>
+                  ))}
+              </select>
           </div>
           <div className="relative">
             <Search

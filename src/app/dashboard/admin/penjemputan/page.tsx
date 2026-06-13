@@ -12,7 +12,8 @@ import {
   Navigation,
   Plus,
   X,
-  Loader2
+  Loader2,
+  Filter
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -294,24 +295,21 @@ export default function PenjemputanBarangPage() {
 
         {/* Right: Tab filter + Pickup Cards */}
         <div className="xl:col-span-2 space-y-5">
-          {/* Tabs */}
-          <div className="flex gap-2 flex-wrap">
-            {tabs.map((tab) => {
-              const isActive = activeTab === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-                    isActive
-                      ? "bg-green-600 text-white shadow-md shadow-green-600/20"
-                      : "bg-white text-stone-600 border border-stone-200 hover:bg-stone-50 hover:border-stone-300"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
+          {/* Filter Dropdown */}
+          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-4 flex flex-wrap items-center gap-3">
+              <Filter size={18} className="text-stone-400" />
+              <span className="text-sm font-semibold text-stone-600">Filter Status:</span>
+              <select
+                  value={activeTab}
+                  onChange={(e) => setActiveTab(e.target.value as TabKey)}
+                  className="px-4 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm font-semibold text-stone-700 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 transition-all cursor-pointer min-w-[200px]"
+              >
+                  {tabs.map((tab) => (
+                      <option key={tab.key} value={tab.key}>
+                          {tab.label}
+                      </option>
+                  ))}
+              </select>
           </div>
 
           {/* Card List */}

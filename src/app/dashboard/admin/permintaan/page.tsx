@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { CheckCircle, XCircle, Loader2, Package, Eye, X } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Package, Eye, X, Filter } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
@@ -122,21 +122,20 @@ export default function AdminPermintaanPage() {
                 )}
             </div>
 
-            {/* Tabs */}
-            <div className="flex items-center gap-2 flex-wrap">
-                {(["menunggu", "semua", "diterima", "ditolak"] as const).map((tab) => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 capitalize ${
-                            activeTab === tab
-                                ? "bg-teal-600 text-white shadow-md shadow-teal-600/20"
-                                : "bg-white text-stone-600 border border-stone-200 hover:bg-stone-50"
-                        }`}
-                    >
-                        {tab === "menunggu" ? `Menunggu${menungguCount > 0 ? ` (${menungguCount})` : ""}` : tab.charAt(0).toUpperCase() + tab.slice(1)}
-                    </button>
-                ))}
+            {/* Filter Dropdown */}
+            <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-4 flex flex-wrap items-center gap-3">
+                <Filter size={18} className="text-stone-400" />
+                <span className="text-sm font-semibold text-stone-600">Filter Status:</span>
+                <select
+                    value={activeTab}
+                    onChange={(e) => setActiveTab(e.target.value as any)}
+                    className="px-4 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm font-semibold text-stone-700 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 transition-all cursor-pointer min-w-[200px]"
+                >
+                    <option value="semua">Semua Permintaan</option>
+                    <option value="menunggu">Menunggu{menungguCount > 0 ? ` (${menungguCount})` : ""}</option>
+                    <option value="diterima">Diterima</option>
+                    <option value="ditolak">Ditolak</option>
+                </select>
             </div>
 
             {/* Table */}

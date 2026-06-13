@@ -115,6 +115,7 @@ export default function InventoryPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
   const [kategoriFilter, setKategoriFilter] = useState("Semua");
+  const [statusFilter, setStatusFilter] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
 
   // QR modal state
@@ -146,7 +147,8 @@ export default function InventoryPage() {
       item.id.toString().includes(search.toLowerCase()) ||
       item.donatur?.nama?.toLowerCase().includes(search.toLowerCase());
     const matchKategori = kategoriFilter === "Semua" || item.kategori === kategoriFilter;
-    return matchSearch && matchKategori;
+    const matchStatus = statusFilter === "Semua" || item.status === statusFilter;
+    return matchSearch && matchKategori && matchStatus;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
@@ -236,6 +238,20 @@ export default function InventoryPage() {
                 {KATEGORI_OPTIONS.map((k) => (
                   <option key={k} value={k}>{k}</option>
                 ))}
+              </select>
+            </div>
+
+            {/* Status filter */}
+            <div className="flex items-center gap-2">
+              <Filter size={16} className="text-stone-400" />
+              <select
+                value={statusFilter}
+                onChange={(e) => updateFilter(setStatusFilter, e.target.value)}
+                className="px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-400 transition-all cursor-pointer"
+              >
+                <option value="Semua">Semua Status</option>
+                <option value="terkirim">{STATUS_BARANG_LABEL['terkirim']}</option>
+                <option value="tersalurkan">{STATUS_BARANG_LABEL['tersalurkan']}</option>
               </select>
             </div>
 
