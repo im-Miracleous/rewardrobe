@@ -74,15 +74,15 @@ Legenda: ❌ belum ada |📝 dalam rencana | 🟡 sedang dikerjakan | ✅ sudah 
 ## 2. DONATUR
 | No  | Fitur                                                                                                                                                         | Status | PIC |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----: | --- |
-| 2.1 | **Notifikasi** saat donasi diterima admin (poin dasar). Belum ada `notifikasi.create` sama sekali                                                             |   ❌    |     |
-| 2.2 | **Notifikasi** saat donasi tersalurkan ke penerima (poin bonus)                                                                                               |   ❌    |     |
-| 2.3 | **Poin dasar** otomatis saat barang diterima admin (belum ada `logPoin.create`)                                                                               |   ❌    |     |
-| 2.4 | **Poin bonus** otomatis saat barang tersalurkan                                                                                                               |   ❌    |     |
-| 2.5 | Rename sidebar "Riwayat Donasi" → **"Donasi Saya"**                                                                                                           |   🟡   |     |
-| 2.6 | Fitur **"Mengelola Pengiriman"**: donatur konfirmasi kirim barang ke ReWardrobe (drop-off/kirim sendiri)                                                      |   ❌    |     |
-| 2.7 | Penamaan status untuk donatur: **"Menunggu Pengiriman"**, **"Terkirim"**, **"Tersalurkan"** (sudah pakai `STATUS_BARANG_LABEL`/`_BADGE` di `donatur/history`) |   ✅    |     |
-| 2.8 | Sub-tab **"Donasi Sedang Berjalan"** di "Donasi Saya" (menunggu pengiriman / terkirim)                                                                        |   ❌    |     |
-| 2.9 | Sub-tab/menu **"Riwayat Donasi"** khusus yang sudah **tersalurkan**                                                                                           |   ❌    |     |
+| 2.1 | **Notifikasi** saat donasi diterima admin (poin dasar). Belum ada `notifikasi.create` sama sekali                                                             |   ✅    |   Christian  |
+| 2.2 | **Notifikasi** saat donasi tersalurkan ke penerima (poin bonus)                                                                                               |   ✅    |   Christian  |
+| 2.3 | **Poin dasar** otomatis saat barang diterima admin (belum ada `logPoin.create`)                                                                               |   ✅    |  Christian   |
+| 2.4 | **Poin bonus** otomatis saat barang tersalurkan                                                                                                               |   ✅    |  Christian   |
+| 2.5 | Rename sidebar "Riwayat Donasi" → **"Donasi Saya"**                                                                                                           |   ✅   |   Henry  |
+| 2.6 | Fitur **"Mengelola Pengiriman"**: donatur konfirmasi kirim barang ke ReWardrobe (drop-off/kirim sendiri)                                                      |   ✅    |   Henry  |
+| 2.7 | Penamaan status untuk donatur: **"Menunggu Pengiriman"**, **"Terkirim"**, **"Tersalurkan"** (sudah pakai `STATUS_BARANG_LABEL`/`_BADGE` di `donatur/history`) |   ✅    |   Henry  |
+| 2.8 | Sub-tab **"Donasi Sedang Berjalan"** di "Donasi Saya" (menunggu pengiriman / terkirim)                                                                        |   ✅    |   Henry  |
+| 2.9 | Sub-tab/menu **"Riwayat Donasi"** khusus yang sudah **tersalurkan**                                                                                           |   ✅    |  Henry   |
 
 ## 3. PENERIMA
 | No  | Fitur                                                                                                            | Status | PIC |

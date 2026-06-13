@@ -46,7 +46,7 @@ export default function Sidebar() {
         donatur: [
             { href: '/dashboard/donatur', label: 'Beranda Saya', icon: <Home size={18} /> },
             { href: '/dashboard/donatur/donate', label: 'Donasi Baru', icon: <Shirt size={18} /> },
-            { href: '/dashboard/donatur/history', label: 'Donasi Saya', icon: <History size={18} /> },
+            { href: '/dashboard/donatur/donasi-saya', label: 'Donasi Saya', icon: <History size={18} /> },
             { href: '/dashboard/donatur/impact', label: 'Dampak & Tantangan', icon: <Trophy size={18} /> },
         ],
         penerima: [

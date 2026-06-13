@@ -111,7 +111,7 @@ function DonateFormContent() {
             setBuktiFoto('');
 
             setTimeout(() => {
-                router.push('/dashboard/donatur/history');
+                router.push('/dashboard/donatur/donasi-saya');
             }, 2000);
         } catch (error) {
             console.error('Submit donation error:', error);

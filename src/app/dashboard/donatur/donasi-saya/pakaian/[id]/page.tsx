@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Shirt, Info, Clock, Truck, ShieldCheck, Package } from 'lucide-react';
+import { ArrowLeft, Shirt, Info, Clock, Truck, ShieldCheck, Package, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { STATUS_BARANG_BADGE, STATUS_BARANG_LABEL, type StatusBarang } from '@/lib/statusBarang';
@@ -14,27 +14,76 @@ export default function ClothingDetailPage() {
     const [barang, setBarang] = useState<any | null>(null);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
-    useEffect(() => {
-        const fetchDetail = async () => {
-            setIsLoading(true);
-            setError('');
-            try {
-                const res = await fetch(`/api/barang-donasi/${id}`);
-                const result = await res.json();
-                if (!res.ok) {
-                    setError(result.error || 'Gagal memuat rincian donasi pakaian.');
-                    return;
-                }
-                setBarang(result.data);
-            } catch (err) {
-                console.error(err);
-                setError('Terjadi kesalahan koneksi internet.');
-            } finally {
-                setIsLoading(false);
+    // Konfirmasi Pengiriman (2.6) State
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [shipMetode, setShipMetode] = useState<'drop_off' | 'kurir'>('drop_off');
+    const [shipKurir, setShipKurir] = useState('');
+    const [shipResi, setShipResi] = useState('');
+    const [shipSubmitting, setShipSubmitting] = useState(false);
+    const [shipError, setShipError] = useState('');
+
+    const fetchDetail = async () => {
+        setIsLoading(true);
+        setError('');
+        try {
+            const res = await fetch(`/api/barang-donasi/${id}`);
+            const result = await res.json();
+            if (!res.ok) {
+                setError(result.error || 'Gagal memuat rincian donasi pakaian.');
+                return;
             }
-        };
+            setBarang(result.data);
+        } catch (err) {
+            console.error(err);
+            setError('Terjadi kesalahan koneksi internet.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
         if (id) fetchDetail();
     }, [id]);
+
+    const pendingShipment = (barang?.pengiriman || []).find(
+        (p: any) => p.tipe === 'donatur_ke_admin' && p.status === 'disiapkan'
+    );
+
+    const openConfirm = () => {
+        setShipMetode('drop_off');
+        setShipKurir('');
+        setShipResi('');
+        setShipError('');
+        setConfirmOpen(true);
+    };
+
+    const submitConfirm = async () => {
+        if (!pendingShipment) return;
+        setShipSubmitting(true);
+        setShipError('');
+        try {
+            const res = await fetch(`/api/donatur/pengiriman/${pendingShipment.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    metode: shipMetode,
+                    kurir: shipMetode === 'kurir' ? shipKurir : undefined,
+                    resi: shipMetode === 'kurir' ? shipResi : undefined,
+                }),
+            });
+            const json = await res.json();
+            if (!res.ok) {
+                setShipError(json.error || 'Gagal mengonfirmasi pengiriman.');
+                return;
+            }
+            setConfirmOpen(false);
+            await fetchDetail();
+        } catch {
+            setShipError('Terjadi kesalahan koneksi.');
+        } finally {
+            setShipSubmitting(false);
+        }
+    };
 
     const getStatusBadge = (status: StatusBarang) => {
         return (
@@ -79,8 +128,8 @@ export default function ClothingDetailPage() {
                 <Info size={40} className="mb-3 text-red-500" />
                 <h3 className="font-bold text-lg mb-1">Rincian Tidak Ditemukan</h3>
                 <p className="text-sm text-red-600 mb-4">{error || 'Data donasi pakaian tidak tersedia.'}</p>
-                <Link href="/dashboard/donatur/history">
-                    <Button variant="outline" size="sm">Kembali ke Riwayat</Button>
+                <Link href="/dashboard/donatur/donasi-saya">
+                    <Button variant="outline" size="sm">Kembali ke Donasi Saya</Button>
                 </Link>
             </div>
         );
@@ -91,10 +140,10 @@ export default function ClothingDetailPage() {
             {/* Header */}
             <div>
                 <Link
-                    href="/dashboard/donatur/history"
+                    href="/dashboard/donatur/donasi-saya"
                     className="inline-flex items-center gap-2 text-sm font-semibold text-stone-500 hover:text-stone-800 transition-colors mb-4"
                 >
-                    <ArrowLeft size={16} /> Kembali ke Riwayat
+                    <ArrowLeft size={16} /> Kembali ke Donasi Saya
                 </Link>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -181,9 +230,22 @@ export default function ClothingDetailPage() {
 
                     {/* Logistics Timeline */}
                     <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 space-y-6">
-                        <h3 className="font-display font-extrabold text-stone-900 text-base flex items-center gap-2">
-                            <Truck className="text-green-600" size={20} /> Status Logistik & Pengiriman
-                        </h3>
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <h3 className="font-display font-extrabold text-stone-900 text-base flex items-center gap-2">
+                                <Truck className="text-green-600" size={20} /> Status Logistik & Pengiriman
+                            </h3>
+                            {pendingShipment && (
+                                <Button size="sm" onClick={openConfirm} className="shrink-0">
+                                    <span className="inline-flex items-center gap-1.5"><Truck size={14} /> Konfirmasi Pengiriman</span>
+                                </Button>
+                            )}
+                        </div>
+                        {pendingShipment && (
+                            <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+                                <Info size={14} className="mt-0.5 shrink-0" />
+                                <span>Sudah mengirim barang ini ke ReWardrobe? Konfirmasikan agar admin dapat memprosesnya.</span>
+                            </div>
+                        )}
 
                         {barang.pengiriman && barang.pengiriman.length > 0 ? (
                             <div className="relative pl-6 space-y-6 border-l-2 border-stone-100">
@@ -225,6 +287,88 @@ export default function ClothingDetailPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Konfirmasi Pengiriman Modal (2.6) */}
+            {confirmOpen && (
+                <div
+                    className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease]"
+                    onClick={() => !shipSubmitting && setConfirmOpen(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl border border-stone-200 w-full max-w-md p-6 space-y-5"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+                                <CheckCircle2 size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-display font-bold text-lg text-stone-900">Konfirmasi Pengiriman</h3>
+                                <p className="text-sm text-stone-500 mt-0.5">
+                                    Konfirmasi bahwa Anda telah mengirim barang ini ke ReWardrobe.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="text-xs font-bold text-stone-500 uppercase tracking-wider">Metode Pengiriman</div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {([
+                                    { key: 'drop_off', label: 'Antar Sendiri / Drop-off' },
+                                    { key: 'kurir', label: 'Kirim via Kurir' },
+                                ] as const).map((m) => (
+                                    <button
+                                        key={m.key}
+                                        type="button"
+                                        onClick={() => setShipMetode(m.key)}
+                                        className={`px-3 py-2.5 rounded-xl text-sm font-bold border transition-all ${shipMetode === m.key ? 'border-green-600 bg-green-50 text-green-700' : 'border-stone-200 text-stone-600 hover:border-stone-300'}`}
+                                    >
+                                        {m.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {shipMetode === 'kurir' && (
+                                <div className="space-y-3 pt-1">
+                                    <div>
+                                        <label className="text-xs font-semibold text-stone-500">Nama Kurir (opsional)</label>
+                                        <input
+                                            type="text"
+                                            value={shipKurir}
+                                            onChange={(e) => setShipKurir(e.target.value)}
+                                            placeholder="mis. JNE, J&T, GoSend"
+                                            className="mt-1 w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-stone-50 focus:bg-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-stone-500">No. Resi (opsional)</label>
+                                        <input
+                                            type="text"
+                                            value={shipResi}
+                                            onChange={(e) => setShipResi(e.target.value)}
+                                            placeholder="mis. JNE1234567890"
+                                            className="mt-1 w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-stone-50 focus:bg-white"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {shipError && (
+                            <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{shipError}</div>
+                        )}
+
+                        <div className="flex justify-end gap-2 pt-1">
+                            <Button variant="outline" size="sm" onClick={() => setConfirmOpen(false)} disabled={shipSubmitting}>
+                                Batal
+                            </Button>
+                            <Button size="sm" onClick={submitConfirm} disabled={shipSubmitting}>
+                                {shipSubmitting ? 'Menyimpan...' : 'Konfirmasi Kirim'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Image Modal */}
             {isImageModalOpen && (

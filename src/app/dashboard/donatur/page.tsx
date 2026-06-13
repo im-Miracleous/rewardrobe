@@ -183,7 +183,7 @@ export default function DonaturDash() {
                                         {getStatusBadge(donation.status)}
                                     </div>
                                 </div>
-                                <Link href={`/dashboard/donatur/history/${donation.type}/${donation.id}`} className="text-xs font-bold text-stone-500 hover:text-green-600 transition-colors flex items-center gap-1 shrink-0 bg-white px-3 py-1.5 rounded-lg border border-stone-200 hover:border-green-300">
+                                <Link href={`/dashboard/donatur/donasi-saya/${donation.type}/${donation.id}`} className="text-xs font-bold text-stone-500 hover:text-green-600 transition-colors flex items-center gap-1 shrink-0 bg-white px-3 py-1.5 rounded-lg border border-stone-200 hover:border-green-300">
                                     Detail
                                 </Link>
                             </div>
@@ -191,8 +191,8 @@ export default function DonaturDash() {
                         
                         {latestDonations.length > 0 && (
                             <div className="pt-2 text-center">
-                                <Link href="/dashboard/donatur/history" className="text-xs font-bold text-green-600 hover:text-green-700 transition-colors inline-flex items-center gap-1">
-                                    Lihat Semua Riwayat <ArrowRight size={14} />
+                                <Link href="/dashboard/donatur/donasi-saya" className="text-xs font-bold text-green-600 hover:text-green-700 transition-colors inline-flex items-center gap-1">
+                                    Lihat Semua Donasi <ArrowRight size={14} />
                                 </Link>
                             </div>
                         )}

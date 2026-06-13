@@ -25,6 +25,12 @@ export async function GET(request: NextRequest) {
         const barangDonasi = await prisma.barangDonasi.findMany({
             where: { donatur_id: donaturId },
             orderBy: { created_at: 'desc' },
+            include: {
+                pengiriman: {
+                    where: { tipe: 'donatur_ke_admin' },
+                    orderBy: { created_at: 'asc' },
+                },
+            },
         });
 
         return NextResponse.json({

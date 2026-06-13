@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { History, Shirt, Calendar, AlertCircle, ExternalLink, RefreshCw, Search, Filter, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { History, Shirt, Calendar, AlertCircle, ExternalLink, RefreshCw, Search, Filter, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { STATUS_BARANG_BADGE, STATUS_BARANG_LABEL, type StatusBarang } from '@/lib/statusBarang';
@@ -16,11 +16,19 @@ export default function DonationHistoryPage() {
     const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
     // Filtering State
-    const [filter, setFilter] = useState<'semua' | 'pakaian'>('semua');
+    const [tab, setTab] = useState<'berjalan' | 'riwayat'>('berjalan');
     const [searchQuery, setSearchQuery] = useState('');
     const [dateFilter, setDateFilter] = useState<'semua' | 'hari_ini' | 'minggu_ini' | 'bulan_ini'>('semua');
     const [kondisiFilter, setKondisiFilter] = useState<'semua' | 'baik' | 'fair' | 'rusak'>('semua');
     const [kategoriFilter, setKategoriFilter] = useState<string>('semua');
+
+    // Konfirmasi Pengiriman (2.6) State
+    const [confirmItem, setConfirmItem] = useState<any | null>(null);
+    const [shipMetode, setShipMetode] = useState<'drop_off' | 'kurir'>('drop_off');
+    const [shipKurir, setShipKurir] = useState('');
+    const [shipResi, setShipResi] = useState('');
+    const [shipSubmitting, setShipSubmitting] = useState(false);
+    const [shipError, setShipError] = useState('');
 
     // Sorting State
     const [sortColumn, setSortColumn] = useState<'tanggal' | 'tipe' | 'judul' | 'status'>('tanggal');
@@ -74,7 +82,48 @@ export default function DonationHistoryPage() {
     // Reset pagination when filter changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [filter, searchQuery, dateFilter, kondisiFilter, kategoriFilter, itemsPerPage, sortColumn, sortDirection]);
+    }, [tab, searchQuery, dateFilter, kondisiFilter, kategoriFilter, itemsPerPage, sortColumn, sortDirection]);
+
+    // Helper: pengiriman donatur->admin yang masih menunggu konfirmasi donatur
+    const getPendingShipment = (item: any) =>
+        (item.pengiriman || []).find((p: any) => p.tipe === 'donatur_ke_admin' && p.status === 'disiapkan');
+
+    const openConfirm = (item: any) => {
+        setConfirmItem(item);
+        setShipMetode('drop_off');
+        setShipKurir('');
+        setShipResi('');
+        setShipError('');
+    };
+
+    const submitConfirm = async () => {
+        const ship = confirmItem && getPendingShipment(confirmItem);
+        if (!ship) return;
+        setShipSubmitting(true);
+        setShipError('');
+        try {
+            const res = await fetch(`/api/donatur/pengiriman/${ship.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    metode: shipMetode,
+                    kurir: shipMetode === 'kurir' ? shipKurir : undefined,
+                    resi: shipMetode === 'kurir' ? shipResi : undefined,
+                }),
+            });
+            const json = await res.json();
+            if (!res.ok) {
+                setShipError(json.error || 'Gagal mengonfirmasi pengiriman.');
+                return;
+            }
+            setConfirmItem(null);
+            await fetchHistory();
+        } catch {
+            setShipError('Terjadi kesalahan koneksi.');
+        } finally {
+            setShipSubmitting(false);
+        }
+    };
 
     const getStatusBadge = (status: StatusBarang) => {
         return (
@@ -97,9 +146,12 @@ export default function DonationHistoryPage() {
     const combinedHistory = clothesList.map(item => ({ ...item, type: 'pakaian' as const }));
 
     // 2. Apply Filters (Tab, Search, Custom Filters)
+    const BERJALAN_STATUS = ['menunggu_pengiriman', 'terkirim'];
+    const RIWAYAT_STATUS = ['tersalurkan', 'ditolak'];
     const filteredAndSearched = combinedHistory.filter(item => {
-        // Tab Filter
-        if (filter !== 'semua' && item.type !== filter) return false;
+        // Tab Filter (berdasarkan status barang)
+        const statusGroup = tab === 'berjalan' ? BERJALAN_STATUS : RIWAYAT_STATUS;
+        if (!statusGroup.includes(item.status)) return false;
 
         // Date Filter
         if (dateFilter !== 'semua') {
@@ -115,11 +167,9 @@ export default function DonationHistoryPage() {
             }
         }
 
-        // Specific Tab Filters
-        if (filter === 'pakaian' && item.type === 'pakaian') {
-            if (kondisiFilter !== 'semua' && item.kondisi_user !== kondisiFilter) return false;
-            if (kategoriFilter !== 'semua' && item.kategori?.toLowerCase() !== kategoriFilter.toLowerCase()) return false;
-        }
+        // Custom Filters (kondisi & kategori)
+        if (kondisiFilter !== 'semua' && item.kondisi_user !== kondisiFilter) return false;
+        if (kategoriFilter !== 'semua' && item.kategori?.toLowerCase() !== kategoriFilter.toLowerCase()) return false;
 
         // Search Filter
         if (searchQuery.trim() !== '') {
@@ -215,20 +265,16 @@ export default function DonationHistoryPage() {
 
             {/* Filter Tabs */}
             <div className="flex gap-2 border-b border-stone-200 pb-px">
-                {(['semua', 'pakaian'] as const).map((tab) => (
+                {([
+                    { key: 'berjalan', label: 'Sedang Berjalan' },
+                    { key: 'riwayat', label: 'Riwayat Donasi' },
+                ] as const).map((t) => (
                     <button
-                        key={tab}
-                        onClick={() => {
-                            setFilter(tab);
-                            // Reset tab-specific filters when switching tabs
-                            if (tab !== 'pakaian') {
-                                setKondisiFilter('semua');
-                                setKategoriFilter('semua');
-                            }
-                        }}
-                        className={`pb-3 px-4 text-sm font-bold font-display border-b-2 transition-all capitalize -mb-px ${filter === tab ? 'border-green-600 text-green-700' : 'border-transparent text-stone-500 hover:text-stone-800'}`}
+                        key={t.key}
+                        onClick={() => setTab(t.key)}
+                        className={`pb-3 px-4 text-sm font-bold font-display border-b-2 transition-all -mb-px ${tab === t.key ? 'border-green-600 text-green-700' : 'border-transparent text-stone-500 hover:text-stone-800'}`}
                     >
-                        {tab === 'semua' ? 'Semua Donasi' : 'Donasi Pakaian'}
+                        {t.label}
                     </button>
                 ))}
             </div>
@@ -265,33 +311,29 @@ export default function DonationHistoryPage() {
                         <option value="bulan_ini">Bulan Ini</option>
                     </select>
 
-                    {filter === 'pakaian' && (
-                        <>
-                            <select 
-                                value={kategoriFilter}
-                                onChange={(e) => setKategoriFilter(e.target.value)}
-                                className="text-xs bg-white border border-stone-200 text-stone-600 rounded-lg px-2.5 py-2 focus:outline-hidden focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-                            >
-                                <option value="semua">Semua Kategori</option>
-                                <option value="baju">Baju</option>
-                                <option value="celana">Celana</option>
-                                <option value="jaket">Jaket / Luaran</option>
-                                <option value="sepatu">Sepatu</option>
-                                <option value="aksesoris">Aksesoris</option>
-                            </select>
-                            
-                            <select 
-                                value={kondisiFilter}
-                                onChange={(e) => setKondisiFilter(e.target.value as any)}
-                                className="text-xs bg-white border border-stone-200 text-stone-600 rounded-lg px-2.5 py-2 focus:outline-hidden focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-                            >
-                                <option value="semua">Semua Kondisi</option>
-                                <option value="baik">Baik / Layak</option>
-                                <option value="fair">Cukup / Sedang</option>
-                                <option value="rusak">Rusak / Daur Ulang</option>
-                            </select>
-                        </>
-                    )}
+                    <select
+                        value={kategoriFilter}
+                        onChange={(e) => setKategoriFilter(e.target.value)}
+                        className="text-xs bg-white border border-stone-200 text-stone-600 rounded-lg px-2.5 py-2 focus:outline-hidden focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                    >
+                        <option value="semua">Semua Kategori</option>
+                        <option value="baju">Baju</option>
+                        <option value="celana">Celana</option>
+                        <option value="jaket">Jaket / Luaran</option>
+                        <option value="sepatu">Sepatu</option>
+                        <option value="aksesoris">Aksesoris</option>
+                    </select>
+
+                    <select
+                        value={kondisiFilter}
+                        onChange={(e) => setKondisiFilter(e.target.value as any)}
+                        className="text-xs bg-white border border-stone-200 text-stone-600 rounded-lg px-2.5 py-2 focus:outline-hidden focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                    >
+                        <option value="semua">Semua Kondisi</option>
+                        <option value="baik">Baik / Layak</option>
+                        <option value="fair">Cukup / Sedang</option>
+                        <option value="rusak">Rusak / Daur Ulang</option>
+                    </select>
                 </div>
             </div>
 
@@ -304,7 +346,7 @@ export default function DonationHistoryPage() {
             ) : error ? (
                 <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center text-red-800 flex flex-col items-center justify-center">
                     <AlertCircle size={40} className="mb-3 text-red-500" />
-                    <h3 className="font-bold text-lg mb-1">Gagal Memuat Riwayat</h3>
+                    <h3 className="font-bold text-lg mb-1">Gagal Memuat Donasi</h3>
                     <p className="text-sm text-red-600 mb-4">{error}</p>
                     <Button variant="outline" size="sm" onClick={fetchHistory}>Coba Lagi</Button>
                 </div>
@@ -317,11 +359,10 @@ export default function DonationHistoryPage() {
                     <p className="text-stone-500 text-sm mb-8">
                         Belum ada riwayat donasi yang sesuai dengan saringan (filter) atau pencarian Anda.
                     </p>
-                    {(searchQuery || filter !== 'semua' || dateFilter !== 'semua') ? (
-                        <Button 
-                            variant="outline" 
+                    {(searchQuery || dateFilter !== 'semua' || kondisiFilter !== 'semua' || kategoriFilter !== 'semua') ? (
+                        <Button
+                            variant="outline"
                             onClick={() => {
-                                setFilter('semua');
                                 setSearchQuery('');
                                 setDateFilter('semua');
                                 setKondisiFilter('semua');
@@ -406,11 +447,22 @@ export default function DonationHistoryPage() {
                                         </td>
 
                                         <td className="px-4 py-4 align-middle text-right">
-                                            <Link href={`/dashboard/donatur/history/${item.type}/${item.id}`}>
-                                                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-stone-500 hover:text-white hover:bg-green-600 rounded-lg transition-colors border border-stone-200 hover:border-green-600" title="Lihat Rincian">
-                                                    Detail <ExternalLink size={14} />
-                                                </button>
-                                            </Link>
+                                            <div className="inline-flex items-center gap-1.5 justify-end">
+                                                {getPendingShipment(item) && (
+                                                    <button
+                                                        onClick={() => openConfirm(item)}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors border border-green-600"
+                                                        title="Konfirmasi pengiriman barang ke ReWardrobe"
+                                                    >
+                                                        <Truck size={14} /> Konfirmasi Pengiriman
+                                                    </button>
+                                                )}
+                                                <Link href={`/dashboard/donatur/donasi-saya/${item.type}/${item.id}`}>
+                                                    <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-stone-500 hover:text-white hover:bg-green-600 rounded-lg transition-colors border border-stone-200 hover:border-green-600" title="Lihat Rincian">
+                                                        Detail <ExternalLink size={14} />
+                                                    </button>
+                                                </Link>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -461,6 +513,88 @@ export default function DonationHistoryPage() {
                             >
                                 <ChevronRight size={16} />
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Konfirmasi Pengiriman Modal (2.6) */}
+            {confirmItem && (
+                <div
+                    className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease]"
+                    onClick={() => !shipSubmitting && setConfirmItem(null)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl border border-stone-200 w-full max-w-md p-6 space-y-5"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+                                <Truck size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-display font-bold text-lg text-stone-900">Konfirmasi Pengiriman</h3>
+                                <p className="text-sm text-stone-500 mt-0.5">
+                                    Konfirmasi bahwa Anda telah mengirim <span className="font-semibold text-stone-700">{confirmItem.judul || `Pakaian - ${confirmItem.kategori || 'Lainnya'}`}</span> ke ReWardrobe.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="text-xs font-bold text-stone-500 uppercase tracking-wider">Metode Pengiriman</div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {([
+                                    { key: 'drop_off', label: 'Antar Sendiri / Drop-off' },
+                                    { key: 'kurir', label: 'Kirim via Kurir' },
+                                ] as const).map((m) => (
+                                    <button
+                                        key={m.key}
+                                        type="button"
+                                        onClick={() => setShipMetode(m.key)}
+                                        className={`px-3 py-2.5 rounded-xl text-sm font-bold border transition-all ${shipMetode === m.key ? 'border-green-600 bg-green-50 text-green-700' : 'border-stone-200 text-stone-600 hover:border-stone-300'}`}
+                                    >
+                                        {m.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {shipMetode === 'kurir' && (
+                                <div className="space-y-3 pt-1">
+                                    <div>
+                                        <label className="text-xs font-semibold text-stone-500">Nama Kurir (opsional)</label>
+                                        <input
+                                            type="text"
+                                            value={shipKurir}
+                                            onChange={(e) => setShipKurir(e.target.value)}
+                                            placeholder="mis. JNE, J&T, GoSend"
+                                            className="mt-1 w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-stone-50 focus:bg-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-stone-500">No. Resi (opsional)</label>
+                                        <input
+                                            type="text"
+                                            value={shipResi}
+                                            onChange={(e) => setShipResi(e.target.value)}
+                                            placeholder="mis. JNE1234567890"
+                                            className="mt-1 w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-stone-50 focus:bg-white"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {shipError && (
+                            <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{shipError}</div>
+                        )}
+
+                        <div className="flex justify-end gap-2 pt-1">
+                            <Button variant="outline" size="sm" onClick={() => setConfirmItem(null)} disabled={shipSubmitting}>
+                                Batal
+                            </Button>
+                            <Button size="sm" onClick={submitConfirm} disabled={shipSubmitting}>
+                                {shipSubmitting ? 'Menyimpan...' : 'Konfirmasi Kirim'}
+                            </Button>
                         </div>
                     </div>
                 </div>
