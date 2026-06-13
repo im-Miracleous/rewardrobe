@@ -62,32 +62,33 @@ Legenda: ❌ belum ada |📝 dalam rencana | 🟡 sedang dikerjakan | ✅ sudah 
 | 0.6 | Helper label status (`src/lib/statusBarang.ts`) untuk penamaan konsisten di UI                                                                                                                                              |   ✅    | Gavin |
 
 ## 1. ADMIN
-| No  | Fitur                                                                                           | Status | PIC       |
-| --- | ----------------------------------------------------------------------------------------------- | :----: | --------- |
-| 1.1 | **Hapus/nonaktifkan menu "Verifikasi Donasi"** — tak ada screening tanpa kampanye               |   ✅    | Gavin     |
-| 1.2 | Filter inventory pakai status `terkirim` & `tersalurkan` (ganti `disetujui`)                    |   ✅    | Christian |
-| 1.3 | Setujui permintaan penerima → atur pengiriman admin→penerima                                    |   ✅    | Gavin     |
-| 1.4 | Konfirmasi barang sampai → status barang `tersalurkan`                                          |   ✅    | Gavin     |
-| 1.5 | Fitur untuk menyetujui permintaan barang dari penerima (menggantikan fitur "Kelola Pengiriman") |   ❌    |           |
+| No  | Fitur                                                                                                                                                                                                                                                             | Status | PIC       |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----: | --------- |
+| 1.1 | **Hapus/nonaktifkan menu "Verifikasi Donasi"** — tak ada screening tanpa kampanye                                                                                                                                                                                 |   ✅    | Gavin     |
+| 1.2 | Filter inventory pakai status `terkirim` & `tersalurkan` (ganti `disetujui`)                                                                                                                                                                                      |   ✅    | Christian |
+| 1.3 | Setujui permintaan penerima → atur pengiriman admin→penerima (menggantikan "Kelola Pengiriman"). _Catatan: 1.5 digabung ke sini._                                                                                                                                 |   ✅    | Gavin     |
+| 1.4 | Admin update pengiriman → `terkirim` memicu status barang `tersalurkan` + poin/notif (lihat `admin/pengiriman/[id]`)                                                                                                                                              |   ✅    | Gavin     |
+| 1.6 | **BUG ALUR — barang `tersalurkan` ganda**: `permintaan/[id]` set barang `tersalurkan` saat admin *approve* (poin flow 10), padahal seharusnya hanya saat barang **sampai** (poin flow 11). Hapus set status di approve, biarkan hanya `pengiriman→terkirim`       |   ❌    |           |
+| 1.7 | **Putuskan aktor penutup transaksi** (flow poin 11): admin tandai pengiriman `terkirim` **atau** konfirmasi penerima. Saat ini konfirmasi penerima (`permintaan/[id]` aksi `konfirmasi`) hanya menambah catatan teks ke `pesan`, tidak mengubah status/poin/notif |   ❌    |           |
 
 ## 2. DONATUR
-| No  | Fitur                                                                                                    | Status | PIC |
-| --- | -------------------------------------------------------------------------------------------------------- | :----: | --- |
-| 2.1 | **Notifikasi** saat donasi diterima admin (poin dasar). Belum ada `notifikasi.create` sama sekali        |   ❌    |     |
-| 2.2 | **Notifikasi** saat donasi tersalurkan ke penerima (poin bonus)                                          |   ❌    |     |
-| 2.3 | **Poin dasar** otomatis saat barang diterima admin (belum ada `logPoin.create`)                          |   ❌    |     |
-| 2.4 | **Poin bonus** otomatis saat barang tersalurkan                                                          |   ❌    |     |
-| 2.5 | Rename sidebar "Riwayat Donasi" → **"Donasi Saya"**                                                      |   🟡   |     |
-| 2.6 | Fitur **"Mengelola Pengiriman"**: donatur konfirmasi kirim barang ke ReWardrobe (drop-off/kirim sendiri) |   ❌    |     |
-| 2.7 | Penamaan status untuk donatur: **"Menunggu Pengiriman"**, **"Terkirim"**, **"Tersalurkan"**              |   ❌    |     |
-| 2.8 | Sub-tab **"Donasi Sedang Berjalan"** di "Donasi Saya" (menunggu pengiriman / terkirim)                   |   ❌    |     |
-| 2.9 | Sub-tab/menu **"Riwayat Donasi"** khusus yang sudah **tersalurkan**                                      |   ❌    |     |
+| No  | Fitur                                                                                                                                                         | Status | PIC |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----: | --- |
+| 2.1 | **Notifikasi** saat donasi diterima admin (poin dasar). Belum ada `notifikasi.create` sama sekali                                                             |   ❌    |     |
+| 2.2 | **Notifikasi** saat donasi tersalurkan ke penerima (poin bonus)                                                                                               |   ❌    |     |
+| 2.3 | **Poin dasar** otomatis saat barang diterima admin (belum ada `logPoin.create`)                                                                               |   ❌    |     |
+| 2.4 | **Poin bonus** otomatis saat barang tersalurkan                                                                                                               |   ❌    |     |
+| 2.5 | Rename sidebar "Riwayat Donasi" → **"Donasi Saya"**                                                                                                           |   🟡   |     |
+| 2.6 | Fitur **"Mengelola Pengiriman"**: donatur konfirmasi kirim barang ke ReWardrobe (drop-off/kirim sendiri)                                                      |   ❌    |     |
+| 2.7 | Penamaan status untuk donatur: **"Menunggu Pengiriman"**, **"Terkirim"**, **"Tersalurkan"** (sudah pakai `STATUS_BARANG_LABEL`/`_BADGE` di `donatur/history`) |   ✅    |     |
+| 2.8 | Sub-tab **"Donasi Sedang Berjalan"** di "Donasi Saya" (menunggu pengiriman / terkirim)                                                                        |   ❌    |     |
+| 2.9 | Sub-tab/menu **"Riwayat Donasi"** khusus yang sudah **tersalurkan**                                                                                           |   ❌    |     |
 
 ## 3. PENERIMA
 | No  | Fitur                                                                                                            | Status | PIC |
 | --- | ---------------------------------------------------------------------------------------------------------------- | :----: | --- |
-| 3.1 | Katalog hanya barang berstatus `terkirim`                                                                        |   🟡   |     |
-| 3.2 | Validasi permintaan: barang harus `terkirim` & belum diminta aktif oleh penerima sama (sekarang cek `disetujui`) |   🟡   |     |
+| 3.1 | Katalog hanya barang berstatus `terkirim` (`penerima/page.tsx` fetch `?status=terkirim`)                          |   ✅   |     |
+| 3.2 | Validasi permintaan: barang harus `terkirim` & belum diminta aktif oleh penerima sama (`permintaan/route.ts` sudah cek `terkirim`) |   ✅   |     |
 | 3.3 | Fitur **batasi penerimaan per satuan waktu** (rate-limit permintaan/periode)                                     |   ❌    |     |
 
 ## 4. LINTAS-AKTOR (Aturan Pendukung)
