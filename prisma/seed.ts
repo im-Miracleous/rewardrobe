@@ -143,6 +143,48 @@ async function main() {
         data: { barang_id: barang4.id, tipe: 'donatur_ke_admin', status: 'disiapkan' },
     });
 
+    // --- BarangDonasi Tambahan (Pakaian dari Unsplash) ---
+    const pakaianDummies = [
+        { judul: 'Kemeja Flannel Pria', deskripsi: 'Kemeja kotak-kotak lengan panjang.', kategori: 'Pakaian Pria', berat_kg: 0.5, foto_url: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=600&q=80', label_ai: 'layak_donasi' },
+        { judul: 'Kaos Polos Putih', deskripsi: 'Kaos cotton combed 30s warna putih.', kategori: 'Pakaian Pria', berat_kg: 0.2, foto_url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80', label_ai: 'layak_donasi' },
+        { judul: 'Jaket Denim Vintage', deskripsi: 'Jaket denim tebal model lama.', kategori: 'Pakaian Pria', berat_kg: 1.2, foto_url: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80', label_ai: 'layak_donasi' },
+        { judul: 'Dress Wanita Motif Bunga', deskripsi: 'Dress katun cantik untuk acara santai.', kategori: 'Pakaian Wanita', berat_kg: 0.4, foto_url: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=600&q=80', label_ai: 'layak_donasi' },
+        { judul: 'Sweater Hoodie Abu-abu', deskripsi: 'Hoodie tebal dan hangat.', kategori: 'Pakaian Unisex', berat_kg: 0.8, foto_url: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600&q=80', label_ai: 'layak_donasi' },
+        { judul: 'Celana Jeans Biru', deskripsi: 'Jeans panjang ukuran 32.', kategori: 'Pakaian Pria', berat_kg: 0.9, foto_url: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&q=80', label_ai: 'layak_donasi' },
+        { judul: 'Pakaian Bayi Set', deskripsi: 'Baju dan celana bayi usia 6-12 bulan.', kategori: 'Pakaian Anak', berat_kg: 0.3, foto_url: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?w=600&q=80', label_ai: 'layak_donasi' },
+        { judul: 'Kemeja Kerja Wanita', deskripsi: 'Kemeja polos bahan jatuh.', kategori: 'Pakaian Wanita', berat_kg: 0.3, foto_url: 'https://images.unsplash.com/photo-1599566219227-2efe0c9b7f5f?w=600&q=80', label_ai: 'layak_donasi' },
+        { judul: 'Seragam Sekolah SD', deskripsi: 'Seragam merah putih ukuran anak kelas 3 SD.', kategori: 'Pakaian Anak', berat_kg: 0.4, foto_url: 'https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=600&q=80', label_ai: 'layak_donasi' },
+        { judul: 'Blazer Navy Elegan', deskripsi: 'Blazer wanita warna navy, kondisi 90%.', kategori: 'Pakaian Wanita', berat_kg: 0.6, foto_url: 'https://images.unsplash.com/photo-1584273143981-41c073dfe8f8?w=600&q=80', label_ai: 'layak_donasi' }
+    ] as const;
+
+    for (const [index, p] of pakaianDummies.entries()) {
+        const bd = await prisma.barangDonasi.create({
+            data: {
+                judul: p.judul,
+                deskripsi: p.deskripsi,
+                kondisi_user: 'baik',
+                kategori: p.kategori,
+                berat_kg: p.berat_kg,
+                foto_url: p.foto_url,
+                label_ai: p.label_ai as any,
+                status: 'terkirim', // Supaya muncul di katalog
+                donatur_id: donatur.id,
+                verified_by: admin.id,
+                verified_at: verifiedAt,
+            }
+        });
+
+        await prisma.pengiriman.create({
+            data: {
+                barang_id: bd.id,
+                tipe: 'donatur_ke_admin',
+                kurir: 'JNE',
+                status: 'terkirim',
+                resi: `DUMMY${20260510003 + index}`
+            }
+        });
+    }
+
     // --- Permintaan (sample) ---
     await prisma.permintaan.create({
         data: {
@@ -172,8 +214,8 @@ async function main() {
 
     console.log('✅ Seed selesai:');
     console.log('   Users: admin, donatur, donatur2, penerima (panti), penerima2 (komunitas), pengrajin');
-    console.log('   BarangDonasi: 5 item (2 di katalog/terkirim, 2 menunggu pengiriman, 1 ditolak)');
-    console.log('   Katalog penerima: kemeja batik + kain perca (sudah dijemput)');
+    console.log('   BarangDonasi: 15 item (12 di katalog/terkirim, 2 menunggu pengiriman, 1 ditolak)');
+    console.log('   Katalog penerima: kemeja batik + kain perca + 10 pakaian Unsplash (sudah dijemput)');
 }
 
 main()
