@@ -50,7 +50,7 @@ Legenda: ✅ sudah ada | 🟡 perlu perbaikan | ❌ belum ada | 🗑️ hapus
 | A.4 | Hapus menu sidebar terkait (Kelola Kampanye) + semua referensi UI ke uang/kampanye                                                                      | ✅      | Gavin |
 | A.5 | Migrasi Prisma untuk drop tabel/kolom di atas (hati-hati, destruktif)                                                                                   | ✅      | Gavin |
 
-## 0. PONDASI: Perbaikan Status Barang 
+## 0. Perbaikan Status Barang 
 
 | No  | Item                                                                                                                                                                                                                        | Status | PIC   |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- |
@@ -62,40 +62,40 @@ Legenda: ✅ sudah ada | 🟡 perlu perbaikan | ❌ belum ada | 🗑️ hapus
 | 0.6 | Helper label status (`src/lib/statusBarang.ts`) untuk penamaan konsisten di UI                                                                                                                                              | ✅      | Gavin |
 
 ## 1. ADMIN
-| No  | Fitur                                                                             | Status |
-| --- | --------------------------------------------------------------------------------- | ------ |
-| 1.1 | Tambah fitur **Katalog Donasi** (lihat barang yang sudah di katalog/inventaris)   | ❌      |
-| 1.2 | **Hapus/nonaktifkan menu "Verifikasi Donasi"** — tak ada screening tanpa kampanye | 🗑️    |
-| 1.3 | Filter inventory pakai status `terkirim` & `tersalurkan` (ganti `disetujui`)      | 🟡     |
-| 1.4 | Setujui permintaan penerima → atur pengiriman admin→penerima                      | ✅      |
-| 1.5 | Konfirmasi barang sampai → status barang `tersalurkan`                            | ✅      |
+| No  | Fitur                                                                             | Status | PIC |
+| --- | --------------------------------------------------------------------------------- | ------ | --- |
+| 1.1 | Tambah fitur **Katalog Donasi** (lihat barang yang sudah di katalog/inventaris)   | ❌      |     |
+| 1.2 | **Hapus/nonaktifkan menu "Verifikasi Donasi"** — tak ada screening tanpa kampanye | 🗑️    |     |
+| 1.3 | Filter inventory pakai status `terkirim` & `tersalurkan` (ganti `disetujui`)      | 🟡     |     |
+| 1.4 | Setujui permintaan penerima → atur pengiriman admin→penerima                      | ✅      |     |
+| 1.5 | Konfirmasi barang sampai → status barang `tersalurkan`                            | ✅      |     |
 
 ## 2. DONATUR
-| No  | Fitur                                                                                                    | Status |
-| --- | -------------------------------------------------------------------------------------------------------- | ------ |
-| 2.1 | **Notifikasi** saat donasi diterima admin (poin dasar). Belum ada `notifikasi.create` sama sekali        | ❌      |
-| 2.2 | **Notifikasi** saat donasi tersalurkan ke penerima (poin bonus)                                          | ❌      |
-| 2.3 | **Poin dasar** otomatis saat barang diterima admin (belum ada `logPoin.create`)                          | ❌      |
-| 2.4 | **Poin bonus** otomatis saat barang tersalurkan                                                          | ❌      |
-| 2.5 | Rename sidebar "Riwayat Donasi" → **"Donasi Saya"**                                                      | 🟡     |
-| 2.6 | Fitur **"Mengelola Pengiriman"**: donatur konfirmasi kirim barang ke ReWardrobe (drop-off/kirim sendiri) | ❌      |
-| 2.7 | Penamaan status untuk donatur: **"Menunggu Pengiriman"**, **"Terkirim"**, **"Tersalurkan"**              | ❌      |
-| 2.8 | Sub-tab **"Donasi Sedang Berjalan"** di "Donasi Saya" (menunggu pengiriman / terkirim)                   | ❌      |
-| 2.9 | Sub-tab/menu **"Riwayat Donasi"** khusus yang sudah **tersalurkan**                                      | ❌      |
+| No  | Fitur                                                                                                    | Status | PIC |
+| --- | -------------------------------------------------------------------------------------------------------- | ------ | --- |
+| 2.1 | **Notifikasi** saat donasi diterima admin (poin dasar). Belum ada `notifikasi.create` sama sekali        | ❌      |     |
+| 2.2 | **Notifikasi** saat donasi tersalurkan ke penerima (poin bonus)                                          | ❌      |     |
+| 2.3 | **Poin dasar** otomatis saat barang diterima admin (belum ada `logPoin.create`)                          | ❌      |     |
+| 2.4 | **Poin bonus** otomatis saat barang tersalurkan                                                          | ❌      |     |
+| 2.5 | Rename sidebar "Riwayat Donasi" → **"Donasi Saya"**                                                      | 🟡     |     |
+| 2.6 | Fitur **"Mengelola Pengiriman"**: donatur konfirmasi kirim barang ke ReWardrobe (drop-off/kirim sendiri) | ❌      |     |
+| 2.7 | Penamaan status untuk donatur: **"Menunggu Pengiriman"**, **"Terkirim"**, **"Tersalurkan"**              | ❌      |     |
+| 2.8 | Sub-tab **"Donasi Sedang Berjalan"** di "Donasi Saya" (menunggu pengiriman / terkirim)                   | ❌      |     |
+| 2.9 | Sub-tab/menu **"Riwayat Donasi"** khusus yang sudah **tersalurkan**                                      | ❌      |     |
 
 ## 3. PENERIMA
-| No  | Fitur                                                                                                            | Status |
-| --- | ---------------------------------------------------------------------------------------------------------------- | ------ |
-| 3.1 | Katalog hanya barang berstatus `terkirim`                                                                        | 🟡     |
-| 3.2 | Validasi permintaan: barang harus `terkirim` & belum diminta aktif oleh penerima sama (sekarang cek `disetujui`) | 🟡     |
-| 3.3 | Fitur **batasi penerimaan per satuan waktu** (rate-limit permintaan/periode)                                     | ❌      |
+| No  | Fitur                                                                                                            | Status | PIC |
+| --- | ---------------------------------------------------------------------------------------------------------------- | ------ | --- |
+| 3.1 | Katalog hanya barang berstatus `terkirim`                                                                        | 🟡     |     |
+| 3.2 | Validasi permintaan: barang harus `terkirim` & belum diminta aktif oleh penerima sama (sekarang cek `disetujui`) | 🟡     |     |
+| 3.3 | Fitur **batasi penerimaan per satuan waktu** (rate-limit permintaan/periode)                                     | ❌      |     |
 
 ## 4. LINTAS-AKTOR (Aturan Pendukung)
-| No  | Fitur                                                                           | Status |
-| --- | ------------------------------------------------------------------------------- | ------ |
-| 4.1 | Sistem **notifikasi terpusat**: tiap perubahan status penting → `Notifikasi`    | ❌      |
-| 4.2 | Sistem **poin/gamifikasi**: `LogPoin` di tiap milestone (diterima, tersalurkan) | ❌      |
-| 4.3 | Penamaan status konsisten di seluruh UI (pakai helper 0.6)                      | ❌      |
+| No  | Fitur                                                                           | Status | PIC |
+| --- | ------------------------------------------------------------------------------- | ------ | --- |
+| 4.1 | Sistem **notifikasi terpusat**: tiap perubahan status penting → `Notifikasi`    | ❌      |     |
+| 4.2 | Sistem **poin/gamifikasi**: `LogPoin` di tiap milestone (diterima, tersalurkan) | ❌      |     |
+| 4.3 | Penamaan status konsisten di seluruh UI (pakai helper 0.6)                      | ❌      |     |
 
 ## Urutan Pengerjaan (saran)
 1. **A.x** — hapus Donasi Uang & Kampanye dulu (bersihkan, biar tidak ganggu).

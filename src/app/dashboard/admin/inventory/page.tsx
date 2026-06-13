@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { STATUS_BARANG_LABEL, STATUS_BARANG_BADGE, type StatusBarang } from '@/lib/statusBarang';
 
 // ─── Data Types ────────────────────────────────────────────────────────────────
 
@@ -162,20 +163,13 @@ export default function InventoryPage() {
   const siapSalurkan = items.filter((i) => i.status === "terkirim").length; // Di gudang artinya sudah terkirim ke admin
   const tersalurkan = items.filter((i) => i.status === "tersalurkan").length;
 
-  const statusLabel = (s: string) => {
-    switch (s) {
-      case "terkirim": return "Siap Disalurkan";
-      case "tersalurkan": return "Tersalurkan";
-      default: return "Lainnya";
-    }
-  };
-
-  const statusBadgeColor = (s: string): "green" | "blue" | "stone" => {
-    switch (s) {
-      case "terkirim": return "green";
-      case "tersalurkan": return "blue";
-      default: return "stone";
-    }
+  const getStatusBadge = (status: string) => {
+    const s = status as StatusBarang;
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold border ${STATUS_BARANG_BADGE[s] ?? ''}`}>
+        {STATUS_BARANG_LABEL[s] ?? status}
+      </span>
+    );
   };
 
   const kondisiBadgeColor = (s: string | null) => {
@@ -299,7 +293,7 @@ export default function InventoryPage() {
                 </div>
                 {/* Status badge overlay */}
                 <div className="absolute top-3 left-3">
-                  <Badge color={statusBadgeColor(item.status)}>{statusLabel(item.status)}</Badge>
+                  {getStatusBadge(item.status)}
                 </div>
               </div>
 
@@ -371,7 +365,7 @@ export default function InventoryPage() {
                     </td>
                     <td className="p-5 text-sm text-stone-600">{item.donatur?.nama}</td>
                     <td className="p-5">
-                      <Badge color={statusBadgeColor(item.status)}>{statusLabel(item.status)}</Badge>
+                      {getStatusBadge(item.status)}
                     </td>
                     <td className="p-5">
                       <Button variant="ghost" size="sm" className="!text-xs" onClick={() => setQrModal(item)}>
