@@ -103,6 +103,7 @@ Legenda: ❌ belum ada |📝 dalam rencana | 🟡 sedang dikerjakan | ✅ sudah 
 | --- | -------------------------------------------------------------------------------------------------------------- | :----: | ------- |
 | 5.1 | Optimalisasi ukuran cache proyek                                                                               |   🟡   | Miracle |
 | 5.2 | Migrasi dari Node.JS + Next.JS ke Next.JS single-monolith (menggabungkan *front-end* dan *backend* di Next.JS) |   📝   | Miracle |
+| 5.3 | Update readme                                                                                                  |   🟡   | Henry   |
 ## Urutan Pengerjaan (saran)
 1. **A.x** — hapus Donasi Uang & Kampanye dulu (bersihkan, biar tidak ganggu).
 2. **0.x** — perbaiki enum & alur status.
