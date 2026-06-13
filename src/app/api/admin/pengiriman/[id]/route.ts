@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { notificationSubject } from '@/lib/notifikasi';
 const patchSchema = z.object({
     status: z.enum(['disiapkan', 'dalam_pengiriman', 'terkirim']),
 });
@@ -27,39 +26,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             return NextResponse.json({ data: null, error: 'Data pengiriman tidak ditemukan' }, { status: 404 });
         }
 
-        const result = await prisma.$transaction(async (tx) => {
-            const updated = await tx.pengiriman.update({
-                where: { id },
-                data: { status }
-            });
-
-            // If Pengiriman is finished (terkirim = sampai di tangan penerima), 
-            // the status of BarangDonasi becomes 'tersalurkan'.
-            if (status === 'terkirim') {
-                await tx.barangDonasi.update({
-                    where: { id: existing.barang_id },
-                    data: { status: 'tersalurkan' }
-                });
-
-                await notificationSubject.emitStatusEvent(tx, {
-                    type: 'BARANG_TERSALURKAN',
-                    userId: existing.barang.donatur_id,
-                    barangJudul: existing.barang.judul || 'Tanpa Judul'
-                });
-
-                await tx.logPoin.create({
-                    data: {
-                        user_id: existing.barang.donatur_id,
-                        poin: 25,
-                        keterangan: `Poin dari donasi barang tersalurkan: ${existing.barang.judul || 'Tanpa Judul'}`
-                    }
-                });
-            }
-
-            return updated;
+        // status 'terkirim' di sini hanya berarti barang sampai di tangan penerima.
+        // Penutupan transaksi (status barang 'tersalurkan' + poin donatur + notif)
+        // terjadi saat penerima mengkonfirmasi penerimaan di /api/permintaan/[id].
+        const updated = await prisma.pengiriman.update({
+            where: { id },
+            data: { status }
         });
 
-        return NextResponse.json({ data: result, error: null });
+        return NextResponse.json({ data: updated, error: null });
     } catch (error) {
         console.error('PATCH /api/admin/pengiriman/[id] error:', error);
         return NextResponse.json({ data: null, error: 'Terjadi kesalahan pada server' }, { status: 500 });

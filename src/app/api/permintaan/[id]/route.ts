@@ -38,15 +38,45 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             if (auth.role !== 'penerima') return NextResponse.json({ data: null, error: 'Akses hanya untuk penerima' }, { status: 403 });
             if (existing.penerima_id !== auth.userId) return NextResponse.json({ data: null, error: 'Bukan permintaan Anda' }, { status: 403 });
             if (existing.status !== 'diterima') return NextResponse.json({ data: null, error: 'Permintaan belum disetujui' }, { status: 400 });
+            if (existing.barang.status === 'tersalurkan') return NextResponse.json({ data: null, error: 'Penerimaan sudah dikonfirmasi' }, { status: 400 });
+
+            // Barang harus sudah sampai (pengiriman terkirim) sebelum penerima bisa konfirmasi
+            const pengiriman = await prisma.pengiriman.findFirst({
+                where: { barang_id: existing.barang_id, tipe: 'admin_ke_penerima', status: 'terkirim' },
+            });
+            if (!pengiriman) return NextResponse.json({ data: null, error: 'Barang belum sampai ke penerima' }, { status: 400 });
 
             const konfirmasiNote = `DIKONFIRMASI PENERIMA: ${new Date().toISOString()}`;
-            const updated = await prisma.permintaan.update({
-                where: { id },
-                data: {
-                    pesan: existing.pesan
-                        ? `${existing.pesan}\n\n${konfirmasiNote}`
-                        : konfirmasiNote,
-                },
+            const updated = await prisma.$transaction(async (tx) => {
+                const updatedPermintaan = await tx.permintaan.update({
+                    where: { id },
+                    data: {
+                        pesan: existing.pesan
+                            ? `${existing.pesan}\n\n${konfirmasiNote}`
+                            : konfirmasiNote,
+                    },
+                });
+
+                await tx.barangDonasi.update({
+                    where: { id: existing.barang_id },
+                    data: { status: 'tersalurkan' },
+                });
+
+                await tx.logPoin.create({
+                    data: {
+                        user_id: existing.barang.donatur_id,
+                        poin: 25,
+                        keterangan: `Poin dari donasi barang tersalurkan: ${existing.barang.judul || 'Tanpa Judul'}`,
+                    },
+                });
+
+                await notificationSubject.emitStatusEvent(tx, {
+                    type: 'BARANG_TERSALURKAN',
+                    userId: existing.barang.donatur_id,
+                    barangJudul: existing.barang.judul || 'Tanpa Judul',
+                });
+
+                return updatedPermintaan;
             });
             return NextResponse.json({ data: updated, error: null });
         }
@@ -70,11 +100,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             });
 
             if (status === 'diterima') {
-                await tx.barangDonasi.update({
-                    where: { id: existing.barang_id },
-                    data: { status: 'tersalurkan' },
-                });
-
                 await tx.pengiriman.create({
                     data: {
                         barang_id: existing.barang_id,
