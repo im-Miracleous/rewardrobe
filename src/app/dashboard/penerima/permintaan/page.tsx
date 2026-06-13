@@ -25,7 +25,6 @@ interface PermintaanItem {
         deskripsi: string;
         foto_url: string | null;
         donatur: { id: number; nama: string; kota: string | null };
-        campaign: { id: number; judul: string } | null;
         pengiriman: Pengiriman[];
     };
 }
@@ -192,11 +191,6 @@ export default function PenerimaPermintaanPage() {
                                             <MapPin size={11} />
                                             {item.barang.donatur.kota || 'Lokasi tidak tersedia'}
                                         </div>
-                                        {item.barang.campaign && (
-                                            <p className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-lg inline-block mb-1">
-                                                Kampanye: {item.barang.campaign.judul}
-                                            </p>
-                                        )}
                                         <p className="text-xs text-stone-500">
                                             Diajukan: {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                                         </p>

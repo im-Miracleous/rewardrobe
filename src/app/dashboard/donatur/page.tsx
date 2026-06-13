@@ -11,7 +11,6 @@ export default function DonaturDash() {
         total_poin: 0,
         total_limbah_kg: 0,
         total_pakaian_item: 0,
-        total_uang_donasi: 0,
         peringkat: '-',
     });
     const [latestDonations, setLatestDonations] = useState<any[]>([]);
@@ -41,10 +40,9 @@ export default function DonaturDash() {
                 const historyRes = await fetch(`/api/donatur/history?donatur_id=${donaturId}`);
                 const historyResult = await historyRes.json();
                 if (historyResult.data) {
-                    const combined = [
-                        ... (historyResult.data.barang || []).map((b: any) => ({ ...b, type: 'pakaian' })),
-                        ... (historyResult.data.uang || []).map((u: any) => ({ ...u, type: 'uang' }))
-                    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                    const combined = (historyResult.data.barang || [])
+                        .map((b: any) => ({ ...b, type: 'pakaian' }))
+                        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
                     if (combined.length > 0) {
                         setLatestDonations(combined.slice(0, 3));
@@ -62,10 +60,10 @@ export default function DonaturDash() {
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'menunggu_verifikasi':
-                return <span className="text-[10px] uppercase font-extrabold text-yellow-700 bg-yellow-100 px-2.5 py-0.5 rounded-full">Menunggu</span>;
-            case 'disetujui':
-                return <span className="text-[10px] uppercase font-extrabold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full">Diproses</span>;
+            case 'menunggu_pengiriman':
+                return <span className="text-[10px] uppercase font-extrabold text-yellow-700 bg-yellow-100 px-2.5 py-0.5 rounded-full">Menunggu Pengiriman</span>;
+            case 'terkirim':
+                return <span className="text-[10px] uppercase font-extrabold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full">Terkirim</span>;
             case 'tersalurkan':
                 return <span className="text-[10px] uppercase font-extrabold text-green-700 bg-green-100 px-2.5 py-0.5 rounded-full">Selesai</span>;
             case 'ditolak':
@@ -121,11 +119,6 @@ export default function DonaturDash() {
                     <div className="text-3xl font-display font-extrabold text-stone-900">
                         {isLoading ? '...' : `${stats.total_pakaian_item} Item`}
                     </div>
-                    {stats.total_uang_donasi > 0 && (
-                        <div className="mt-1 text-xs font-semibold text-green-600">
-                            & Rp {stats.total_uang_donasi.toLocaleString('id-ID')} Dana
-                        </div>
-                    )}
                 </div>
             </div>
 
@@ -146,18 +139,13 @@ export default function DonaturDash() {
                             <ComposedChart data={monthlyStats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#78716c' }} tickLine={false} axisLine={false} />
-                                <YAxis yAxisId="left" tick={{ fontSize: 12, fill: '#78716c' }} tickLine={false} axisLine={false} />
-                                <YAxis yAxisId="right" orientation="right" tickFormatter={(v) => `Rp${v/1000}k`} tick={{ fontSize: 12, fill: '#78716c' }} tickLine={false} axisLine={false} />
-                                <Tooltip 
+                                <YAxis tick={{ fontSize: 12, fill: '#78716c' }} tickLine={false} axisLine={false} allowDecimals={false} />
+                                <Tooltip
                                     contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    formatter={(value: any, name: any) => {
-                                        if (name === 'dana') return [`Rp ${(value as number).toLocaleString('id-ID')}`, 'Donasi Uang'];
-                                        return [`${value} Item`, 'Donasi Pakaian'];
-                                    }}
+                                    formatter={(value: any) => [`${value} Item`, 'Donasi Pakaian']}
                                 />
                                 <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                                <Bar yAxisId="left" dataKey="pakaian" name="pakaian" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={32} />
-                                <Line yAxisId="right" type="monotone" dataKey="dana" name="dana" stroke="#16a34a" strokeWidth={3} dot={{ r: 4, fill: '#16a34a', strokeWidth: 2, stroke: '#fff' }} />
+                                <Bar dataKey="pakaian" name="pakaian" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={32} />
                             </ComposedChart>
                         </ResponsiveContainer>
                     </div>
@@ -174,7 +162,7 @@ export default function DonaturDash() {
                     <div className="text-center py-8 border border-stone-100 rounded-xl bg-stone-50/30 flex flex-col items-center">
                         <Sparkles className="text-green-500 mb-2" size={28} />
                         <div className="font-bold text-stone-700">Belum ada donasi</div>
-                        <div className="text-xs text-stone-500 mt-1 max-w-sm">Mulai langkah pertamamu dengan menyumbangkan pakaian layak pakai atau dana finansial.</div>
+                        <div className="text-xs text-stone-500 mt-1 max-w-sm">Mulai langkah pertamamu dengan menyumbangkan pakaian layak pakai.</div>
                         <Link href="/dashboard/donatur/donate" className="mt-3">
                             <Button size="sm">Ayo Donasi Sekarang</Button>
                         </Link>
@@ -184,16 +172,13 @@ export default function DonaturDash() {
                         {latestDonations.map((donation) => (
                             <div key={`${donation.type}-${donation.id}`} className="flex border border-stone-100 rounded-xl p-3 gap-3 items-center bg-stone-50 hover:bg-stone-100/50 transition-colors">
                                 <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-xl shadow-xs border border-stone-200">
-                                    {donation.type === 'pakaian' ? '🧥' : '💵'}
+                                    🧥
                                 </div>
                                 <div className="flex-1">
                                     <div className="font-bold text-stone-900 flex items-center gap-2 text-sm">
-                                        {donation.type === 'pakaian' 
-                                            ? (donation.judul || `Pakaian - ${donation.kategori}`) 
-                                            : `Rp ${donation.nominal.toLocaleString('id-ID')}`
-                                        }
+                                        {donation.judul || `Pakaian - ${donation.kategori}`}
                                         <span className="text-[9px] uppercase font-extrabold text-stone-500 bg-stone-200/50 px-2 py-0.5 rounded-full border border-stone-200/50">
-                                            {donation.type}
+                                            pakaian
                                         </span>
                                         {getStatusBadge(donation.status)}
                                     </div>

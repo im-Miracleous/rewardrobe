@@ -12,7 +12,6 @@ interface BarangItem {
     foto_url: string | null;
     berat_kg: number | null;
     donatur: { id: number; nama: string; kota: string | null };
-    campaign: { id: number; judul: string } | null;
 }
 
 function getKondisiBadge(kondisi: string) {
@@ -37,7 +36,7 @@ export default function PenerimaDash() {
             setIsLoading(true);
             try {
                 const [barangRes, userStr] = await Promise.all([
-                    fetch('/api/barang-donasi?status=disetujui&tersedia=true'),
+                    fetch('/api/barang-donasi?status=terkirim'),
                     Promise.resolve(typeof window !== 'undefined' ? localStorage.getItem('user') : null),
                 ]);
 
@@ -162,9 +161,6 @@ export default function PenerimaDash() {
                                     <MapPin size={11} />
                                     {item.donatur.kota || 'Lokasi tidak tersedia'}
                                 </div>
-                                {item.campaign && (
-                                    <p className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded-lg mb-3">Kampanye: {item.campaign.judul}</p>
-                                )}
                                 <div className="mt-auto">
                                     {requestedIds.has(item.id) ? (
                                         <div className="flex items-center gap-2 justify-center py-2 text-green-600 text-sm font-bold">

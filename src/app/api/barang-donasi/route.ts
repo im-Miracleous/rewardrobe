@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 
-const StatusBarangEnum = z.enum(['menunggu_verifikasi', 'disetujui', 'ditolak', 'tersalurkan']);
+const StatusBarangEnum = z.enum(['menunggu_pengiriman', 'terkirim', 'tersalurkan', 'ditolak']);
 const KondisiUserEnum = z.enum(['fair', 'baik', 'rusak']);
 
 const createSchema = z.object({
@@ -19,7 +19,6 @@ const createSchema = z.object({
     berat_kg: z.number().positive('Berat harus lebih dari 0').optional(),
     donatur_id: z.number().int().positive('donatur_id harus berupa integer positif'),
     bukti_foto: z.string().min(1, 'Bukti foto wajib diunggah'),
-    campaign_id: z.number().int().positive().optional().nullable(),
 });
 
 export async function GET(request: NextRequest) {
@@ -51,7 +50,6 @@ export async function GET(request: NextRequest) {
             include: {
                 donatur: { select: { id: true, nama: true, kota: true } },
                 verifier: { select: { id: true, nama: true } },
-                campaign: { select: { id: true, judul: true } },
             },
             orderBy: { created_at: 'desc' },
         });
@@ -75,23 +73,15 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { tipePakaian, catatan, kategori, kondisi, berat_kg, donatur_id, bukti_foto, campaign_id } = parsed.data;
+        const { tipePakaian, catatan, kategori, kondisi, berat_kg, donatur_id, bukti_foto } = parsed.data;
 
         const donaturExists = await prisma.user.findUnique({ where: { id: donatur_id } });
         if (!donaturExists) {
             return NextResponse.json({ data: null, error: 'donatur_id tidak ditemukan' }, { status: 404 });
         }
 
-        let needsVerification = false;
-        if (campaign_id) {
-            const campaign = await prisma.campaign.findUnique({ where: { id: campaign_id } });
-            if (!campaign) {
-                return NextResponse.json({ data: null, error: 'Kampanye tidak ditemukan' }, { status: 404 });
-            }
-            needsVerification = campaign.verification_required;
-        }
-
-        const finalStatus = needsVerification ? 'menunggu_verifikasi' : 'disetujui';
+        // Tanpa kampanye/verifikasi: donasi langsung auto-approve, menunggu dijemput.
+        const finalStatus = 'menunggu_pengiriman';
 
         const fullDeskripsi = catatan
             ? `Kondisi menurut donatur: ${kondisi}\n\nCatatan: ${catatan}`
@@ -108,19 +98,17 @@ export async function POST(request: NextRequest) {
                     foto_url: bukti_foto || null,
                     status: finalStatus,
                     donatur_id,
-                    campaign_id: campaign_id || null,
                 },
             });
 
-            if (finalStatus === 'disetujui') {
-                await tx.pengiriman.create({
-                    data: {
-                        barang_id: created.id,
-                        tipe: 'donatur_ke_admin',
-                        status: 'disiapkan',
-                    },
-                });
-            }
+            // Setiap donasi perlu dijemput admin -> buat jadwal penjemputan.
+            await tx.pengiriman.create({
+                data: {
+                    barang_id: created.id,
+                    tipe: 'donatur_ke_admin',
+                    status: 'disiapkan',
+                },
+            });
 
             return created;
         });

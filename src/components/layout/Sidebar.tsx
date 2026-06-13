@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Shirt, Package, Truck, QrCode, Heart, Trophy, History, ClipboardList, LogOut, Settings, User, LayoutDashboard, ShieldCheck, Megaphone } from 'lucide-react';
+import { Home, Shirt, Package, Truck, QrCode, Heart, Trophy, History, ClipboardList, LogOut, Settings, User, LayoutDashboard } from 'lucide-react';
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -39,16 +39,14 @@ export default function Sidebar() {
     const menus: Record<string, { href: string; label: string; icon: React.ReactNode }[]> = {
         admin: [
             { href: '/dashboard/admin', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-            { href: '/dashboard/admin/verifikasi', label: 'Verifikasi Donasi', icon: <ShieldCheck size={18} /> },
             { href: '/dashboard/admin/penjemputan', label: 'Penjemputan Barang', icon: <Truck size={18} /> },
             { href: '/dashboard/admin/pengiriman', label: 'Kelola Pengiriman', icon: <Package size={18} /> },
             { href: '/dashboard/admin/inventory', label: 'Inventory (QR)', icon: <QrCode size={18} /> },
-            { href: '/dashboard/admin/kampanye', label: 'Kelola Kampanye', icon: <Megaphone size={18} /> },
         ],
         donatur: [
             { href: '/dashboard/donatur', label: 'Beranda Saya', icon: <Home size={18} /> },
             { href: '/dashboard/donatur/donate', label: 'Donasi Baru', icon: <Shirt size={18} /> },
-            { href: '/dashboard/donatur/history', label: 'Riwayat Donasi', icon: <History size={18} /> },
+            { href: '/dashboard/donatur/history', label: 'Donasi Saya', icon: <History size={18} /> },
             { href: '/dashboard/donatur/impact', label: 'Dampak & Tantangan', icon: <Trophy size={18} /> },
         ],
         penerima: [

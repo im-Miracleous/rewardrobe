@@ -30,7 +30,7 @@ interface InventoryItem {
   deskripsi: string;
   foto_url: string | null;
   donatur: { id: number; nama: string };
-  status: "menunggu_verifikasi" | "disetujui" | "ditolak" | "tersalurkan";
+  status: "menunggu_pengiriman" | "terkirim" | "ditolak" | "tersalurkan";
   created_at: string;
   updated_at: string;
   qr_code?: string;
@@ -159,12 +159,12 @@ export default function InventoryPage() {
 
   // ── Stats ────────────────────────────────────────────────────────────────
   const totalGudang = items.length;
-  const siapSalurkan = items.filter((i) => i.status === "disetujui").length; // Di gudang artinya disetujui
+  const siapSalurkan = items.filter((i) => i.status === "terkirim").length; // Di gudang artinya sudah terkirim ke admin
   const tersalurkan = items.filter((i) => i.status === "tersalurkan").length;
 
   const statusLabel = (s: string) => {
     switch (s) {
-      case "disetujui": return "Siap Disalurkan";
+      case "terkirim": return "Siap Disalurkan";
       case "tersalurkan": return "Tersalurkan";
       default: return "Lainnya";
     }
@@ -172,7 +172,7 @@ export default function InventoryPage() {
 
   const statusBadgeColor = (s: string): "green" | "blue" | "stone" => {
     switch (s) {
-      case "disetujui": return "green";
+      case "terkirim": return "green";
       case "tersalurkan": return "blue";
       default: return "stone";
     }

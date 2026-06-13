@@ -10,7 +10,7 @@ import prisma from '@/lib/prisma';
 import { AUTH_COOKIE_NAME, parseAuthCookieValue } from '@/lib/auth';
 
 const patchSchema = z.object({
-    status: z.enum(['menunggu_verifikasi', 'disetujui', 'ditolak', 'tersalurkan']),
+    status: z.enum(['menunggu_pengiriman', 'terkirim', 'tersalurkan', 'ditolak']),
 });
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -27,9 +27,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         const barang = await prisma.barangDonasi.findUnique({
             where: { id: barangId },
             include: {
-                campaign: {
-                    select: { id: true, judul: true }
-                },
                 donatur: {
                     select: { id: true, nama: true, email: true }
                 },
@@ -93,12 +90,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
             return NextResponse.json({ data: null, error: 'Barang donasi tidak ditemukan' }, { status: 404 });
         }
 
-        const needsVerifier = status === 'disetujui' || status === 'ditolak' || status === 'tersalurkan';
+        const needsVerifier = status === 'terkirim' || status === 'ditolak' || status === 'tersalurkan';
         const updated = await prisma.barangDonasi.update({
             where: { id: barangId },
             data: {
                 status,
-                ...(status === 'disetujui' || status === 'ditolak' || status === 'tersalurkan'
+                ...(needsVerifier
                     ? { verified_by: actor.id, verified_at: new Date() }
                     : {}),
             },

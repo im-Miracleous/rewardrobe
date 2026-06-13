@@ -105,9 +105,9 @@ export default function KelolaPengirimanPage() {
 
           if (jsonPengiriman.data) setData(jsonPengiriman.data);
           
-          // Only show items that are 'disetujui' (in warehouse), not 'tersalurkan'
+          // Only show items that are 'terkirim' (in warehouse), not 'tersalurkan'
           if (jsonInventory.data) {
-              setInventoryList(jsonInventory.data.filter((i: any) => i.status === 'disetujui'));
+              setInventoryList(jsonInventory.data.filter((i: any) => i.status === 'terkirim'));
           }
       } catch (err) {
           console.error(err);

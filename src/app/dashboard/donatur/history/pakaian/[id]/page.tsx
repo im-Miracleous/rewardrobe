@@ -1,11 +1,10 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Shirt, Calendar, Tag, Info, CheckCircle2, Clock, Truck, ShieldCheck, MapPin, Package, XCircle } from 'lucide-react';
+import { ArrowLeft, Shirt, Info, Clock, Truck, ShieldCheck, Package } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-
-type StatusType = 'menunggu_verifikasi' | 'disetujui' | 'ditolak' | 'tersalurkan';
+import { STATUS_BARANG_BADGE, STATUS_BARANG_LABEL, type StatusBarang } from '@/lib/statusBarang';
 
 export default function ClothingDetailPage() {
     const router = useRouter();
@@ -37,24 +36,10 @@ export default function ClothingDetailPage() {
         if (id) fetchDetail();
     }, [id]);
 
-    const getStatusBadge = (status: StatusType) => {
-        const styles = {
-            menunggu_verifikasi: 'bg-amber-50 text-amber-700 border-amber-200',
-            disetujui: 'bg-green-50 text-green-700 border-green-200',
-            ditolak: 'bg-red-50 text-red-700 border-red-200',
-            tersalurkan: 'bg-blue-50 text-blue-700 border-blue-200',
-        };
-
-        const labels = {
-            menunggu_verifikasi: 'Menunggu Verifikasi',
-            disetujui: 'Disetujui',
-            ditolak: 'Ditolak',
-            tersalurkan: 'Tersalurkan',
-        };
-
+    const getStatusBadge = (status: StatusBarang) => {
         return (
-            <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-black border uppercase tracking-wider ${styles[status]}`}>
-                {labels[status]}
+            <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-black border uppercase tracking-wider ${STATUS_BARANG_BADGE[status] ?? ''}`}>
+                {STATUS_BARANG_LABEL[status] ?? status}
             </span>
         );
     };
@@ -174,21 +159,6 @@ export default function ClothingDetailPage() {
                                 <div className="text-sm font-bold text-stone-800 mt-0.5">{formatDate(barang.created_at)}</div>
                             </div>
                         </div>
-
-                        {barang.campaign && (
-                            <div className="p-4 bg-green-50/50 border border-green-100 rounded-xl flex items-center justify-between">
-                                <div className="flex items-center gap-2.5">
-                                    <Tag className="text-green-600" size={20} />
-                                    <div>
-                                        <div className="text-[10px] font-bold text-green-700 uppercase">Kampanye Terhubung</div>
-                                        <div className="text-sm font-bold text-green-950 font-display">{barang.campaign.judul}</div>
-                                    </div>
-                                </div>
-                                <Link href={`/dashboard/donatur/impact/${barang.campaign.id}`}>
-                                    <Button size="sm" variant="outline">Lihat Detail Kampanye</Button>
-                                </Link>
-                            </div>
-                        )}
 
                         <div className="space-y-2">
                             <div className="text-xs font-bold text-stone-400 uppercase tracking-widest">Deskripsi / Catatan Donasi</div>

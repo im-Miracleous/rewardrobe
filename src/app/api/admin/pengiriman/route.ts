@@ -78,9 +78,9 @@ export async function POST(request: NextRequest) {
             const createdPengiriman = [];
 
             for (const barang_id of barang_ids) {
-                // Ensure barang is available (status disetujui and not already requested/sent)
+                // Ensure barang is available (status terkirim = di gudang, not already requested/sent)
                 const barang = await tx.barangDonasi.findUnique({ where: { id: barang_id } });
-                if (!barang || barang.status !== 'disetujui') {
+                if (!barang || barang.status !== 'terkirim') {
                     throw new Error(`Barang ID ${barang_id} tidak valid atau tidak tersedia di gudang`);
                 }
 

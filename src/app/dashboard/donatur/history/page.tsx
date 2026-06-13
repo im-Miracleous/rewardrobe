@@ -1,11 +1,10 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { History, Shirt, DollarSign, Calendar, Tag, AlertCircle, Info, ExternalLink, RefreshCw, CheckCircle, Search, Filter, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { History, Shirt, Calendar, AlertCircle, ExternalLink, RefreshCw, Search, Filter, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-
-type StatusType = 'menunggu_verifikasi' | 'disetujui' | 'ditolak' | 'tersalurkan';
+import { STATUS_BARANG_BADGE, STATUS_BARANG_LABEL, type StatusBarang } from '@/lib/statusBarang';
 
 export default function DonationHistoryPage() {
     const router = useRouter();
@@ -14,11 +13,10 @@ export default function DonationHistoryPage() {
     
     // Data State
     const [clothesList, setClothesList] = useState<any[]>([]);
-    const [moneyList, setMoneyList] = useState<any[]>([]);
     const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
     // Filtering State
-    const [filter, setFilter] = useState<'semua' | 'pakaian' | 'uang'>('semua');
+    const [filter, setFilter] = useState<'semua' | 'pakaian'>('semua');
     const [searchQuery, setSearchQuery] = useState('');
     const [dateFilter, setDateFilter] = useState<'semua' | 'hari_ini' | 'minggu_ini' | 'bulan_ini'>('semua');
     const [kondisiFilter, setKondisiFilter] = useState<'semua' | 'baik' | 'fair' | 'rusak'>('semua');
@@ -60,7 +58,6 @@ export default function DonationHistoryPage() {
 
             if (result.data) {
                 setClothesList(result.data.barang || []);
-                setMoneyList(result.data.uang || []);
             }
         } catch (err) {
             console.error('Fetch history error:', err);
@@ -79,24 +76,10 @@ export default function DonationHistoryPage() {
         setCurrentPage(1);
     }, [filter, searchQuery, dateFilter, kondisiFilter, kategoriFilter, itemsPerPage, sortColumn, sortDirection]);
 
-    const getStatusBadge = (status: StatusType) => {
-        const styles = {
-            menunggu_verifikasi: 'bg-amber-50 text-amber-700 border-amber-200',
-            disetujui: 'bg-green-50 text-green-700 border-green-200',
-            ditolak: 'bg-red-50 text-red-700 border-red-200',
-            tersalurkan: 'bg-blue-50 text-blue-700 border-blue-200',
-        };
-
-        const labels = {
-            menunggu_verifikasi: 'Menunggu',
-            disetujui: 'Disetujui',
-            ditolak: 'Ditolak',
-            tersalurkan: 'Selesai',
-        };
-
+    const getStatusBadge = (status: StatusBarang) => {
         return (
-            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border ${styles[status]}`}>
-                {labels[status]}
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border ${STATUS_BARANG_BADGE[status] ?? ''}`}>
+                {STATUS_BARANG_LABEL[status] ?? status}
             </span>
         );
     };
@@ -110,11 +93,8 @@ export default function DonationHistoryPage() {
         });
     };
 
-    // 1. Combine and map raw data
-    const combinedHistory = [
-        ...clothesList.map(item => ({ ...item, type: 'pakaian' as const })),
-        ...moneyList.map(item => ({ ...item, type: 'uang' as const }))
-    ];
+    // 1. Map raw data
+    const combinedHistory = clothesList.map(item => ({ ...item, type: 'pakaian' as const }));
 
     // 2. Apply Filters (Tab, Search, Custom Filters)
     const filteredAndSearched = combinedHistory.filter(item => {
@@ -145,11 +125,9 @@ export default function DonationHistoryPage() {
         if (searchQuery.trim() !== '') {
             const query = searchQuery.toLowerCase();
             const titleMatch = (item.judul || item.kategori || '').toLowerCase().includes(query);
-            const nominalStr = item.type === 'uang' ? item.nominal?.toString() : '';
-            const descMatch = (item.deskripsi || item.catatan || '').toLowerCase().includes(query);
-            const campaignMatch = (item.campaign?.judul || '').toLowerCase().includes(query);
-            
-            if (!titleMatch && !descMatch && !campaignMatch && !nominalStr.includes(query)) return false;
+            const descMatch = (item.deskripsi || '').toLowerCase().includes(query);
+
+            if (!titleMatch && !descMatch) return false;
         }
 
         return true;
@@ -168,8 +146,8 @@ export default function DonationHistoryPage() {
                 valB = b.type;
                 break;
             case 'judul':
-                valA = (a.type === 'pakaian' ? (a.judul || a.kategori || '') : `Uang Rp${a.nominal}`) || '';
-                valB = (b.type === 'pakaian' ? (b.judul || b.kategori || '') : `Uang Rp${b.nominal}`) || '';
+                valA = (a.judul || a.kategori || '');
+                valB = (b.judul || b.kategori || '');
                 break;
             case 'status':
                 valA = a.status;
@@ -216,7 +194,7 @@ export default function DonationHistoryPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-display font-bold text-stone-900 flex items-center gap-2">
-                        <History className="text-green-600" size={24} /> Riwayat Donasi Anda
+                        <History className="text-green-600" size={24} /> Donasi Saya
                     </h1>
                     <p className="text-stone-500 text-sm mt-1">Kelola dan pantau seluruh histori kontribusi sosial Anda.</p>
                 </div>
@@ -237,7 +215,7 @@ export default function DonationHistoryPage() {
 
             {/* Filter Tabs */}
             <div className="flex gap-2 border-b border-stone-200 pb-px">
-                {(['semua', 'pakaian', 'uang'] as const).map((tab) => (
+                {(['semua', 'pakaian'] as const).map((tab) => (
                     <button
                         key={tab}
                         onClick={() => {
@@ -250,7 +228,7 @@ export default function DonationHistoryPage() {
                         }}
                         className={`pb-3 px-4 text-sm font-bold font-display border-b-2 transition-all capitalize -mb-px ${filter === tab ? 'border-green-600 text-green-700' : 'border-transparent text-stone-500 hover:text-stone-800'}`}
                     >
-                        {tab === 'semua' ? 'Semua Donasi' : tab === 'pakaian' ? 'Donasi Pakaian' : 'Donasi Uang'}
+                        {tab === 'semua' ? 'Semua Donasi' : 'Donasi Pakaian'}
                     </button>
                 ))}
             </div>
@@ -265,7 +243,7 @@ export default function DonationHistoryPage() {
                         type="text" 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Cari donasi atau kampanye..."
+                        placeholder="Cari donasi..."
                         className="w-full pl-9 pr-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all bg-stone-50 hover:bg-white"
                     />
                 </div>
@@ -386,60 +364,34 @@ export default function DonationHistoryPage() {
                                     <tr key={`${item.type}-${item.id}`} className="hover:bg-stone-50/80 transition-colors group">
                                         <td className="px-4 py-3 text-center align-middle">
                                             <div className="w-12 h-12 rounded-lg bg-stone-100 overflow-hidden relative border border-stone-200 shadow-sm inline-block shrink-0">
-                                                {item.type === 'pakaian' ? (
-                                                    item.foto_url ? (
-                                                        <img 
-                                                            src={item.foto_url} 
-                                                            alt={item.kategori || 'Pakaian'} 
-                                                            className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform"
-                                                            onClick={() => setSelectedPhoto(item.foto_url)}
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-stone-400"><Shirt size={20} /></div>
-                                                    )
+                                                {item.foto_url ? (
+                                                    <img
+                                                        src={item.foto_url}
+                                                        alt={item.kategori || 'Pakaian'}
+                                                        className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform"
+                                                        onClick={() => setSelectedPhoto(item.foto_url)}
+                                                    />
                                                 ) : (
-                                                    item.bukti_transfer ? (
-                                                        <img 
-                                                            src={item.bukti_transfer} 
-                                                            alt="Bukti Transfer" 
-                                                            className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform"
-                                                            onClick={() => setSelectedPhoto(item.bukti_transfer)}
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-stone-400"><DollarSign size={20} /></div>
-                                                    )
+                                                    <div className="w-full h-full flex items-center justify-center text-stone-400"><Shirt size={20} /></div>
                                                 )}
                                                 <div className="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-lg pointer-events-none"></div>
                                             </div>
                                         </td>
-                                        
+
                                         <td className="px-4 py-4 align-middle">
-                                            <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${item.type === 'pakaian' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
-                                                {item.type === 'pakaian' ? <><Shirt size={10} /> Pakaian</> : <><DollarSign size={10} /> Finansial</>}
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                                <Shirt size={10} /> Pakaian
                                             </span>
                                             <div className="text-xs text-stone-400 mt-1 font-mono font-semibold">#{item.id}</div>
                                         </td>
 
                                         <td className="px-4 py-4 align-middle max-w-xs">
-                                            {item.type === 'pakaian' ? (
-                                                <div className="font-bold text-stone-900 text-sm line-clamp-1">
-                                                    {item.judul || `Pakaian - ${item.kategori || 'Lainnya'}`}
-                                                </div>
-                                            ) : (
-                                                <div className="font-bold text-green-700 text-sm">
-                                                    Rp {item.nominal.toLocaleString('id-ID')}
-                                                </div>
-                                            )}
-                                            
-                                            {item.campaign ? (
-                                                <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50/50 px-1.5 py-0.5 rounded w-max border border-green-100">
-                                                    <Tag size={10} /> {item.campaign.judul}
-                                                </div>
-                                            ) : (
-                                                <div className="mt-1 text-xs text-stone-500 line-clamp-1">
-                                                    {item.type === 'pakaian' ? (item.deskripsi || '-') : (item.catatan || 'Tanpa catatan')}
-                                                </div>
-                                            )}
+                                            <div className="font-bold text-stone-900 text-sm line-clamp-1">
+                                                {item.judul || `Pakaian - ${item.kategori || 'Lainnya'}`}
+                                            </div>
+                                            <div className="mt-1 text-xs text-stone-500 line-clamp-1">
+                                                {item.deskripsi || '-'}
+                                            </div>
                                         </td>
 
                                         <td className="px-4 py-4 align-middle">

@@ -3,11 +3,11 @@ import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
     try {
-        // Fetch BarangDonasi that are either in warehouse (disetujui) or distributed (tersalurkan)
+        // Fetch BarangDonasi that are either in warehouse (terkirim) or distributed (tersalurkan)
         const inventoryList = await prisma.barangDonasi.findMany({
             where: {
                 status: {
-                    in: ['disetujui', 'tersalurkan']
+                    in: ['terkirim', 'tersalurkan']
                 }
             },
             include: {

@@ -16,7 +16,6 @@ interface Permintaan {
         deskripsi: string;
         foto_url: string | null;
         donatur: { nama: string; kota: string | null };
-        campaign: { judul: string } | null;
     };
     penerima: { id: number; nama: string; kota: string | null; tipe: string | null };
 }
@@ -178,9 +177,6 @@ export default function AdminPermintaanPage() {
                                             <td className="p-4">
                                                 <p className="font-bold text-stone-900">{item.barang.kategori || 'Pakaian'}</p>
                                                 <p className="text-xs text-stone-400">Kondisi: {item.barang.kondisi_user}</p>
-                                                {item.barang.campaign && (
-                                                    <p className="text-xs text-green-700 mt-0.5">📢 {item.barang.campaign.judul}</p>
-                                                )}
                                             </td>
                                             <td className="p-4 max-w-[200px]">
                                                 <p className="text-xs text-stone-600 line-clamp-2">{item.pesan || '-'}</p>

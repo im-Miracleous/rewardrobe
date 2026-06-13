@@ -45,9 +45,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 }
             });
 
-            // If Penjemputan is finished (terkirim = sampai di gudang Admin), 
-            // the status of BarangDonasi remains 'disetujui' based on the plan.
-            // If there's any logic needed to append catatan, we can do it here.
+            // Penjemputan selesai (terkirim = sampai di gudang Admin) ->
+            // barang masuk inventaris dan siap masuk katalog.
+            if (status === 'terkirim') {
+                await tx.barangDonasi.update({
+                    where: { id: existing.barang_id },
+                    data: { status: 'terkirim' },
+                });
+            }
 
             return updated;
         });

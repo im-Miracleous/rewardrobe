@@ -11,9 +11,6 @@ async function main() {
     await prisma.pengiriman.deleteMany();
     await prisma.permintaan.deleteMany();
     await prisma.barangDonasi.deleteMany();
-    await prisma.partisipasiCampaign.deleteMany();
-    await prisma.donasiUang.deleteMany();
-    await prisma.campaign.deleteMany();
 
     // --- Users ---
     const admin = await prisma.user.upsert({
@@ -52,48 +49,11 @@ async function main() {
         create: { nama: 'Kelompok Pengrajin Batik', email: 'pengrajin@example.com', password: defaultPassword, role: 'penerima', tipe: 'pengrajin', no_telpon: '089876543212', alamat_lengkap: 'Jl. Kerajinan No. 2', kota: 'Solo' },
     });
 
-    // --- Campaigns ---
-    // Kampanye 1: Pengrajin — bebas tipe pakaian, TIDAK perlu verifikasi
-    const campaign1 = await prisma.campaign.create({
-        data: {
-            judul: 'Green Wardrobe Challenge',
-            deskripsi: 'Tantangan mengumpulkan pakaian katun bekas untuk didaur ulang menjadi produk baru oleh pengrajin lokal.',
-            target_barang: 50,
-            status: 'aktif',
-            verification_required: false,
-            // requirement null = bebas tipe pakaian
-        },
-    });
-
-    // Kampanye 2: Bantu Korban — ADA requirement, PERLU verifikasi admin
-    const campaign2 = await prisma.campaign.create({
-        data: {
-            judul: 'Bantu Korban Banjir Ciliwung',
-            deskripsi: 'Bantu warga terdampak banjir di bantaran Ciliwung dengan mendonasikan pakaian hangat yang layak pakai.',
-            target_dana: 10000000,
-            target_barang: 100,
-            status: 'aktif',
-            requirement: 'Pakaian harus bersih, tidak sobek, dan layak pakai. Diutamakan pakaian hangat (jaket, sweater, celana panjang). Pakaian dalam tidak diterima.',
-            verification_required: true,
-        },
-    });
-
-    // Kampanye 3: Pengrajin Lokal — bebas, TIDAK perlu verifikasi
-    const campaign3 = await prisma.campaign.create({
-        data: {
-            judul: 'Dukung Pengrajin Lokal',
-            deskripsi: 'Program pemberdayaan pengrajin lokal untuk menjahit ulang pakaian tidak layak pakai menjadi kerajinan tangan.',
-            target_dana: 5000000,
-            status: 'aktif',
-            verification_required: false,
-        },
-    });
-
     const verifiedAt = new Date('2026-05-10T08:00:00Z');
 
     // --- BarangDonasi ---
 
-    // [KASUS 1] Donasi bebas (tanpa kampanye) → auto disetujui, sudah dijemput → MUNCUL di katalog
+    // [KASUS 1] Sudah dijemput admin (terkirim) → MUNCUL di katalog penerima
     const barang1 = await prisma.barangDonasi.create({
         data: {
             judul: 'Kemeja Batik Pria',
@@ -101,14 +61,14 @@ async function main() {
             kondisi_user: 'baik',
             kategori: 'Kemeja',
             berat_kg: 0.5,
-            status: 'disetujui',
+            status: 'terkirim',
             donatur_id: donatur.id,
             verified_by: admin.id,
             verified_at: verifiedAt,
         },
     });
 
-    // [KASUS 2] Donasi ke kampanye pengrajin (verification_required: false) → auto disetujui, sudah dijemput → MUNCUL di katalog
+    // [KASUS 2] Sudah dijemput admin (terkirim) → MUNCUL di katalog penerima
     const barang2 = await prisma.barangDonasi.create({
         data: {
             judul: 'Kain Perca Campur',
@@ -116,13 +76,14 @@ async function main() {
             kondisi_user: 'fair',
             kategori: 'Lainnya',
             berat_kg: 1.2,
-            status: 'disetujui',
+            status: 'terkirim',
             donatur_id: donatur.id,
-            campaign_id: campaign1.id,
+            verified_by: admin.id,
+            verified_at: verifiedAt,
         },
     });
 
-    // [KASUS 3] Donasi bebas, sudah disetujui tapi BELUM dijemput → TIDAK muncul di katalog (Opsi B)
+    // [KASUS 3] Baru didonasikan, BELUM dijemput → menunggu pengiriman → TIDAK muncul di katalog
     const barang3 = await prisma.barangDonasi.create({
         data: {
             judul: 'Gaun Pesta',
@@ -130,12 +91,12 @@ async function main() {
             kondisi_user: 'baik',
             kategori: 'Atasan Wanita',
             berat_kg: 0.6,
-            status: 'disetujui',
+            status: 'menunggu_pengiriman',
             donatur_id: donatur2.id,
         },
     });
 
-    // [KASUS 4] Donasi ke kampanye BEREQUIREMENT → menunggu verifikasi → MUNCUL di halaman verifikasi admin
+    // [KASUS 4] Baru didonasikan, BELUM dijemput → menunggu pengiriman
     const barang4 = await prisma.barangDonasi.create({
         data: {
             judul: 'Jaket Fleece',
@@ -143,27 +104,12 @@ async function main() {
             kondisi_user: 'baik',
             kategori: 'Jaket',
             berat_kg: 0.9,
-            status: 'menunggu_verifikasi',
+            status: 'menunggu_pengiriman',
             donatur_id: donatur.id,
-            campaign_id: campaign2.id,
         },
     });
 
-    // [KASUS 4b] Donasi lain ke kampanye berequirement → menunggu verifikasi
-    const barang5 = await prisma.barangDonasi.create({
-        data: {
-            judul: 'Celana Panjang Katun',
-            deskripsi: 'Kondisi menurut donatur: fair\n\nCatatan: Celana panjang abu-abu, ukuran 32',
-            kondisi_user: 'fair',
-            kategori: 'Celana',
-            berat_kg: 0.7,
-            status: 'menunggu_verifikasi',
-            donatur_id: donatur2.id,
-            campaign_id: campaign2.id,
-        },
-    });
-
-    // [KASUS 5] Donasi ditolak
+    // [KASUS 5] Donasi ditolak admin
     await prisma.barangDonasi.create({
         data: {
             judul: 'Celana Jeans Sobek',
@@ -189,12 +135,13 @@ async function main() {
         data: { barang_id: barang2.id, tipe: 'donatur_ke_admin', kurir: 'GoSend', status: 'terkirim', resi: 'GS20260510002' },
     });
 
-    // barang3: belum dijemput (disiapkan) → TIDAK muncul di katalog — demonstrasi Opsi B
+    // barang3 & barang4: belum dijemput (disiapkan) → menunggu pengiriman, TIDAK muncul di katalog
     await prisma.pengiriman.create({
         data: { barang_id: barang3.id, tipe: 'donatur_ke_admin', status: 'disiapkan' },
     });
-
-    // barang4 & barang5: masih menunggu verifikasi, belum ada pengiriman
+    await prisma.pengiriman.create({
+        data: { barang_id: barang4.id, tipe: 'donatur_ke_admin', status: 'disiapkan' },
+    });
 
     // --- Permintaan (sample) ---
     await prisma.permintaan.create({
@@ -206,63 +153,26 @@ async function main() {
         },
     });
 
-    // --- DonasiUang ---
-    await prisma.donasiUang.create({
-        data: {
-            nominal: 150000,
-            bukti_transfer: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
-            catatan: 'Semoga membantu untuk pembelian mesin jahit.',
-            status: 'disetujui',
-            donatur_id: donatur.id,
-            campaign_id: campaign3.id,
-            verified_by: admin.id,
-            verified_at: verifiedAt,
-        },
-    });
-
-    // Donasi uang menunggu verifikasi → muncul di halaman verifikasi admin
-    await prisma.donasiUang.create({
-        data: {
-            nominal: 75000,
-            bukti_transfer: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
-            catatan: 'Untuk logistik korban banjir',
-            status: 'menunggu_verifikasi',
-            donatur_id: donatur2.id,
-            campaign_id: campaign2.id,
-        },
-    });
-
     // --- LogPoin ---
     await prisma.logPoin.createMany({
         data: [
-            { user_id: donatur.id,  poin: 50, keterangan: 'Donasi Kemeja Batik Pria berhasil disetujui' },
+            { user_id: donatur.id,  poin: 50, keterangan: 'Donasi Kemeja Batik Pria berhasil diterima' },
             { user_id: donatur.id,  poin: 25, keterangan: 'Bonus donasi pertama' },
-            { user_id: donatur2.id, poin: 30, keterangan: 'Donasi Kain Perca berhasil disetujui' },
+            { user_id: donatur2.id, poin: 30, keterangan: 'Donasi Kain Perca berhasil diterima' },
         ],
     });
 
     // --- Notifikasi ---
     await prisma.notifikasi.createMany({
         data: [
-            { user_id: donatur.id,  judul: 'Barang Disetujui', pesan: 'Kemeja Batik Pria Anda telah disetujui oleh admin.', dibaca: true },
+            { user_id: donatur.id,  judul: 'Barang Diterima', pesan: 'Kemeja Batik Pria Anda telah diterima di gudang ReWardrobe.', dibaca: true },
             { user_id: penerima.id, judul: 'Permintaan Terkirim', pesan: 'Permintaan Kemeja Batik Pria Anda sedang diproses.', dibaca: false },
-        ],
-    });
-
-    // --- PartisipasiCampaign ---
-    await prisma.partisipasiCampaign.createMany({
-        data: [
-            { user_id: donatur.id, campaign_id: campaign1.id },
-            { user_id: donatur.id, campaign_id: campaign2.id },
-            { user_id: donatur2.id, campaign_id: campaign2.id },
         ],
     });
 
     console.log('✅ Seed selesai:');
     console.log('   Users: admin, donatur, donatur2, penerima (panti), penerima2 (komunitas), pengrajin');
-    console.log('   Campaigns: 3 (1 perlu verifikasi, 2 bebas)');
-    console.log('   BarangDonasi: 6 item (2 di katalog, 1 belum dijemput, 2 menunggu verifikasi, 1 ditolak)');
-    console.log('   Verifikasi admin: jaket fleece + celana panjang (pakaian) + donasi uang Rp75rb');
+    console.log('   BarangDonasi: 5 item (2 di katalog/terkirim, 2 menunggu pengiriman, 1 ditolak)');
     console.log('   Katalog penerima: kemeja batik + kain perca (sudah dijemput)');
 }
 

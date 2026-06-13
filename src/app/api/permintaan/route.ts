@@ -24,7 +24,6 @@ export async function GET(request: NextRequest) {
                 barang: {
                     include: {
                         donatur: { select: { id: true, nama: true, kota: true } },
-                        campaign: { select: { id: true, judul: true } },
                         pengiriman: {
                             where: { tipe: 'admin_ke_penerima' },
                             select: { id: true, kurir: true, resi: true, status: true, created_at: true, updated_at: true },
@@ -72,7 +71,7 @@ export async function POST(request: NextRequest) {
         if (!barang) {
             return NextResponse.json({ data: null, error: 'Barang tidak ditemukan' }, { status: 404 });
         }
-        if (barang.status !== 'disetujui') {
+        if (barang.status !== 'terkirim') {
             return NextResponse.json({ data: null, error: 'Barang tidak tersedia untuk diminta' }, { status: 400 });
         }
 

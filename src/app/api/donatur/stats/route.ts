@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         const approvedClothes = await prisma.barangDonasi.findMany({
             where: {
                 donatur_id: donaturId,
-                status: { in: ['disetujui', 'tersalurkan'] }
+                status: { in: ['terkirim', 'tersalurkan'] }
             },
             select: { berat_kg: true }
         });
@@ -40,16 +40,6 @@ export async function GET(request: NextRequest) {
 
         // 3. Pakaian Tersalurkan (Count of approved clothes)
         const totalPakaianItem = approvedClothes.length;
-
-        // 4. Total Donasi Finansial (Approved money donations)
-        const approvedMoney = await prisma.donasiUang.findMany({
-            where: {
-                donatur_id: donaturId,
-                status: { in: ['disetujui', 'tersalurkan'] }
-            },
-            select: { nominal: true }
-        });
-        const totalUangDonasi = approvedMoney.reduce((sum, item) => sum + item.nominal, 0);
 
         // 5. Leaderboard (Calculate sum of points for all donaturs)
         const donaturUsers = await prisma.user.findMany({
@@ -87,11 +77,6 @@ export async function GET(request: NextRequest) {
             where: { donatur_id: donaturId, created_at: { gte: sixMonthsAgo } },
             select: { created_at: true }
         });
-        
-        const allUang = await prisma.donasiUang.findMany({
-            where: { donatur_id: donaturId, created_at: { gte: sixMonthsAgo } },
-            select: { created_at: true, nominal: true }
-        });
 
         // Group by month
         const monthlyStatsMap = new Map();
@@ -99,20 +84,13 @@ export async function GET(request: NextRequest) {
             const d = new Date();
             d.setMonth(d.getMonth() - i);
             const key = d.toLocaleString('id-ID', { month: 'short', year: 'numeric' });
-            monthlyStatsMap.set(key, { name: key, pakaian: 0, dana: 0 });
+            monthlyStatsMap.set(key, { name: key, pakaian: 0 });
         }
 
         allBarang.forEach(b => {
             const key = new Date(b.created_at).toLocaleString('id-ID', { month: 'short', year: 'numeric' });
             if (monthlyStatsMap.has(key)) {
                 monthlyStatsMap.get(key).pakaian += 1;
-            }
-        });
-
-        allUang.forEach(u => {
-            const key = new Date(u.created_at).toLocaleString('id-ID', { month: 'short', year: 'numeric' });
-            if (monthlyStatsMap.has(key)) {
-                monthlyStatsMap.get(key).dana += u.nominal;
             }
         });
 
@@ -123,7 +101,6 @@ export async function GET(request: NextRequest) {
                 total_poin: totalPoin,
                 total_limbah_kg: totalLimbahKg,
                 total_pakaian_item: totalPakaianItem,
-                total_uang_donasi: totalUangDonasi,
                 peringkat: userRank > 0 ? userRank : '-',
                 leaderboard: leaderboard.slice(0, 10), // top 10
                 monthly_stats: monthlyStats

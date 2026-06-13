@@ -3,14 +3,10 @@ import prisma from '@/lib/prisma';
 
 export async function GET() {
     try {
-        // 1. Verifikasi: Menunggu (Barang + Uang)
-        const barangMenunggu = await prisma.barangDonasi.count({
-            where: { status: 'menunggu_verifikasi' }
+        // 1. Donasi menunggu pengiriman (belum dijemput)
+        const totalMenungguPengiriman = await prisma.barangDonasi.count({
+            where: { status: 'menunggu_pengiriman' }
         });
-        const uangMenunggu = await prisma.donasiUang.count({
-            where: { status: 'menunggu_verifikasi' }
-        });
-        const totalMenungguVerifikasi = barangMenunggu + uangMenunggu;
 
         // 2. Penjemputan: Menunggu & Sedang Dijemput
         const penjemputanAktif = await prisma.pengiriman.count({
@@ -20,9 +16,9 @@ export async function GET() {
             }
         });
 
-        // 3. Inventory: Di Gudang (disetujui)
+        // 3. Inventory: Di Gudang (terkirim)
         const inventoryGudang = await prisma.barangDonasi.count({
-            where: { status: 'disetujui' }
+            where: { status: 'terkirim' }
         });
         
         // Inventory: Tersalurkan (tersalurkan)
@@ -38,12 +34,7 @@ export async function GET() {
             }
         });
 
-        // 5. Kampanye Aktif
-        const kampanyeAktif = await prisma.campaign.count({
-            where: { status: 'aktif' }
-        });
-
-        // 6. Recent Donations (Barang Donasi)
+        // 5. Recent Donations (Barang Donasi)
         const recentDonations = await prisma.barangDonasi.findMany({
             take: 5,
             orderBy: { created_at: 'desc' },
@@ -53,11 +44,10 @@ export async function GET() {
         return NextResponse.json({
             data: {
                 stats: {
-                    menungguVerifikasi: totalMenungguVerifikasi,
+                    menungguPengiriman: totalMenungguPengiriman,
                     penjemputanAktif: penjemputanAktif,
                     inventoryGudang: inventoryGudang,
                     pengirimanAktif: pengirimanAktif,
-                    kampanyeAktif: kampanyeAktif,
                     totalTersalurkan: totalTersalurkan
                 },
                 recentDonations: recentDonations

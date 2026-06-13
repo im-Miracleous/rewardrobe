@@ -24,29 +24,12 @@ export async function GET(request: NextRequest) {
         // Fetch clothes donations
         const barangDonasi = await prisma.barangDonasi.findMany({
             where: { donatur_id: donaturId },
-            include: {
-                campaign: {
-                    select: { id: true, judul: true }
-                }
-            },
-            orderBy: { created_at: 'desc' },
-        });
-
-        // Fetch money donations
-        const donasiUang = await prisma.donasiUang.findMany({
-            where: { donatur_id: donaturId },
-            include: {
-                campaign: {
-                    select: { id: true, judul: true }
-                }
-            },
             orderBy: { created_at: 'desc' },
         });
 
         return NextResponse.json({
             data: {
-                barang: barangDonasi,
-                uang: donasiUang
+                barang: barangDonasi
             },
             error: null
         });

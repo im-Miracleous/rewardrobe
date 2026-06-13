@@ -33,11 +33,9 @@ export default function DashboardLayout({
 
     const titleMap: Record<string, string> = {
         '/dashboard/admin': 'Admin Dashboard',
-        '/dashboard/admin/verifikasi': 'Verifikasi Donasi',
         '/dashboard/admin/penjemputan': 'Penjemputan Barang',
         '/dashboard/admin/pengiriman': 'Kelola Pengiriman',
         '/dashboard/admin/inventory': 'Inventory & Katalog (QR)',
-        '/dashboard/admin/kampanye': 'Kelola Kampanye',
         '/dashboard/admin/permintaan': 'Permintaan Penerima',
         '/dashboard/donatur': 'Donatur Dashboard',
         '/dashboard/penerima': 'Katalog Donasi',
