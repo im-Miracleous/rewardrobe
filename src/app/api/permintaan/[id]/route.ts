@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { AUTH_COOKIE_NAME, parseAuthCookieValue } from '@/lib/auth';
-
+import { notificationSubject } from '@/lib/notifikasi';
 const patchSchema = z.union([
     z.object({
         status: z.enum(['diterima', 'ditolak']),
@@ -26,7 +26,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             return NextResponse.json({ data: null, error: parsed.error.issues.map(i => i.message).join(', ') }, { status: 400 });
         }
 
-        const existing = await prisma.permintaan.findUnique({ where: { id } });
+        const existing = await prisma.permintaan.findUnique({ where: { id }, include: { barang: true } });
         if (!existing) {
             return NextResponse.json({ data: null, error: 'Permintaan tidak ditemukan' }, { status: 404 });
         }
@@ -81,6 +81,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                         tipe: 'admin_ke_penerima',
                         status: 'disiapkan',
                     },
+                });
+
+                await notificationSubject.emitStatusEvent(tx, {
+                    type: 'PERMINTAAN_DITERIMA',
+                    userId: existing.penerima_id,
+                    barangJudul: existing.barang.judul || 'Tanpa Judul'
+                });
+            } else if (status === 'ditolak') {
+                await notificationSubject.emitStatusEvent(tx, {
+                    type: 'PERMINTAAN_DITOLAK',
+                    userId: existing.penerima_id,
+                    barangJudul: existing.barang.judul || 'Tanpa Judul'
                 });
             }
 
