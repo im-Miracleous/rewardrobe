@@ -82,6 +82,25 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ data: null, error: 'Anda sudah memiliki permintaan aktif untuk barang ini' }, { status: 409 });
         }
 
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const recentRequestsCount = await prisma.permintaan.count({
+            where: {
+                penerima_id,
+                created_at: {
+                    gte: sevenDaysAgo,
+                },
+            },
+        });
+
+        if (recentRequestsCount >= 3) {
+            return NextResponse.json(
+                { data: null, error: 'Anda telah mencapai batas maksimal 3 permintaan dalam 7 hari terakhir.' },
+                { status: 429 }
+            );
+        }
+
         const permintaan = await prisma.permintaan.create({
             data: { barang_id, penerima_id, pesan: pesan || null, status: 'menunggu' },
         });

@@ -1,4 +1,5 @@
-**Project:** ReWardrobe - Donasi Pakaian
+# Progress Report — Week 6
+**Project:** ReWardrobe - Donasi & Daur Ulang Pakaian
 
 **Branch:** https://github.com/im-Miracleous/rewardrobe/tree/Week06
 
@@ -87,9 +88,9 @@ Legenda: ❌ belum ada |📝 dalam rencana | 🟡 sedang dikerjakan | ✅ sudah 
 ## 3. PENERIMA
 | No  | Fitur                                                                                                            | Status | PIC |
 | --- | ---------------------------------------------------------------------------------------------------------------- | :----: | --- |
-| 3.1 | Katalog hanya barang berstatus `terkirim` (`penerima/page.tsx` fetch `?status=terkirim`)                          |   ✅   |     |
-| 3.2 | Validasi permintaan: barang harus `terkirim` & belum diminta aktif oleh penerima sama (`permintaan/route.ts` sudah cek `terkirim`) |   ✅   |     |
-| 3.3 | Fitur **batasi penerimaan per satuan waktu** (rate-limit permintaan/periode)                                     |   ❌    |     |
+| 3.1 | Katalog hanya barang berstatus `terkirim` (`penerima/page.tsx` fetch `?status=terkirim`)                          |   ✅   | Miracle |
+| 3.2 | Validasi permintaan: barang harus `terkirim` & belum diminta aktif oleh penerima sama (`permintaan/route.ts` sudah cek `terkirim`) |   ✅   | Miracle |
+| 3.3 | Fitur **batasi penerimaan per satuan waktu** (rate-limit permintaan/periode)                                     |   ✅    | Miracle |
 
 ## 4. LINTAS-AKTOR (Aturan Pendukung)
 | No  | Fitur                                                                           | Status | PIC       |
@@ -101,7 +102,7 @@ Legenda: ❌ belum ada |📝 dalam rencana | 🟡 sedang dikerjakan | ✅ sudah 
 
 | No  | Fitur                                                                                                          | Status | PIC     |
 | --- | -------------------------------------------------------------------------------------------------------------- | :----: | ------- |
-| 5.1 | Optimalisasi ukuran cache proyek                                                                               |   🟡   | Miracle |
+| 5.1 | Optimalisasi ukuran cache proyek                                                                               |   ✅   | Miracle |
 | 5.2 | Migrasi dari Node.JS + Next.JS ke Next.JS single-monolith (menggabungkan *front-end* dan *backend* di Next.JS) |   📝   | Miracle |
 | 5.3 | Update readme                                                                                                  |   🟡   | Henry   |
 ## Urutan Pengerjaan (saran)

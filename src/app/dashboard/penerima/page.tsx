@@ -106,7 +106,10 @@ export default function PenerimaDash() {
     return (
         <div className="space-y-8 animate-[fadeIn_0.3s_ease]">
             <div>
-                <h1 className="text-2xl font-display font-bold text-stone-900">Katalog Donasi</h1>
+                <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-display font-bold text-stone-900">Katalog Donasi</h1>
+                    <Badge color="blue">Batas Pengajuan: 3 Barang / 7 Hari</Badge>
+                </div>
                 <p className="text-stone-500 mt-1">Pilih barang yang sesuai dengan kebutuhan Anda.</p>
             </div>
 
