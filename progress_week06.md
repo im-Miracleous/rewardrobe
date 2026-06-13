@@ -91,11 +91,11 @@ Legenda: ✅ sudah ada | 🟡 perlu perbaikan | ❌ belum ada | 🗑️ hapus
 | 3.3 | Fitur **batasi penerimaan per satuan waktu** (rate-limit permintaan/periode)                                     | ❌      |     |
 
 ## 4. LINTAS-AKTOR (Aturan Pendukung)
-| No  | Fitur                                                                           | Status | PIC |
-| --- | ------------------------------------------------------------------------------- | ------ | --- |
-| 4.1 | Sistem **notifikasi terpusat**: tiap perubahan status penting → `Notifikasi`    | ❌      |     |
-| 4.2 | Sistem **poin/gamifikasi**: `LogPoin` di tiap milestone (diterima, tersalurkan) | ❌      |     |
-| 4.3 | Penamaan status konsisten di seluruh UI (pakai helper 0.6)                      | ❌      |     |
+| No  | Fitur                                                                           | Status | PIC       |
+| --- | ------------------------------------------------------------------------------- | ------ | --------- |
+| 4.1 | Sistem **notifikasi terpusat**: tiap perubahan status penting → `Notifikasi`    | ✅      | Christian |
+| 4.2 | Sistem **poin/gamifikasi**: `LogPoin` di tiap milestone (diterima, tersalurkan) | ✅      | Christian |
+| 4.3 | Penamaan status konsisten di seluruh UI (pakai helper 0.6)                      | ✅      | Christian |
 
 ## Urutan Pengerjaan (saran)
 1. **A.x** — hapus Donasi Uang & Kampanye dulu (bersihkan, biar tidak ganggu).
