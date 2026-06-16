@@ -6,6 +6,7 @@ import { AUTH_COOKIE_NAME, parseAuthCookieValue } from '@/lib/auth';
 const createSchema = z.object({
     barang_id: z.number().int().positive('barang_id harus integer positif'),
     pesan: z.string().optional(),
+    alamat_tujuan: z.string().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { barang_id, pesan } = parsed.data;
+        const { barang_id, pesan, alamat_tujuan } = parsed.data;
 
         const barang = await prisma.barangDonasi.findUnique({ where: { id: barang_id } });
         if (!barang) {
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
         }
 
         const permintaan = await prisma.permintaan.create({
-            data: { barang_id, penerima_id, pesan: pesan || null, status: 'menunggu' },
+            data: { barang_id, penerima_id, pesan: pesan || null, alamat_tujuan: alamat_tujuan || null, status: 'menunggu' },
         });
 
         return NextResponse.json({ data: permintaan, error: null }, { status: 201 });

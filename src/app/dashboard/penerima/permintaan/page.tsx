@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Package, Loader2, Shirt, MapPin, Truck, CheckCircle2, X } from 'lucide-react';
+import { Package, Loader2, Shirt, MapPin, Truck, CheckCircle2, X, Save } from 'lucide-react';
 
 interface Pengiriman {
     id: number;
@@ -17,6 +17,7 @@ interface PermintaanItem {
     id: number;
     status: 'menunggu' | 'diterima' | 'ditolak';
     pesan: string | null;
+    alamat_tujuan: string | null;
     created_at: string;
     barang: {
         id: number;
@@ -47,6 +48,50 @@ export default function PenerimaPermintaanPage() {
     const [tabFilter, setTabFilter] = useState<'semua' | 'menunggu' | 'diterima' | 'ditolak'>('semua');
     const [cancellingId, setCancellingId] = useState<number | null>(null);
     const [confirmingId, setConfirmingId] = useState<number | null>(null);
+
+    const [alamatDefault, setAlamatDefault] = useState('');
+    const [isLoadingAlamat, setIsLoadingAlamat] = useState(true);
+    const [isSavingAlamat, setIsSavingAlamat] = useState(false);
+
+    const fetchAlamatDefault = useCallback(async () => {
+        setIsLoadingAlamat(true);
+        try {
+            const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+            const user = userStr ? JSON.parse(userStr) : null;
+            if (!user?.id) return;
+
+            const res = await fetch(`/api/users/${user.id}`);
+            const json = await res.json();
+            if (json.user) setAlamatDefault(json.user.alamat_lengkap || '');
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsLoadingAlamat(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchAlamatDefault();
+    }, [fetchAlamatDefault]);
+
+    const handleSaveAlamat = async () => {
+        const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+        const user = userStr ? JSON.parse(userStr) : null;
+        if (!user?.id) return;
+
+        setIsSavingAlamat(true);
+        try {
+            await fetch(`/api/users/${user.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alamat_lengkap: alamatDefault }),
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSavingAlamat(false);
+        }
+    };
 
     const fetchPermintaan = useCallback(async () => {
         setIsLoading(true);
@@ -125,6 +170,36 @@ export default function PenerimaPermintaanPage() {
                 <p className="text-stone-500 mt-1">Riwayat dan status permintaan barang yang Anda ajukan.</p>
             </div>
 
+            {/* Alamat Tujuan Default */}
+            <div className="bg-white border border-stone-200 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-2">
+                    <MapPin size={16} className="text-stone-500" />
+                    <h3 className="font-bold text-stone-800 text-sm">Alamat Tujuan Default</h3>
+                </div>
+                <p className="text-xs text-stone-500 mb-3">
+                    Alamat ini akan otomatis terisi setiap kali Anda mengajukan permintaan barang baru di Katalog Donasi.
+                </p>
+                {isLoadingAlamat ? (
+                    <div className="flex items-center gap-2 text-stone-400 text-sm py-2">
+                        <Loader2 size={16} className="animate-spin" /> Memuat alamat...
+                    </div>
+                ) : (
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <textarea
+                            value={alamatDefault}
+                            onChange={(e) => setAlamatDefault(e.target.value)}
+                            placeholder="Masukkan alamat lengkap tujuan pengiriman..."
+                            rows={2}
+                            className="flex-1 px-4 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 resize-none"
+                        />
+                        <Button variant="primary" size="sm" onClick={handleSaveAlamat} disabled={isSavingAlamat} className="self-end sm:self-start">
+                            {isSavingAlamat ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                            Simpan
+                        </Button>
+                    </div>
+                )}
+            </div>
+
             {/* Tabs */}
             <div className="flex gap-2 border-b border-stone-200">
                 {tabs.map(tab => (
@@ -194,6 +269,11 @@ export default function PenerimaPermintaanPage() {
                                         <p className="text-xs text-stone-500">
                                             Diajukan: {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                                         </p>
+                                        {item.alamat_tujuan && (
+                                            <p className="text-xs text-stone-400 mt-1 line-clamp-1">
+                                                Dikirim ke: {item.alamat_tujuan}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 

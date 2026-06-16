@@ -60,13 +60,14 @@ model BarangDonasi {
 }
 
 model Permintaan {
-  id          Int              @id @default(autoincrement())
-  barang_id   Int
-  penerima_id Int
-  pesan       String?
-  status      StatusPermintaan @default(menunggu)
-  created_at  DateTime         @default(now())
-  updated_at  DateTime         @updatedAt
+  id             Int              @id @default(autoincrement())
+  barang_id      Int
+  penerima_id    Int
+  pesan          String?
+  alamat_tujuan  String?
+  status         StatusPermintaan @default(menunggu)
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
 
   barang   BarangDonasi @relation(fields: [barang_id], references: [id])
   penerima User         @relation(fields: [penerima_id], references: [id])

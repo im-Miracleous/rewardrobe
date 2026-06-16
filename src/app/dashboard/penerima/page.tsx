@@ -27,9 +27,12 @@ export default function PenerimaDash() {
     const [kategoriFilter, setKategoriFilter] = useState('');
     const [selectedBarang, setSelectedBarang] = useState<BarangItem | null>(null);
     const [pesan, setPesan] = useState('');
+    const [alamatTujuan, setAlamatTujuan] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     // barang_id yang sudah pernah diminta (menunggu/diterima) — diisi dari API saat mount
     const [requestedIds, setRequestedIds] = useState<Set<number>>(new Set());
+    // alamat default penerima, untuk auto-fill saat mengajukan permintaan baru
+    const [alamatDefault, setAlamatDefault] = useState('');
 
     useEffect(() => {
         const init = async () => {
@@ -46,7 +49,10 @@ export default function PenerimaDash() {
                 if (userStr) {
                     const user = JSON.parse(userStr);
                     if (user?.id) {
-                        const permintaanRes = await fetch(`/api/permintaan?penerima_id=${user.id}`);
+                        const [permintaanRes, userRes] = await Promise.all([
+                            fetch(`/api/permintaan?penerima_id=${user.id}`),
+                            fetch(`/api/users/${user.id}`),
+                        ]);
                         const permintaanJson = await permintaanRes.json();
                         if (permintaanJson.data) {
                             const activeIds = new Set<number>(
@@ -58,6 +64,9 @@ export default function PenerimaDash() {
                             );
                             setRequestedIds(activeIds);
                         }
+
+                        const userJson = await userRes.json();
+                        if (userJson.user?.alamat_lengkap) setAlamatDefault(userJson.user.alamat_lengkap);
                     }
                 }
             } catch (err) {
@@ -86,13 +95,14 @@ export default function PenerimaDash() {
             const res = await fetch('/api/permintaan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ barang_id: selectedBarang.id, pesan }),
+                body: JSON.stringify({ barang_id: selectedBarang.id, pesan, alamat_tujuan: alamatTujuan }),
             });
             const json = await res.json();
             if (res.ok) {
                 setRequestedIds(prev => new Set(prev).add(selectedBarang.id));
                 setSelectedBarang(null);
                 setPesan('');
+                setAlamatTujuan('');
             } else {
                 alert(json.error || 'Gagal mengajukan permintaan');
             }
@@ -150,7 +160,7 @@ export default function PenerimaDash() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {filtered.map((item) => (
                         <div key={item.id} className="bg-white border border-stone-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group">
-                            <div className="h-44 bg-stone-50 flex items-center justify-center text-5xl group-hover:scale-105 transition-transform duration-500 overflow-hidden">
+                            <div className="aspect-square bg-stone-50 flex items-center justify-center text-5xl group-hover:scale-105 transition-transform duration-500 overflow-hidden">
                                 {item.foto_url ? (
                                     <img src={item.foto_url} alt={item.kategori || 'barang'} className="w-full h-full object-cover" />
                                 ) : (
@@ -170,7 +180,7 @@ export default function PenerimaDash() {
                                             <CheckCircle size={16} /> Sudah Diminta
                                         </div>
                                     ) : (
-                                        <Button className="w-full" onClick={() => { setSelectedBarang(item); setPesan(''); }}>
+                                        <Button className="w-full" onClick={() => { setSelectedBarang(item); setPesan(''); setAlamatTujuan(alamatDefault); }}>
                                             Minta Barang
                                         </Button>
                                     )}
@@ -199,6 +209,23 @@ export default function PenerimaDash() {
                             <div className="bg-stone-50 rounded-xl p-4 text-sm text-stone-600">
                                 <p className="font-semibold text-stone-800 mb-1">Detail Barang</p>
                                 <p>{selectedBarang.deskripsi}</p>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">
+                                    Alamat Tujuan
+                                </label>
+                                <textarea
+                                    value={alamatTujuan}
+                                    onChange={(e) => setAlamatTujuan(e.target.value)}
+                                    placeholder="Alamat lengkap tujuan pengiriman..."
+                                    rows={2}
+                                    className="w-full px-4 py-3 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all resize-none"
+                                />
+                                {!alamatDefault && (
+                                    <p className="text-xs text-amber-600 mt-1.5">
+                                        Anda belum mengatur alamat default. Atur di tab "Permintaan Saya" agar otomatis terisi lain kali.
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">

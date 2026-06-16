@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
     Truck, CheckCircle, Image as ImageIcon,
-    Loader2, Package, QrCode, ArrowRight,
+    Loader2, Package, Boxes, ArrowRight,
     TrendingUp, AlertCircle, Shirt
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -103,9 +103,9 @@ const quickActions = [
     },
     {
         href: '/dashboard/admin/inventory',
-        icon: <QrCode size={24} />,
-        title: 'Inventory (QR)',
-        desc: 'Kelola stok gudang & generate QR',
+        icon: <Boxes size={24} />,
+        title: 'Inventaris',
+        desc: 'Lihat stok barang yang ada di gudang',
         color: 'text-purple-600',
         bg: 'bg-purple-50',
         border: 'border-purple-200',
@@ -180,7 +180,7 @@ export default function AdminDash() {
 
                 <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center transition-all hover:shadow-md">
                     <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
-                        <QrCode size={20} />
+                        <Boxes size={20} />
                     </div>
                     <div className="text-2xl font-display font-extrabold text-stone-900 leading-none mb-1">{isLoading ? '-' : stats?.inventoryGudang}</div>
                     <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Item Di<br/>Gudang</div>

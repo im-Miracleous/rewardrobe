@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 const patchSchema = z.object({
+    kurir: z.string().optional(),
     status: z.enum(['disiapkan', 'dalam_pengiriman', 'terkirim']),
+    catatan: z.string().optional(),
 });
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -18,7 +20,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             return NextResponse.json({ data: null, error: parsed.error.issues.map(i => i.message).join(', ') }, { status: 400 });
         }
 
-        const { status } = parsed.data;
+        const { kurir, status, catatan } = parsed.data;
 
         // Check exists
         const existing = await prisma.pengiriman.findUnique({ where: { id }, include: { barang: true } });
@@ -26,12 +28,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             return NextResponse.json({ data: null, error: 'Data pengiriman tidak ditemukan' }, { status: 404 });
         }
 
+        let resiToUpdate = existing.resi;
+        if (kurir && status === 'dalam_pengiriman' && !existing.resi) {
+            // Mock generate resi if not exists
+            resiToUpdate = `PGM-${new Date().getTime()}`;
+        }
+
         // status 'terkirim' di sini hanya berarti barang sampai di tangan penerima.
         // Penutupan transaksi (status barang 'tersalurkan' + poin donatur + notif)
         // terjadi saat penerima mengkonfirmasi penerimaan di /api/permintaan/[id].
         const updated = await prisma.pengiriman.update({
             where: { id },
-            data: { status }
+            data: {
+                kurir: kurir || existing.kurir,
+                status,
+                resi: resiToUpdate
+            }
         });
 
         return NextResponse.json({ data: updated, error: null });

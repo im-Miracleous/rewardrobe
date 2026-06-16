@@ -2,11 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   Package,
-  Send,
   Truck,
   CheckCircle,
   MapPin,
-  Plus,
+  User,
   X,
   ChevronLeft,
   ChevronRight,
@@ -24,21 +23,17 @@ interface Pengiriman {
   id: number;
   barang_id: number;
   penerima: { id: number; nama: string; kota: string; tipe: string };
+  alamat_tujuan: string | null;
   barang_info: {
       nama: string;
       kategori: string;
+      foto_url: string | null;
   };
   kurir: string;
   resi: string;
   status: StatusPengiriman;
   waktu_request: string;
 }
-
-const mockDaftarPenerima = [
-  { id: 101, nama: 'Panti Asuhan Kasih Ibu', tipe: 'Panti Asuhan' },
-  { id: 102, nama: 'Komunitas Peduli Sesama', tipe: 'Komunitas' },
-  { id: 103, nama: 'Pengrajin Batik Cirebon', tipe: 'Pengrajin' },
-];
 
 type TabFilter = 'semua' | 'disiapkan' | 'dalam_pengiriman' | 'terkirim';
 
@@ -77,39 +72,25 @@ function formatTanggal(dateStr: string): string {
 
 export default function KelolaPengirimanPage() {
   const [data, setData] = useState<Pengiriman[]>([]);
-  const [inventoryList, setInventoryList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   const [activeTab, setActiveTab] = useState<TabFilter>('semua');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showPanel, setShowPanel] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Form state
-  const [formPenerimaId, setFormPenerimaId] = useState<number | ''>('');
-  const [formBarangIds, setFormBarangIds] = useState<number[]>([]);
+  // Modal "Tugaskan Kurir"
+  const [assignModalId, setAssignModalId] = useState<number | null>(null);
   const [formKurir, setFormKurir] = useState('');
-  const [formNoResi, setFormNoResi] = useState('');
+  const [formCatatan, setFormCatatan] = useState('');
 
   const fetchData = async () => {
       try {
           setIsLoading(true);
-          const [resPengiriman, resInventory] = await Promise.all([
-              fetch('/api/admin/pengiriman'),
-              fetch('/api/admin/inventory')
-          ]);
-          
-          const jsonPengiriman = await resPengiriman.json();
-          const jsonInventory = await resInventory.json();
-
-          if (jsonPengiriman.data) setData(jsonPengiriman.data);
-          
-          // Only show items that are 'terkirim' (in warehouse), not 'tersalurkan'
-          if (jsonInventory.data) {
-              setInventoryList(jsonInventory.data.filter((i: any) => i.status === 'terkirim'));
-          }
+          const res = await fetch('/api/admin/pengiriman');
+          const json = await res.json();
+          if (json.data) setData(json.data);
       } catch (err) {
           console.error(err);
       } finally {
@@ -161,46 +142,30 @@ export default function KelolaPengirimanPage() {
     }
   }
 
-  async function handleSubmit() {
-    if (!formPenerimaId || formBarangIds.length === 0 || !formKurir || !formNoResi) return;
-    
+  const openAssignModal = (id: number) => {
+    setAssignModalId(id);
+    setFormKurir('');
+    setFormCatatan('');
+  };
+
+  async function handleAssignSubmit() {
+    if (!assignModalId || !formKurir) return;
     setIsProcessing(true);
     try {
-        const res = await fetch('/api/admin/pengiriman', {
-            method: 'POST',
+        const res = await fetch(`/api/admin/pengiriman/${assignModalId}`, {
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                penerima_id: formPenerimaId,
-                barang_ids: formBarangIds,
-                kurir: formKurir,
-                resi: formNoResi
-            })
+            body: JSON.stringify({ kurir: formKurir, status: 'dalam_pengiriman', catatan: formCatatan })
         });
-
         if (res.ok) {
-            setFormPenerimaId('');
-            setFormBarangIds([]);
-            setFormKurir('');
-            setFormNoResi('');
-            setShowPanel(false);
-            setActiveTab('semua');
-            setCurrentPage(1);
             await fetchData();
-        } else {
-            const err = await res.json();
-            alert(`Gagal membuat pengiriman: ${err.error}`);
+            setAssignModalId(null);
         }
     } catch (err) {
         console.error(err);
     } finally {
         setIsProcessing(false);
     }
-  }
-
-  function toggleBarang(id: number) {
-    setFormBarangIds((prev) =>
-      prev.includes(id) ? prev.filter((b) => b !== id) : [...prev, id]
-    );
   }
 
   const tabs: { key: TabFilter; label: string }[] = [
@@ -244,19 +209,13 @@ export default function KelolaPengirimanPage() {
   return (
     <div className="space-y-8 animate-[fadeIn_0.3s_ease]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-stone-900">
-            Kelola Pengiriman
-          </h1>
-          <p className="text-stone-500">
-            Pantau dan kelola pengiriman barang ke penerima donasi.
-          </p>
-        </div>
-        <Button variant="primary" size="md" onClick={() => setShowPanel(true)}>
-          <Plus size={18} />
-          Buat Pengiriman Baru
-        </Button>
+      <div>
+        <h1 className="text-2xl font-display font-bold text-stone-900">
+          Kelola Pengiriman
+        </h1>
+        <p className="text-stone-500">
+          Pantau dan kelola pengiriman barang ke penerima donasi. Baris muncul otomatis begitu admin menyetujui permintaan penerima.
+        </p>
       </div>
 
       {/* Stat Cards */}
@@ -330,6 +289,7 @@ export default function KelolaPengirimanPage() {
                 <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">No</th>
                 <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Penerima</th>
                 <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Tipe Penerima</th>
+                <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Alamat Tujuan</th>
                 <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Barang Dikirim</th>
                 <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">Kurir</th>
                 <th className="p-4 text-xs font-bold text-stone-400 uppercase tracking-wider">No. Resi</th>
@@ -341,14 +301,14 @@ export default function KelolaPengirimanPage() {
             <tbody>
               {isLoading ? (
                   <tr>
-                      <td colSpan={9} className="p-12 text-center">
+                      <td colSpan={10} className="p-12 text-center">
                           <Loader2 size={40} className="mx-auto mb-3 text-stone-300 animate-spin" />
                           <p className="text-stone-400 font-semibold text-sm">Memuat data...</p>
                       </td>
                   </tr>
               ) : paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-12 text-center">
+                  <td colSpan={10} className="p-12 text-center">
                     <Truck size={48} className="mx-auto mb-4 text-stone-300" />
                     <p className="font-semibold text-stone-400">
                       Tidak ada data pengiriman ditemukan.
@@ -381,13 +341,23 @@ export default function KelolaPengirimanPage() {
                         </Badge>
                       )}
                     </td>
+                    <td className="p-4 max-w-[180px]">
+                      <p className="text-xs text-stone-600 line-clamp-2">
+                        {item.alamat_tujuan || item.penerima?.kota || '-'}
+                      </p>
+                    </td>
                     <td className="p-4">
-                      <div className="flex flex-wrap gap-1">
-                          <span
-                            className="inline-block bg-stone-100 text-stone-600 text-xs font-medium px-2 py-0.5 rounded-md"
-                          >
-                            {item.barang_info.nama || item.barang_info.kategori}
-                          </span>
+                      <div className="flex items-center gap-2">
+                        {item.barang_info.foto_url ? (
+                          <img src={item.barang_info.foto_url} alt={item.barang_info.nama} className="w-9 h-9 rounded-lg object-cover border border-stone-200 shrink-0" />
+                        ) : (
+                          <div className="w-9 h-9 rounded-lg bg-stone-100 border border-stone-200 flex items-center justify-center shrink-0">
+                            <Package size={14} className="text-stone-400" />
+                          </div>
+                        )}
+                        <span className="inline-block bg-stone-100 text-stone-600 text-xs font-medium px-2 py-0.5 rounded-md">
+                          {item.barang_info.nama || item.barang_info.kategori}
+                        </span>
                       </div>
                     </td>
                     <td className="p-4 text-sm font-semibold text-stone-700">
@@ -408,12 +378,10 @@ export default function KelolaPengirimanPage() {
                           variant="primary"
                           size="sm"
                           disabled={isProcessing}
-                          onClick={() =>
-                            handleStatusChange(item.id, 'dalam_pengiriman')
-                          }
+                          onClick={() => openAssignModal(item.id)}
                         >
-                          <Send size={14} />
-                          Kirim Sekarang
+                          <Truck size={14} />
+                          Tugaskan Kurir
                         </Button>
                       )}
                       {item.status === 'dalam_pengiriman' && (
@@ -496,183 +464,81 @@ export default function KelolaPengirimanPage() {
         )}
       </div>
 
-      {/* Slide-out Panel Overlay */}
-      {showPanel && (
-        <div className="fixed inset-0 z-50 flex justify-end">
+      {/* ── Modal: Tugaskan Kurir ──────────────────────────── */}
+      {assignModalId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-[fadeIn_0.2s_ease]"
-            onClick={() => setShowPanel(false)}
+            onClick={() => setAssignModalId(null)}
           />
-
-          <div className="relative w-full max-w-lg bg-white shadow-2xl animate-[slideInRight_0.3s_ease] flex flex-col">
-            <div className="p-6 border-b border-stone-200 flex items-center justify-between">
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-stone-200 animate-[fadeIn_0.25s_ease]">
+            <div className="flex items-center justify-between p-6 border-b border-stone-100">
               <div>
-                <h2 className="text-lg font-display font-bold text-stone-900">
-                  Buat Pengiriman Baru
-                </h2>
+                <h3 className="font-display font-bold text-lg text-stone-900">
+                  Tugaskan Kurir
+                </h3>
                 <p className="text-sm text-stone-500 mt-0.5">
-                  Isi detail pengiriman ke penerima.
+                  Untuk ID #{assignModalId}
                 </p>
               </div>
               <button
-                onClick={() => setShowPanel(false)}
-                className="p-2 rounded-xl hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors"
+                onClick={() => setAssignModalId(null)}
+                className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-stone-100 transition-colors"
               >
-                <X size={20} />
+                <X size={18} className="text-stone-500" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {/* Penerima */}
+            <div className="p-6 space-y-5">
               <div>
-                <label className="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">
-                  Penerima (Mock User)
+                <label className="block text-sm font-semibold text-stone-700 mb-1.5">
+                  Nama Kurir / Driver
                 </label>
-                <select
-                  value={formPenerimaId}
-                  onChange={(e) => setFormPenerimaId(parseInt(e.target.value))}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-400 transition-all appearance-none"
-                >
-                  <option value="">Pilih penerima...</option>
-                  {/* Just use some simple user ID placeholders, assuming they exist or create one if not, 
-                      Actually our DB has user 1,2 as donatur. Let's use any ID, or we can use ID 1,2 for demo */}
-                  <option value={1}>Panti Asuhan Kasih Ibu (Mock User ID 1)</option>
-                  <option value={2}>Komunitas Peduli Sesama (Mock User ID 2)</option>
-                </select>
-                <p className="text-[10px] text-stone-400 mt-1">
-                  Catatan: Menggunakan ID Donatur yang ada (1 & 2) sebagai simulasi akun Penerima untuk demo ini.
-                </p>
-              </div>
-
-              {/* Barang */}
-              <div>
-                <label className="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">
-                  Pilih Barang dari Inventaris Gudang
-                </label>
-                <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 max-h-48 overflow-y-auto space-y-1">
-                  {inventoryList.length === 0 ? (
-                      <p className="text-sm text-stone-500 p-2 text-center">Gudang kosong (tidak ada barang disetujui).</p>
-                  ) : (
-                      inventoryList.map((b) => (
-                        <label
-                          key={b.id}
-                          className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors duration-150 ${
-                            formBarangIds.includes(b.id)
-                              ? 'bg-green-50 border border-green-200'
-                              : 'hover:bg-stone-100 border border-transparent'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={formBarangIds.includes(b.id)}
-                            onChange={() => toggleBarang(b.id)}
-                            className="w-4 h-4 rounded border-stone-300 text-green-600 focus:ring-green-500/30"
-                          />
-                          <span className="text-sm text-stone-700 font-medium truncate flex-1">
-                            {b.judul || b.kategori} (ID: {b.id})
-                          </span>
-                        </label>
-                      ))
-                  )}
+                <div className="relative">
+                  <User
+                    size={16}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"
+                  />
+                  <input
+                    type="text"
+                    value={formKurir}
+                    onChange={(e) => setFormKurir(e.target.value)}
+                    placeholder="Contoh: JNE Express, SiCepat, atau kurir internal"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 transition-all"
+                  />
                 </div>
-                {formBarangIds.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {formBarangIds.map((id) => {
-                        const item = inventoryList.find(i => i.id === id);
-                        if (!item) return null;
-                        return (
-                          <span
-                            key={id}
-                            className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full"
-                          >
-                            {item.judul || item.kategori}
-                            <button
-                              type="button"
-                              onClick={() => toggleBarang(id)}
-                              className="hover:text-green-900 transition-colors"
-                            >
-                              <X size={12} />
-                            </button>
-                          </span>
-                        )
-                    })}
-                  </div>
-                )}
               </div>
-
-              {/* Kurir */}
               <div>
-                <label className="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">
-                  Nama Kurir
+                <label className="block text-sm font-semibold text-stone-700 mb-1.5">
+                  Catatan Tambahan
                 </label>
-                <input
-                  type="text"
-                  value={formKurir}
-                  onChange={(e) => setFormKurir(e.target.value)}
-                  placeholder="cth. JNE Express, SiCepat..."
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-400 transition-all"
-                />
-              </div>
-
-              {/* No. Resi */}
-              <div>
-                <label className="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">
-                  No. Resi
-                </label>
-                <input
-                  type="text"
-                  value={formNoResi}
-                  onChange={(e) => setFormNoResi(e.target.value)}
-                  placeholder="Masukkan nomor resi pengiriman"
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-400 transition-all"
+                <textarea
+                  value={formCatatan}
+                  onChange={(e) => setFormCatatan(e.target.value)}
+                  placeholder="Catatan opsional..."
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 transition-all resize-none"
                 />
               </div>
             </div>
 
-            {/* Panel Footer */}
-            <div className="p-6 border-t border-stone-200 flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="md"
-                className="flex-1"
-                onClick={() => setShowPanel(false)}
-              >
+            <div className="flex justify-end gap-3 p-6 pt-0">
+              <Button variant="ghost" size="sm" onClick={() => setAssignModalId(null)}>
                 Batal
               </Button>
               <Button
                 variant="primary"
-                size="md"
-                className="flex-1"
-                onClick={handleSubmit}
-                disabled={
-                  !formPenerimaId ||
-                  formBarangIds.length === 0 ||
-                  !formKurir ||
-                  !formNoResi ||
-                  isProcessing
-                }
+                size="sm"
+                onClick={handleAssignSubmit}
+                disabled={!formKurir || isProcessing}
               >
-                <Send size={16} />
-                Simpan Pengiriman
+                <Truck size={15} />
+                Tugaskan Kurir
               </Button>
             </div>
           </div>
         </div>
       )}
-
-      {/* Keyframe for slide-in animation */}
-      <style>{`
-        @keyframes slideInRight {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-      `}</style>
     </div>
   );
 }

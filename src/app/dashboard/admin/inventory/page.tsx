@@ -1,19 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import {
-  QrCode,
   Search,
   Grid3X3,
   List,
   Filter,
   Shirt,
-  Download,
-  Printer,
-  Eye,
   Package,
   CheckCircle,
-  X,
-  Tag,
   Truck,
   Loader2
 } from "lucide-react";
@@ -34,56 +28,17 @@ interface InventoryItem {
   status: "menunggu_pengiriman" | "terkirim" | "ditolak" | "tersalurkan";
   created_at: string;
   updated_at: string;
-  qr_code?: string;
 }
 
 const KATEGORI_OPTIONS = ["Semua", "Pakaian Pria", "Pakaian Wanita", "Pakaian Anak", "Sepatu", "Aksesoris"];
 const ITEMS_PER_PAGE = 6;
-
-// ─── QR Code SVG (mock) ──────────────────────────────────────────────────────
-
-function MockQRCode() {
-  const pattern = [
-    [1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1],
-    [1,0,0,0,0,0,1,0,0,1,0,1,1,0,0,0,0,0,1],
-    [1,0,1,1,1,0,1,0,1,1,0,0,1,0,1,1,1,0,1],
-    [1,0,1,1,1,0,1,0,0,0,1,1,1,0,1,1,1,0,1],
-    [1,0,1,1,1,0,1,0,1,0,0,1,1,0,1,1,1,0,1],
-    [1,0,0,0,0,0,1,0,1,1,1,0,1,0,0,0,0,0,1],
-    [1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1],
-    [0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0],
-    [1,0,1,0,1,1,1,1,0,0,1,0,1,1,0,1,0,1,1],
-    [0,1,0,1,0,0,0,1,1,0,1,1,0,0,1,0,1,0,0],
-    [1,1,0,0,1,1,1,0,0,1,0,0,1,0,1,1,0,0,1],
-    [0,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,1,1,0],
-    [1,1,1,1,1,1,1,0,0,1,0,1,1,0,1,0,1,0,1],
-    [1,0,0,0,0,0,1,0,1,0,1,0,0,1,0,1,1,1,0],
-    [1,0,1,1,1,0,1,0,1,1,0,1,1,0,0,0,1,0,1],
-    [1,0,1,1,1,0,1,0,0,0,1,0,1,1,0,1,0,1,0],
-    [1,0,1,1,1,0,1,0,1,0,0,1,0,0,1,1,1,0,1],
-    [1,0,0,0,0,0,1,0,0,1,1,0,1,0,1,0,0,1,0],
-    [1,1,1,1,1,1,1,0,1,0,1,1,0,1,0,1,0,0,1],
-  ];
-  const size = 6;
-  return (
-    <svg width={19 * size} height={19 * size} viewBox={`0 0 ${19 * size} ${19 * size}`} className="mx-auto">
-      {pattern.map((row, y) =>
-        row.map((cell, x) =>
-          cell ? (
-            <rect key={`${y}-${x}`} x={x * size} y={y * size} width={size} height={size} fill="#18181b" rx={1} />
-          ) : null
-        )
-      )}
-    </svg>
-  );
-}
 
 // ─── Clothing Placeholder ────────────────────────────────────────────────────
 
 function ClothingPlaceholder({ kategori, foto_url }: { kategori: string | null; foto_url: string | null }) {
   if (foto_url) {
       return (
-          <div className="w-full h-44 bg-stone-100 flex items-center justify-center overflow-hidden">
+          <div className="w-full aspect-square bg-stone-100 flex items-center justify-center overflow-hidden">
               <img src={foto_url} alt="Foto Barang" className="w-full h-full object-cover" />
           </div>
       );
@@ -100,7 +55,7 @@ function ClothingPlaceholder({ kategori, foto_url }: { kategori: string | null; 
     "Pakaian Anak": "text-amber-400",
   };
   return (
-    <div className={`w-full h-44 bg-gradient-to-br ${kategori ? (bgColors[kategori] ?? "from-stone-50 to-stone-100") : "from-stone-50 to-stone-100"} flex items-center justify-center`}>
+    <div className={`w-full aspect-square bg-gradient-to-br ${kategori ? (bgColors[kategori] ?? "from-stone-50 to-stone-100") : "from-stone-50 to-stone-100"} flex items-center justify-center`}>
       <Shirt size={48} className={`${kategori ? (iconColors[kategori] ?? "text-stone-300") : "text-stone-300"} opacity-70`} />
     </div>
   );
@@ -117,9 +72,6 @@ export default function InventoryPage() {
   const [kategoriFilter, setKategoriFilter] = useState("Semua");
   const [statusFilter, setStatusFilter] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
-
-  // QR modal state
-  const [qrModal, setQrModal] = useState<InventoryItem | null>(null);
 
   const fetchData = async () => {
     try {
@@ -188,8 +140,8 @@ export default function InventoryPage() {
     <div className="space-y-8 animate-[fadeIn_0.3s_ease]">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-display font-bold text-stone-900">Inventory &amp; Katalog Gudang</h1>
-        <p className="text-stone-500">Kelola stok gudang, lihat QR code item siap disalurkan dan tersalurkan.</p>
+        <h1 className="text-2xl font-display font-bold text-stone-900">Inventaris Gudang</h1>
+        <p className="text-stone-500">Lihat stok barang yang siap disalurkan dan sudah tersalurkan di gudang.</p>
       </div>
 
       {/* Stat cards */}
@@ -302,11 +254,6 @@ export default function InventoryPage() {
               {/* Image placeholder */}
               <div className="relative overflow-hidden shrink-0">
                 <ClothingPlaceholder kategori={item.kategori} foto_url={item.foto_url} />
-                <div className="absolute top-3 right-3">
-                    <div className="bg-green-500 text-white p-1.5 rounded-lg shadow-md cursor-pointer hover:bg-green-600 transition-colors" onClick={() => setQrModal(item)}>
-                      <QrCode size={16} />
-                    </div>
-                </div>
                 {/* Status badge overlay */}
                 <div className="absolute top-3 left-3">
                   {getStatusBadge(item.status)}
@@ -336,12 +283,6 @@ export default function InventoryPage() {
                 <div className="text-xs text-stone-500 mb-4 line-clamp-2">
                     {item.deskripsi}
                 </div>
-
-                <div className="mt-auto pt-4 border-t border-stone-100 flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 !text-xs" onClick={() => setQrModal(item)}>
-                      <Eye size={14} /> Lihat QR
-                    </Button>
-                </div>
               </div>
             </div>
           ))}
@@ -358,7 +299,6 @@ export default function InventoryPage() {
                   <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Kondisi</th>
                   <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Donatur</th>
                   <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">Status</th>
-                  <th className="p-5 text-xs font-bold text-stone-400 uppercase tracking-wider">QR / Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -382,11 +322,6 @@ export default function InventoryPage() {
                     <td className="p-5 text-sm text-stone-600">{item.donatur?.nama}</td>
                     <td className="p-5">
                       {getStatusBadge(item.status)}
-                    </td>
-                    <td className="p-5">
-                      <Button variant="ghost" size="sm" className="!text-xs" onClick={() => setQrModal(item)}>
-                        <QrCode size={14} /> Lihat QR
-                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -430,70 +365,6 @@ export default function InventoryPage() {
           >
             Selanjutnya →
           </Button>
-        </div>
-      )}
-
-      {/* ── QR Code Modal ──────────────────────────────────────────────────── */}
-      {qrModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setQrModal(null)} />
-
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-[fadeIn_0.2s_ease]">
-            <div className="flex items-center justify-between p-6 border-b border-stone-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
-                  <QrCode size={20} />
-                </div>
-                <div>
-                  <h3 className="font-display font-bold text-stone-900">QR Code Item</h3>
-                  <p className="text-xs text-stone-400">ID: {qrModal.id}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setQrModal(null)}
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-8 flex flex-col items-center">
-              <div className="p-6 bg-white border-2 border-stone-200 rounded-2xl shadow-inner">
-                <MockQRCode />
-              </div>
-              <p className="mt-4 text-xs text-stone-400 font-mono text-center select-all">
-                {qrModal.qr_code || `QR-RWD-${qrModal.id}-GUDANG`}
-              </p>
-            </div>
-
-            <div className="mx-6 mb-6 bg-stone-50 rounded-xl p-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-stone-400">Nama Item</span>
-                <span className="font-bold text-stone-800">{qrModal.judul || qrModal.kategori || "-"}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-stone-400">Kategori</span>
-                <span className="font-semibold text-stone-600">{qrModal.kategori || "-"}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-stone-400">Kondisi</span>
-                {qrModal.kondisi ? <Badge color={kondisiBadgeColor(qrModal.kondisi)}>{qrModal.kondisi}</Badge> : <span>-</span>}
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-stone-400">Donatur</span>
-                <span className="font-semibold text-stone-600">{qrModal.donatur?.nama}</span>
-              </div>
-            </div>
-
-            <div className="flex gap-3 p-6 border-t border-stone-100 bg-stone-50/50">
-              <Button variant="outline" size="sm" className="flex-1">
-                <Printer size={16} /> Cetak QR
-              </Button>
-              <Button variant="primary" size="sm" className="flex-1">
-                <Download size={16} /> Download QR
-              </Button>
-            </div>
-          </div>
         </div>
       )}
     </div>

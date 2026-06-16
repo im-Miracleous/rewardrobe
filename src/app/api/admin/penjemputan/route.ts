@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
                     }
                 }
             },
-            orderBy: { created_at: 'desc' }
+            orderBy: [{ status: 'asc' }, { created_at: 'desc' }]
         });
 
         // Format data untuk disesuaikan dengan kebutuhan UI (mendekati struktur mock)
@@ -26,7 +26,10 @@ export async function GET(request: NextRequest) {
             donatur: item.barang.donatur,
             barang_info: {
                 kategori: item.barang.kategori || 'Pakaian',
-                jumlah: item.barang.berat_kg ? `${item.barang.berat_kg} kg` : '1 Item'
+                jumlah: item.barang.berat_kg ? `${item.barang.berat_kg} kg` : '1 Item',
+                foto_url: item.barang.foto_url,
+                deskripsi: item.barang.deskripsi,
+                kondisi_user: item.barang.kondisi_user
             },
             kurir: item.kurir,
             resi: item.resi,

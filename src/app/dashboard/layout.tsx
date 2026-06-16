@@ -35,7 +35,7 @@ export default function DashboardLayout({
         '/dashboard/admin': 'Admin Dashboard',
         '/dashboard/admin/penjemputan': 'Penjemputan Barang',
         '/dashboard/admin/pengiriman': 'Kelola Pengiriman',
-        '/dashboard/admin/inventory': 'Inventory & Katalog (QR)',
+        '/dashboard/admin/inventory': 'Inventaris Gudang',
         '/dashboard/admin/permintaan': 'Permintaan Penerima',
         '/dashboard/donatur': 'Donatur Dashboard',
         '/dashboard/penerima': 'Katalog Donasi',
