@@ -61,6 +61,7 @@ async function main() {
             kondisi_user: 'baik',
             kategori: 'Kemeja',
             berat_kg: 0.5,
+            foto_url: 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/3/5/43be1d31-ee36-43fd-9a10-28d103256411.jpg.webp',
             status: 'terkirim',
             donatur_id: donatur.id,
             verified_by: admin.id,
@@ -76,6 +77,7 @@ async function main() {
             kondisi_user: 'fair',
             kategori: 'Lainnya',
             berat_kg: 1.2,
+            foto_url: 'https://p16-oec-sg.ibyteimg.com/tos-alisg-i-aphluv4xwc-sg/a1979e0b69d742708136f6c61af35e00~tplv-aphluv4xwc-white-pad-v1:250:250.jpeg?ect=4g',
             status: 'terkirim',
             donatur_id: donatur.id,
             verified_by: admin.id,
@@ -91,6 +93,7 @@ async function main() {
             kondisi_user: 'baik',
             kategori: 'Atasan Wanita',
             berat_kg: 0.6,
+            foto_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZy7f_dHI2dNt4YQOCG6rpFvymuVuVXSoOAA&s',
             status: 'menunggu_pengiriman',
             donatur_id: donatur2.id,
         },
@@ -104,6 +107,7 @@ async function main() {
             kondisi_user: 'baik',
             kategori: 'Jaket',
             berat_kg: 0.9,
+            foto_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRk2BCfkGBeijU5nCyEYDi3ofU0ytNO8xVkV1P44jOYnSyKVuPB',
             status: 'menunggu_pengiriman',
             donatur_id: donatur.id,
         },
@@ -117,6 +121,7 @@ async function main() {
             kondisi_user: 'rusak',
             kategori: 'Celana',
             berat_kg: 0.7,
+            foto_url: 'https://gw.alicdn.com/imgextra/O1CN01VJSTDL1uoWLm83uKh_!!6000000006084-0-yinhe.jpg_540x540.jpg',
             status: 'ditolak',
             donatur_id: donatur2.id,
             verified_by: admin.id,
@@ -145,16 +150,16 @@ async function main() {
 
     // --- BarangDonasi Tambahan (Pakaian dari Unsplash) ---
     const pakaianDummies = [
-        { judul: 'Kemeja Flannel Pria', deskripsi: 'Kemeja kotak-kotak lengan panjang.', kategori: 'Pakaian Pria', berat_kg: 0.5, foto_url: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=600&q=80', label_ai: 'layak_donasi' },
-        { judul: 'Kaos Polos Putih', deskripsi: 'Kaos cotton combed 30s warna putih.', kategori: 'Pakaian Pria', berat_kg: 0.2, foto_url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80', label_ai: 'layak_donasi' },
+        { judul: 'Kemeja Flannel Pria', deskripsi: 'Kemeja kotak-kotak lengan panjang.', kategori: 'Pakaian Pria', berat_kg: 0.5, foto_url: 'https://image.made-in-china.com/202f0j00MuteEdlFnYbZ/Men-s-Flannel-Shirt-100-Cotton-High-Quality-Factory-Custom-Men-S-Casual-Long-Sleeve-Shirt-Top-Coat-Plaid-Shirts-ODM-Fashion-Design.webp', label_ai: 'layak_donasi' },
+        { judul: 'Kaos Polos Putih', deskripsi: 'Kaos cotton combed 30s warna putih.', kategori: 'Pakaian Pria', berat_kg: 0.2, foto_url: 'https://down-id.img.susercontent.com/file/d3d0ff57d19adbe61f1b2b2f55b54cde', label_ai: 'layak_donasi' },
         { judul: 'Jaket Denim Vintage', deskripsi: 'Jaket denim tebal model lama.', kategori: 'Pakaian Pria', berat_kg: 1.2, foto_url: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80', label_ai: 'layak_donasi' },
-        { judul: 'Dress Wanita Motif Bunga', deskripsi: 'Dress katun cantik untuk acara santai.', kategori: 'Pakaian Wanita', berat_kg: 0.4, foto_url: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=600&q=80', label_ai: 'layak_donasi' },
-        { judul: 'Sweater Hoodie Abu-abu', deskripsi: 'Hoodie tebal dan hangat.', kategori: 'Pakaian Unisex', berat_kg: 0.8, foto_url: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600&q=80', label_ai: 'layak_donasi' },
-        { judul: 'Celana Jeans Biru', deskripsi: 'Jeans panjang ukuran 32.', kategori: 'Pakaian Pria', berat_kg: 0.9, foto_url: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&q=80', label_ai: 'layak_donasi' },
-        { judul: 'Pakaian Bayi Set', deskripsi: 'Baju dan celana bayi usia 6-12 bulan.', kategori: 'Pakaian Anak', berat_kg: 0.3, foto_url: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?w=600&q=80', label_ai: 'layak_donasi' },
-        { judul: 'Kemeja Kerja Wanita', deskripsi: 'Kemeja polos bahan jatuh.', kategori: 'Pakaian Wanita', berat_kg: 0.3, foto_url: 'https://images.unsplash.com/photo-1599566219227-2efe0c9b7f5f?w=600&q=80', label_ai: 'layak_donasi' },
-        { judul: 'Seragam Sekolah SD', deskripsi: 'Seragam merah putih ukuran anak kelas 3 SD.', kategori: 'Pakaian Anak', berat_kg: 0.4, foto_url: 'https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=600&q=80', label_ai: 'layak_donasi' },
-        { judul: 'Blazer Navy Elegan', deskripsi: 'Blazer wanita warna navy, kondisi 90%.', kategori: 'Pakaian Wanita', berat_kg: 0.6, foto_url: 'https://images.unsplash.com/photo-1584273143981-41c073dfe8f8?w=600&q=80', label_ai: 'layak_donasi' }
+        { judul: 'Dress Wanita Motif Bunga', deskripsi: 'Dress katun cantik untuk acara santai.', kategori: 'Pakaian Wanita', berat_kg: 0.4, foto_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8l_-JEpYjQm4A-GzFPnIr3AbLlTo-vGuLAqhGdN-rrw&s', label_ai: 'layak_donasi' },
+        { judul: 'Sweater Hoodie Abu-abu', deskripsi: 'Hoodie tebal dan hangat.', kategori: 'Pakaian Unisex', berat_kg: 0.8, foto_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_HdEn5L6dUIiJis1koGkP2YdKRdDoXHAs7VlItTqRDnEuPbYx4HC6d85r&s=10', label_ai: 'layak_donasi' },
+        { judul: 'Celana Jeans Biru', deskripsi: 'Jeans panjang ukuran 32.', kategori: 'Pakaian Pria', berat_kg: 0.9, foto_url: 'https://images.unsplash.com/photo-1754555009601-498e9873197e?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', label_ai: 'layak_donasi' },
+        { judul: 'Pakaian Bayi Set', deskripsi: 'Baju dan celana bayi usia 6-12 bulan.', kategori: 'Pakaian Anak', berat_kg: 0.3, foto_url: 'https://images.unsplash.com/photo-1774874017217-c441aa77c73b?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', label_ai: 'layak_donasi' },
+        { judul: 'Kemeja Kerja Wanita', deskripsi: 'Kemeja polos bahan jatuh.', kategori: 'Pakaian Wanita', berat_kg: 0.3, foto_url: 'https://plus.unsplash.com/premium_photo-1675186049409-f9f8f60ebb5e?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', label_ai: 'layak_donasi' },
+        { judul: 'Seragam Sekolah SD', deskripsi: 'Seragam merah putih ukuran anak kelas 3 SD.', kategori: 'Pakaian Anak', berat_kg: 0.4, foto_url: 'https://id-test-11.slatic.net/p/89c89d866e6e28a622ff0064150fccb4.jpg', label_ai: 'layak_donasi' },
+        { judul: 'Blazer Navy Elegan', deskripsi: 'Blazer wanita warna navy, kondisi 90%.', kategori: 'Pakaian Wanita', berat_kg: 0.6, foto_url: 'https://plus.unsplash.com/premium_photo-1661308219954-a8035fbeb546?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', label_ai: 'layak_donasi' }
     ] as const;
 
     for (const [index, p] of pakaianDummies.entries()) {

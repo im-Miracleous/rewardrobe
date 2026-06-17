@@ -30,8 +30,31 @@ export default function PenerimaDash() {
     const [selectedBarang, setSelectedBarang] = useState<BarangItem | null>(null);
     const [pesan, setPesan] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [alamatDefault, setAlamatDefault] = useState('');
+    const [alamatTujuan, setAlamatTujuan] = useState('');
     // barang_id yang sudah pernah diminta (menunggu/diterima) — diisi dari API saat mount
     const [requestedIds, setRequestedIds] = useState<Set<number>>(new Set());
+
+    useEffect(() => {
+        const fetchAlamat = async () => {
+            const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                try {
+                    const res = await fetch(`/api/users/${user.id}`);
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json.user && json.user.alamat_lengkap) {
+                            setAlamatDefault(json.user.alamat_lengkap);
+                        }
+                    }
+                } catch (e) {
+                    // Ignore
+                }
+            }
+        };
+        fetchAlamat();
+    }, []);
 
     useEffect(() => {
         const init = async () => {
@@ -83,7 +106,11 @@ export default function PenerimaDash() {
 
         setIsSubmitting(true);
         try {
-            await createPermintaan({ barang_id: selectedBarang.id, pesan });
+            await createPermintaan({ 
+                barang_id: selectedBarang.id, 
+                pesan: pesan.trim(),
+                alamat_tujuan: alamatTujuan.trim()
+            });
             setRequestedIds(prev => new Set(prev).add(selectedBarang.id));
             setSelectedBarang(null);
             setPesan('');
@@ -161,7 +188,7 @@ export default function PenerimaDash() {
                                             <CheckCircle size={16} /> Sudah Diminta
                                         </div>
                                     ) : (
-                                        <Button className="w-full" onClick={() => { setSelectedBarang(item); setPesan(''); }}>
+                                        <Button className="w-full" onClick={() => { setSelectedBarang(item); setPesan(''); setAlamatTujuan(alamatDefault); }}>
                                             Minta Barang
                                         </Button>
                                     )}
@@ -190,6 +217,23 @@ export default function PenerimaDash() {
                             <div className="bg-stone-50 rounded-xl p-4 text-sm text-stone-600">
                                 <p className="font-semibold text-stone-800 mb-1">Detail Barang</p>
                                 <p>{selectedBarang.deskripsi}</p>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">
+                                    Alamat Tujuan
+                                </label>
+                                <textarea
+                                    value={alamatTujuan}
+                                    onChange={(e) => setAlamatTujuan(e.target.value)}
+                                    placeholder="Alamat lengkap tujuan pengiriman..."
+                                    rows={2}
+                                    className="w-full px-4 py-3 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all resize-none"
+                                />
+                                {!alamatDefault && (
+                                    <p className="text-xs text-amber-600 mt-1.5">
+                                        Anda belum mengatur alamat default. Atur di tab "Permintaan Saya" agar otomatis terisi lain kali.
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">

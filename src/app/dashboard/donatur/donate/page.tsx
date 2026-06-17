@@ -245,8 +245,17 @@ function DonateFormContent() {
                     )}
 
                     {successMsg && (
-                        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-lg border border-green-100">
-                            <CheckCircle size={16} /> {successMsg}
+                        <div className="text-sm text-green-700 bg-green-50 p-4 rounded-xl border border-green-100 space-y-2">
+                            <div className="flex items-center gap-2 font-semibold">
+                                <CheckCircle size={16} /> Donasi pakaian berhasil dikirim!
+                            </div>
+                            <div className="text-green-800 font-bold text-xs uppercase tracking-wide mt-1">Langkah Selanjutnya — Kirim Barang ke Gudang ReWardrobe</div>
+                            <div className="bg-white border border-green-200 rounded-lg p-3 space-y-1 text-xs text-stone-700">
+                                <div>📍 <span className="font-semibold">Jl. Sosial No. 1, Kebayoran Baru, Jakarta Selatan 12110</span></div>
+                                <div>📞 <span className="font-semibold">+62 21 7280 0001</span></div>
+                                <div className="text-stone-500 mt-1">Jam operasional: Senin–Jumat, 08.00–17.00 WIB</div>
+                            </div>
+                            <div className="text-xs text-stone-600">Pilih metode pengiriman di halaman <span className="font-semibold">Donasi Saya</span>: antar langsung (drop-off) atau via kurir (JNE, J&amp;T, dll).</div>
                         </div>
                     )}
 

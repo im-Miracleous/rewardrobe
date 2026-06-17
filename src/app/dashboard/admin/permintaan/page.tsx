@@ -164,8 +164,19 @@ export default function AdminPermintaanPage() {
                                                 <p className="text-xs text-stone-400">{item.penerima.kota} • {item.penerima.tipe || '-'}</p>
                                             </td>
                                             <td className="p-4">
-                                                <p className="font-bold text-stone-900">{item.barang.kategori || 'Pakaian'}</p>
-                                                <p className="text-xs text-stone-400">Kondisi: {item.barang.kondisi_user}</p>
+                                                <div className="flex items-center gap-3">
+                                                    {item.barang.foto_url ? (
+                                                        <img src={item.barang.foto_url} alt={item.barang.kategori || 'Barang'} className="w-10 h-10 rounded-lg object-cover border border-stone-200 shrink-0" />
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-lg bg-stone-100 border border-stone-200 flex items-center justify-center shrink-0">
+                                                            <Package size={16} className="text-stone-400" />
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="font-bold text-stone-900">{item.barang.kategori || 'Pakaian'}</p>
+                                                        <p className="text-xs text-stone-400">Kondisi: {item.barang.kondisi_user}</p>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td className="p-4 max-w-[200px]">
                                                 <p className="text-xs text-stone-600 line-clamp-2">{item.pesan || '-'}</p>
@@ -196,6 +207,9 @@ export default function AdminPermintaanPage() {
                                                             <XCircle size={13} />
                                                             Tolak
                                                         </Button>
+                                                        <button onClick={() => setSelectedItem(item)} className="flex items-center gap-1 text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors">
+                                                            <Eye size={14} /> Detail
+                                                        </button>
                                                     </div>
                                                 ) : (
                                                     <button onClick={() => setSelectedItem(item)} className="flex items-center gap-1 text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors">
@@ -252,8 +266,19 @@ export default function AdminPermintaanPage() {
                             </div>
                             <div>
                                 <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">Barang</p>
-                                <p className="font-bold text-stone-900">{selectedItem.barang.kategori || 'Pakaian'}</p>
-                                <p className="text-sm text-stone-500">{selectedItem.barang.deskripsi}</p>
+                                <div className="flex items-center gap-3">
+                                    {selectedItem.barang.foto_url ? (
+                                        <img src={selectedItem.barang.foto_url} alt={selectedItem.barang.kategori || 'Barang'} className="w-16 h-16 rounded-xl object-cover border border-stone-200 shrink-0" />
+                                    ) : (
+                                        <div className="w-16 h-16 rounded-xl bg-stone-100 border border-stone-200 flex items-center justify-center shrink-0">
+                                            <Package size={20} className="text-stone-400" />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <p className="font-bold text-stone-900">{selectedItem.barang.kategori || 'Pakaian'}</p>
+                                        <p className="text-sm text-stone-500">{selectedItem.barang.deskripsi}</p>
+                                    </div>
+                                </div>
                             </div>
                             {selectedItem.pesan && (
                                 <div>

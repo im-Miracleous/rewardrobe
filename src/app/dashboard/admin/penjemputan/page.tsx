@@ -34,6 +34,9 @@ interface Penjemputan {
   barang_info: {
       kategori: string;
       jumlah: string;
+      foto_url: string | null;
+      deskripsi: string;
+      kondisi_user: string;
   };
   kurir: string | null;
   resi: string | null;
@@ -92,6 +95,7 @@ export default function PenjemputanBarangPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedBarang, setSelectedBarang] = useState<Penjemputan | null>(null);
 
   // Modal form state
   const [formKurir, setFormKurir] = useState("");
@@ -233,62 +237,9 @@ export default function PenjemputanBarangPage() {
         ))}
       </div>
 
-      {/* Map Placeholder + Tabs & Cards — 2-col layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Left: Map Placeholder */}
-        <div className="xl:col-span-1">
-          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden h-full flex flex-col">
-            <div className="p-5 border-b border-stone-100">
-              <h3 className="font-display font-bold text-stone-900 flex items-center gap-2">
-                <Navigation size={18} className="text-green-600" />
-                Peta Rute Penjemputan
-              </h3>
-            </div>
-            <div className="flex-1 min-h-[320px] bg-gradient-to-br from-stone-100 via-stone-50 to-green-50 flex flex-col items-center justify-center p-6 gap-4">
-              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
-                <MapPin size={36} className="text-green-600" />
-              </div>
-              <div className="text-center">
-                <p className="font-display font-bold text-stone-700">
-                  Peta Rute Penjemputan
-                </p>
-                <p className="text-sm text-stone-400 mt-1">
-                  Integrasi peta akan ditampilkan di sini
-                </p>
-              </div>
-              {/* Route summary mini */}
-              <div className="w-full mt-2 space-y-2">
-                {data
-                  .filter((p) => p.status === "dalam_pengiriman")
-                  .map((p) => (
-                    <div
-                      key={p.id}
-                      className="flex items-center gap-3 bg-white/80 backdrop-blur rounded-xl px-4 py-3 border border-stone-200/60"
-                    >
-                      <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-stone-700 truncate">
-                          {p.donatur?.nama}
-                        </p>
-                        <p className="text-xs text-stone-400 truncate">
-                          {p.donatur?.alamat_lengkap || p.donatur?.kota || "-"}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                {data.filter((p) => p.status === "dalam_pengiriman").length ===
-                  0 && (
-                  <p className="text-xs text-stone-400 text-center">
-                    Tidak ada penjemputan aktif saat ini.
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right: Tab filter + Pickup Cards */}
-        <div className="xl:col-span-2 space-y-5">
+      {/* Tab filter + Pickup Cards */}
+      <div className="grid grid-cols-1 gap-6">
+        <div className="space-y-5">
           {/* Filter Dropdown */}
           <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-4 flex flex-wrap items-center gap-3">
               <Filter size={18} className="text-stone-400" />
@@ -363,15 +314,21 @@ export default function PenjemputanBarangPage() {
                               Barang yang Dijemput
                             </p>
                             <div className="flex flex-wrap gap-2">
-                                <span
-                                  className="inline-flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg text-sm font-medium text-stone-700 border border-stone-200"
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedBarang(item)}
+                                  className="inline-flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg text-sm font-medium text-stone-700 border border-stone-200 hover:border-green-400 hover:bg-green-50/50 transition-colors"
                                 >
-                                  <Package size={13} className="text-stone-400" />
+                                  {item.barang_info.foto_url ? (
+                                    <img src={item.barang_info.foto_url} alt={item.barang_info.kategori} className="w-6 h-6 rounded-md object-cover shrink-0" />
+                                  ) : (
+                                    <Package size={13} className="text-stone-400" />
+                                  )}
                                   {item.barang_info.kategori}
                                   <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-md ml-0.5">
                                     {item.barang_info.jumlah}
                                   </span>
-                                </span>
+                                </button>
                             </div>
                           </div>
     
@@ -507,6 +464,58 @@ export default function PenjemputanBarangPage() {
                 <Truck size={15} />
                 Jadwalkan Penjemputan
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Detail Barang ──────────────────────────── */}
+      {selectedBarang && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-[fadeIn_0.2s_ease]"
+            onClick={() => setSelectedBarang(null)}
+          />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md border border-stone-200 animate-[fadeIn_0.25s_ease]">
+            <div className="flex items-center justify-between p-6 border-b border-stone-100">
+              <h3 className="font-display font-bold text-lg text-stone-900">Detail Barang</h3>
+              <button
+                onClick={() => setSelectedBarang(null)}
+                className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-stone-100 transition-colors"
+              >
+                <X size={18} className="text-stone-500" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {selectedBarang.barang_info.foto_url ? (
+                <img
+                  src={selectedBarang.barang_info.foto_url}
+                  alt={selectedBarang.barang_info.kategori}
+                  className="w-full aspect-square rounded-xl object-cover border border-stone-200"
+                />
+              ) : (
+                <div className="w-full aspect-square rounded-xl bg-stone-100 border border-stone-200 flex items-center justify-center">
+                  <Package size={40} className="text-stone-300" />
+                </div>
+              )}
+              <div>
+                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">Kategori</p>
+                <p className="font-bold text-stone-900">{selectedBarang.barang_info.kategori}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">Deskripsi</p>
+                <p className="text-sm text-stone-600">{selectedBarang.barang_info.deskripsi}</p>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">Kondisi</p>
+                  <p className="text-sm font-semibold text-stone-700 capitalize">{selectedBarang.barang_info.kondisi_user}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">Jumlah/Berat</p>
+                  <p className="text-sm font-semibold text-stone-700">{selectedBarang.barang_info.jumlah}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

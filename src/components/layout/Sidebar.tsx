@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Shirt, Package, Truck, QrCode, Heart, Trophy, History, ClipboardList, LogOut, Settings, User, LayoutDashboard } from 'lucide-react';
+import { Home, Shirt, Package, Truck, Heart, Trophy, History, ClipboardList, LogOut, Settings, User, LayoutDashboard, Boxes } from 'lucide-react';
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -40,8 +40,9 @@ export default function Sidebar() {
         admin: [
             { href: '/dashboard/admin', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
             { href: '/dashboard/admin/penjemputan', label: 'Penjemputan Barang', icon: <Truck size={18} /> },
+            { href: '/dashboard/admin/inventory', label: 'Inventaris', icon: <Boxes size={18} /> },
+            { href: '/dashboard/admin/permintaan', label: 'Permintaan Penerima', icon: <ClipboardList size={18} /> },
             { href: '/dashboard/admin/pengiriman', label: 'Kelola Pengiriman', icon: <Package size={18} /> },
-            { href: '/dashboard/admin/inventory', label: 'Inventory (QR)', icon: <QrCode size={18} /> },
         ],
         donatur: [
             { href: '/dashboard/donatur', label: 'Beranda Saya', icon: <Home size={18} /> },

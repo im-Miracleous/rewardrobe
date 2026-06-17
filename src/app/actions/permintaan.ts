@@ -32,14 +32,14 @@ export async function getPermintaan(params?: { status?: string; penerima_id?: nu
   return list;
 }
 
-export async function createPermintaan(data: { barang_id: number; pesan?: string }) {
+export async function createPermintaan(data: { barang_id: number; pesan?: string; alamat_tujuan?: string }) {
   const cookieStore = await cookies();
   const auth = parseAuthCookieValue(cookieStore.get(AUTH_COOKIE_NAME)?.value);
   if (!auth) throw new Error('Tidak terautentikasi');
   if (auth.role !== 'penerima') throw new Error('Akses hanya untuk penerima');
   
   const penerima_id = auth.userId;
-  const { barang_id, pesan } = data;
+  const { barang_id, pesan, alamat_tujuan } = data;
 
   const barang = await prisma.barangDonasi.findUnique({ where: { id: barang_id } });
   if (!barang) throw new Error('Barang tidak ditemukan');
@@ -65,7 +65,7 @@ export async function createPermintaan(data: { barang_id: number; pesan?: string
   }
 
   const permintaan = await prisma.permintaan.create({
-    data: { barang_id, penerima_id, pesan: pesan || null, status: 'menunggu' },
+    data: { barang_id, penerima_id, pesan: pesan || null, alamat_tujuan: alamat_tujuan || null, status: 'menunggu' },
   });
 
   return permintaan;

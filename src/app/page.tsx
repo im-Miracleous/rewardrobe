@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Shirt, CheckCircle, ShieldCheck, MapPin, Truck, Trophy, Leaf, QrCode } from 'lucide-react';
+import { Shirt, CheckCircle, ShieldCheck, MapPin, Truck, Trophy, Leaf, Boxes } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Navbar from '@/components/layout/Navbar';
 
@@ -68,7 +68,7 @@ export default function LandingPage() {
               { icon: <Truck size={28} className="text-yellow-700" />, bg: 'bg-yellow-100', title: 'Integrasi Multi-kurir', desc: 'Pilih kurir favorit langsung dari aplikasi.' },
               { icon: <Trophy size={28} className="text-pink-700" />, bg: 'bg-pink-100', title: 'Gamifikasi & Poin', desc: 'Kumpulkan poin setiap donasi dan lihat peringkatmu.' },
               { icon: <Leaf size={28} className="text-emerald-700" />, bg: 'bg-emerald-100', title: 'Laporan Dampak', desc: 'Lihat jumlah limbah tekstil yang berhasil diselamatkan.' },
-              { icon: <QrCode size={28} className="text-orange-700" />, bg: 'bg-orange-100', title: 'QR Code Inventory', desc: 'Stok fisik dan digital selalu tersinkronisasi.' },
+              { icon: <Boxes size={28} className="text-orange-700" />, bg: 'bg-orange-100', title: 'Inventaris Gudang', desc: 'Pantau stok barang yang siap maupun sudah disalurkan.' },
             ].map((f, i) => (
               <div key={i} className="p-8 rounded-3xl border border-stone-200 bg-white hover:-translate-y-2 hover:shadow-xl hover:border-green-200 transition-all duration-300">
                 <div className={`w-14 h-14 rounded-2xl ${f.bg} flex items-center justify-center mb-6`}>

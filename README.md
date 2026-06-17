@@ -17,15 +17,55 @@ npm run dev
 
 Buka browser di alamat [http://localhost:3000](http://localhost:3000) untuk melihat hasilnya.
 
-## Database Setup
+## Prasyarat
 
-ReWardrobe menggunakan Prisma ORM untuk terhubung ke PostgreSQL. Pastikan PostgreSQL sudah aktif sebelum menjalankan app.
+Sebelum setup, pastikan tools berikut sudah terpasang di device:
 
-Catatan: proyek ini memakai Prisma 7, jadi Prisma Client perlu PostgreSQL driver adapter (`@prisma/adapter-pg`) saat runtime.
+* **Node.js** versi 20 atau lebih baru (cek dengan `node -v`). Disarankan memakai versi LTS.
+* **npm** (sudah otomatis terpasang bersama Node.js).
+* **PostgreSQL** versi 14+ dan dalam keadaan aktif (cek dengan `psql --version`).
+* **Git** untuk meng-clone repositori.
 
-### 1. Siapkan file `.env`
+## Setup dari Awal (Clone)
 
-Buat file `.env` di root project, lalu isi dengan connection string PostgreSQL yang valid.
+Ikuti langkah berikut secara berurutan untuk menjalankan project di device baru.
+
+### 1. Clone repositori
+
+```bash
+git clone https://github.com/im-Miracleous/rewardrobe.git
+cd rewardrobe
+```
+
+### 2. Install dependency
+
+```bash
+npm install
+```
+
+```bash
+# otomatis menjalankan `prisma generate` untuk membuat Prisma Client.
+npm install 
+
+# Jika perlu generate ulang secara manual.
+npx prisma generate 
+```
+Catatan: proyek ini memakai Prisma 7, jadi Prisma Client perlu PostgreSQL driver adapter (`@prisma/adapter-pg`) saat runtime. Driver ini sudah termasuk di `package.json`.
+
+### 3. Buat database PostgreSQL
+
+ReWardrobe menggunakan Prisma ORM untuk terhubung ke PostgreSQL. Pastikan service PostgreSQL aktif, lalu buat database kosong bernama `rewardrobe_db`:
+
+```bash
+# Lewat psql
+psql -U postgres -c "CREATE DATABASE rewardrobe_db;"
+```
+
+Atau buat lewat GUI (pgAdmin / DBeaver) dengan nama database `rewardrobe_db`.
+
+### 4. Siapkan file `.env`
+
+Buat file `.env` di root project, lalu isi dengan connection string PostgreSQL yang valid. Satu-satunya variabel yang dibutuhkan adalah `DATABASE_URL`.
 
 Contoh untuk PostgreSQL lokal:
 
@@ -35,23 +75,11 @@ DATABASE_URL="postgresql://postgres:password@localhost:5432/rewardrobe_db?schema
 
 Catatan:
 
-* Ganti `password` sesuai password PostgreSQL kamu.
-* Pastikan database `rewardrobe_db` sudah dibuat.
+* Ganti `postgres` dan `password` sesuai user & password PostgreSQL kamu.
+* Sesuaikan nama database (`rewardrobe_db`) jika kamu memakai nama lain di langkah 3.
 * Jika pakai Docker atau server remote, ganti `localhost` dan port sesuai host database yang benar.
 
-### 2. Install dependency
-
-```bash
-npm install
-```
-
-Jika perlu, generate ulang Prisma Client dengan:
-
-```bash
-npx prisma generate
-```
-
-### 3. Jalankan migration & seed
+### 5. Jalankan migration & seed
 
 ```bash
 npm run db:fresh
@@ -59,7 +87,7 @@ npm run db:fresh
 
 > Perintah ini mereset database, menjalankan semua migration, dan mengisi sample data sekaligus.
 
-### 4. Jalankan aplikasi
+### 6. Jalankan aplikasi
 
 ```bash
 npm run dev
@@ -130,7 +158,7 @@ Contoh `DELETE` untuk hapus user:
 curl -X DELETE http://localhost:3000/api/users/1
 ```
 
-### 5. Verifikasi tambahan
+### 7. Verifikasi tambahan
 
 Jika ingin cek isi database secara visual:
 
