@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Search, Shirt, X, Loader2, Package, MapPin, CheckCircle } from 'lucide-react';
+import { getBarangDonasi } from '@/app/actions/barang';
+import { getPermintaan, createPermintaan } from '@/app/actions/permintaan';
 
 interface BarangItem {
     id: number;
@@ -12,7 +14,6 @@ interface BarangItem {
     foto_url: string | null;
     berat_kg: number | null;
     donatur: { id: number; nama: string; kota: string | null };
-    campaign: { id: number; judul: string } | null;
 }
 
 function getKondisiBadge(kondisi: string) {
@@ -29,33 +30,54 @@ export default function PenerimaDash() {
     const [selectedBarang, setSelectedBarang] = useState<BarangItem | null>(null);
     const [pesan, setPesan] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [alamatDefault, setAlamatDefault] = useState('');
+    const [alamatTujuan, setAlamatTujuan] = useState('');
     // barang_id yang sudah pernah diminta (menunggu/diterima) — diisi dari API saat mount
     const [requestedIds, setRequestedIds] = useState<Set<number>>(new Set());
+
+    useEffect(() => {
+        const fetchAlamat = async () => {
+            const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                try {
+                    const res = await fetch(`/api/users/${user.id}`);
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json.user && json.user.alamat_lengkap) {
+                            setAlamatDefault(json.user.alamat_lengkap);
+                        }
+                    }
+                } catch (e) {
+                    // Ignore
+                }
+            }
+        };
+        fetchAlamat();
+    }, []);
 
     useEffect(() => {
         const init = async () => {
             setIsLoading(true);
             try {
-                const [barangRes, userStr] = await Promise.all([
-                    fetch('/api/barang-donasi?status=disetujui&tersedia=true'),
+                const [userStr] = await Promise.all([
                     Promise.resolve(typeof window !== 'undefined' ? localStorage.getItem('user') : null),
                 ]);
 
-                const barangJson = await barangRes.json();
-                if (barangJson.data) setBarangList(barangJson.data);
+                const barangJson = await getBarangDonasi({ status: 'terkirim' });
+                setBarangList(barangJson as any);
 
                 if (userStr) {
                     const user = JSON.parse(userStr);
                     if (user?.id) {
-                        const permintaanRes = await fetch(`/api/permintaan?penerima_id=${user.id}`);
-                        const permintaanJson = await permintaanRes.json();
-                        if (permintaanJson.data) {
+                        const permintaanJson = await getPermintaan({ penerima_id: user.id });
+                        if (permintaanJson) {
                             const activeIds = new Set<number>(
-                                permintaanJson.data
-                                    .filter((p: { status: string; barang: { id: number } }) =>
+                                permintaanJson
+                                    .filter((p: any) =>
                                         p.status === 'menunggu' || p.status === 'diterima'
                                     )
-                                    .map((p: { barang: { id: number } }) => p.barang.id)
+                                    .map((p: any) => p.barang.id)
                             );
                             setRequestedIds(activeIds);
                         }
@@ -84,21 +106,16 @@ export default function PenerimaDash() {
 
         setIsSubmitting(true);
         try {
-            const res = await fetch('/api/permintaan', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ barang_id: selectedBarang.id, pesan }),
+            await createPermintaan({ 
+                barang_id: selectedBarang.id, 
+                pesan: pesan.trim(),
+                alamat_tujuan: alamatTujuan.trim()
             });
-            const json = await res.json();
-            if (res.ok) {
-                setRequestedIds(prev => new Set(prev).add(selectedBarang.id));
-                setSelectedBarang(null);
-                setPesan('');
-            } else {
-                alert(json.error || 'Gagal mengajukan permintaan');
-            }
-        } catch (err) {
-            console.error(err);
+            setRequestedIds(prev => new Set(prev).add(selectedBarang.id));
+            setSelectedBarang(null);
+            setPesan('');
+        } catch (err: any) {
+            alert(err.message || 'Gagal mengajukan permintaan');
         } finally {
             setIsSubmitting(false);
         }
@@ -107,7 +124,10 @@ export default function PenerimaDash() {
     return (
         <div className="space-y-8 animate-[fadeIn_0.3s_ease]">
             <div>
-                <h1 className="text-2xl font-display font-bold text-stone-900">Katalog Donasi</h1>
+                <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-display font-bold text-stone-900">Katalog Donasi</h1>
+                    <Badge color="blue">Batas Pengajuan: 3 Barang / 7 Hari</Badge>
+                </div>
                 <p className="text-stone-500 mt-1">Pilih barang yang sesuai dengan kebutuhan Anda.</p>
             </div>
 
@@ -162,16 +182,13 @@ export default function PenerimaDash() {
                                     <MapPin size={11} />
                                     {item.donatur.kota || 'Lokasi tidak tersedia'}
                                 </div>
-                                {item.campaign && (
-                                    <p className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded-lg mb-3">Kampanye: {item.campaign.judul}</p>
-                                )}
                                 <div className="mt-auto">
                                     {requestedIds.has(item.id) ? (
                                         <div className="flex items-center gap-2 justify-center py-2 text-green-600 text-sm font-bold">
                                             <CheckCircle size={16} /> Sudah Diminta
                                         </div>
                                     ) : (
-                                        <Button className="w-full" onClick={() => { setSelectedBarang(item); setPesan(''); }}>
+                                        <Button className="w-full" onClick={() => { setSelectedBarang(item); setPesan(''); setAlamatTujuan(alamatDefault); }}>
                                             Minta Barang
                                         </Button>
                                     )}
@@ -200,6 +217,23 @@ export default function PenerimaDash() {
                             <div className="bg-stone-50 rounded-xl p-4 text-sm text-stone-600">
                                 <p className="font-semibold text-stone-800 mb-1">Detail Barang</p>
                                 <p>{selectedBarang.deskripsi}</p>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">
+                                    Alamat Tujuan
+                                </label>
+                                <textarea
+                                    value={alamatTujuan}
+                                    onChange={(e) => setAlamatTujuan(e.target.value)}
+                                    placeholder="Alamat lengkap tujuan pengiriman..."
+                                    rows={2}
+                                    className="w-full px-4 py-3 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all resize-none"
+                                />
+                                {!alamatDefault && (
+                                    <p className="text-xs text-amber-600 mt-1.5">
+                                        Anda belum mengatur alamat default. Atur di tab "Permintaan Saya" agar otomatis terisi lain kali.
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">

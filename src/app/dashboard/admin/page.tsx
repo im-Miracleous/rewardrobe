@@ -2,12 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-    ShieldCheck, Truck, CheckCircle, User, Image as ImageIcon,
-    Loader2, Package, QrCode, Megaphone, ArrowRight, Clock,
-    TrendingUp, AlertCircle, Shirt, Banknote, Eye
+    Truck, CheckCircle, Image as ImageIcon,
+    Loader2, Package, Boxes, ArrowRight,
+    TrendingUp, AlertCircle, Shirt
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { getAdminDashboardStats } from '@/app/actions/admin';
 
 interface Donatur {
     id: number;
@@ -34,11 +35,10 @@ interface BarangDonasi {
 }
 
 interface DashboardStats {
-    menungguVerifikasi: number;
+    menungguPengiriman: number;
     penjemputanAktif: number;
     inventoryGudang: number;
     pengirimanAktif: number;
-    kampanyeAktif: number;
     totalTersalurkan: number;
 }
 
@@ -57,10 +57,10 @@ function getKondisiBadge(kondisi: string) {
 
 function getStatusBadge(status: string) {
     switch (status) {
-        case 'menunggu_verifikasi':
-            return <span className="text-[10px] uppercase font-extrabold text-yellow-700 bg-yellow-100 px-2.5 py-0.5 rounded-full">Menunggu</span>;
-        case 'disetujui':
-            return <span className="text-[10px] uppercase font-extrabold text-green-700 bg-green-100 px-2.5 py-0.5 rounded-full">Disetujui</span>;
+        case 'menunggu_pengiriman':
+            return <span className="text-[10px] uppercase font-extrabold text-yellow-700 bg-yellow-100 px-2.5 py-0.5 rounded-full">Menunggu Pengiriman</span>;
+        case 'terkirim':
+            return <span className="text-[10px] uppercase font-extrabold text-green-700 bg-green-100 px-2.5 py-0.5 rounded-full">Terkirim</span>;
         case 'ditolak':
             return <span className="text-[10px] uppercase font-extrabold text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full">Ditolak</span>;
         case 'tersalurkan':
@@ -83,16 +83,6 @@ function timeAgo(dateStr: string): string {
 
 const quickActions = [
     {
-        href: '/dashboard/admin/verifikasi',
-        icon: <ShieldCheck size={24} />,
-        title: 'Verifikasi Donasi',
-        desc: 'Review dan moderasi donasi masuk',
-        color: 'text-amber-600',
-        bg: 'bg-amber-50',
-        border: 'border-amber-200',
-        hoverBg: 'hover:bg-amber-50',
-    },
-    {
         href: '/dashboard/admin/penjemputan',
         icon: <Truck size={24} />,
         title: 'Penjemputan',
@@ -114,23 +104,13 @@ const quickActions = [
     },
     {
         href: '/dashboard/admin/inventory',
-        icon: <QrCode size={24} />,
-        title: 'Inventory (QR)',
-        desc: 'Kelola stok gudang & generate QR',
+        icon: <Boxes size={24} />,
+        title: 'Inventaris',
+        desc: 'Lihat stok barang yang ada di gudang',
         color: 'text-purple-600',
         bg: 'bg-purple-50',
         border: 'border-purple-200',
         hoverBg: 'hover:bg-purple-50',
-    },
-    {
-        href: '/dashboard/admin/kampanye',
-        icon: <Megaphone size={24} />,
-        title: 'Kelola Kampanye',
-        desc: 'Buat & monitor kampanye donasi',
-        color: 'text-green-600',
-        bg: 'bg-green-50',
-        border: 'border-green-200',
-        hoverBg: 'hover:bg-green-50',
     },
     {
         href: '/dashboard/admin/permintaan',
@@ -153,13 +133,10 @@ export default function AdminDash() {
     const fetchDashboardData = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch('/api/admin/dashboard');
-            const result = await response.json();
-            if (result.data) {
-                setStats(result.data.stats);
-                setRecentItems(result.data.recentDonations);
-            } else {
-                setError(result.error || 'Gagal memuat data dashboard');
+            const result = await getAdminDashboardStats();
+            if (result) {
+                setStats(result.stats);
+                setRecentItems(result.recentDonations as any);
             }
         } catch (err) {
             console.error('Fetch dashboard error:', err);
@@ -182,13 +159,13 @@ export default function AdminDash() {
             </div>
 
             {/* Main Stat Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <div className={`bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center transition-all hover:shadow-md ${stats?.menungguVerifikasi ? 'ring-2 ring-amber-200' : ''}`}>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div className={`bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center transition-all hover:shadow-md ${stats?.menungguPengiriman ? 'ring-2 ring-amber-200' : ''}`}>
                     <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
-                        <ShieldCheck size={20} />
+                        <Truck size={20} />
                     </div>
-                    <div className="text-2xl font-display font-extrabold text-stone-900 leading-none mb-1">{isLoading ? '-' : stats?.menungguVerifikasi}</div>
-                    <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Menunggu<br/>Verifikasi</div>
+                    <div className="text-2xl font-display font-extrabold text-stone-900 leading-none mb-1">{isLoading ? '-' : stats?.menungguPengiriman}</div>
+                    <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Menunggu<br/>Pengiriman</div>
                 </div>
 
                 <div className={`bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center transition-all hover:shadow-md ${stats?.penjemputanAktif ? 'ring-2 ring-blue-200' : ''}`}>
@@ -201,7 +178,7 @@ export default function AdminDash() {
 
                 <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center transition-all hover:shadow-md">
                     <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
-                        <QrCode size={20} />
+                        <Boxes size={20} />
                     </div>
                     <div className="text-2xl font-display font-extrabold text-stone-900 leading-none mb-1">{isLoading ? '-' : stats?.inventoryGudang}</div>
                     <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Item Di<br/>Gudang</div>
@@ -213,14 +190,6 @@ export default function AdminDash() {
                     </div>
                     <div className="text-2xl font-display font-extrabold text-stone-900 leading-none mb-1">{isLoading ? '-' : stats?.pengirimanAktif}</div>
                     <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Pengiriman<br/>Aktif</div>
-                </div>
-
-                <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center transition-all hover:shadow-md">
-                    <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center mb-3">
-                        <Megaphone size={20} />
-                    </div>
-                    <div className="text-2xl font-display font-extrabold text-stone-900 leading-none mb-1">{isLoading ? '-' : stats?.kampanyeAktif}</div>
-                    <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Kampanye<br/>Aktif</div>
                 </div>
 
                 <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center transition-all hover:shadow-md">
@@ -256,15 +225,15 @@ export default function AdminDash() {
                 <div className="p-6 border-b border-stone-100 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <h3 className="font-display font-bold text-stone-900">Donasi Masuk Terbaru</h3>
-                        {stats && stats.menungguVerifikasi > 0 && (
+                        {stats && stats.menungguPengiriman > 0 && (
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-700">
-                                <AlertCircle size={12} /> {stats.menungguVerifikasi} perlu ditinjau
+                                <AlertCircle size={12} /> {stats.menungguPengiriman} menunggu penjemputan
                             </span>
                         )}
                     </div>
                     <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" onClick={fetchDashboardData}>Refresh</Button>
-                        <Link href="/dashboard/admin/verifikasi">
+                        <Link href="/dashboard/admin/penjemputan">
                             <Button variant="ghost" size="sm">Lihat Semua <ArrowRight size={14} /></Button>
                         </Link>
                     </div>
@@ -281,7 +250,7 @@ export default function AdminDash() {
                     </div>
                 ) : recentItems.length === 0 ? (
                     <div className="p-12 text-center text-stone-400">
-                        <ShieldCheck size={48} className="mx-auto mb-4 opacity-30" />
+                        <Shirt size={48} className="mx-auto mb-4 opacity-30" />
                         <p className="font-semibold">Belum ada donasi masuk.</p>
                         <p className="text-sm mt-1">Saat donatur mengirim donasi, data akan muncul di sini.</p>
                     </div>

@@ -2,7 +2,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Package, Loader2, Shirt, MapPin, Truck, CheckCircle2, X } from 'lucide-react';
+import { Package, Loader2, Shirt, MapPin, Truck, CheckCircle2, X, Save } from 'lucide-react';
+import { getPermintaan, updatePermintaan, deletePermintaan } from '@/app/actions/permintaan';
+import { updateUser } from '@/app/actions/user';
 
 interface Pengiriman {
     id: number;
@@ -17,6 +19,7 @@ interface PermintaanItem {
     id: number;
     status: 'menunggu' | 'diterima' | 'ditolak';
     pesan: string | null;
+    alamat_tujuan: string | null;
     created_at: string;
     barang: {
         id: number;
@@ -25,7 +28,6 @@ interface PermintaanItem {
         deskripsi: string;
         foto_url: string | null;
         donatur: { id: number; nama: string; kota: string | null };
-        campaign: { id: number; judul: string } | null;
         pengiriman: Pengiriman[];
     };
 }
@@ -49,6 +51,51 @@ export default function PenerimaPermintaanPage() {
     const [cancellingId, setCancellingId] = useState<number | null>(null);
     const [confirmingId, setConfirmingId] = useState<number | null>(null);
 
+    const [alamatDefault, setAlamatDefault] = useState('');
+    const [isLoadingAlamat, setIsLoadingAlamat] = useState(true);
+    const [isSavingAlamat, setIsSavingAlamat] = useState(false);
+
+    const fetchAlamatDefault = useCallback(async () => {
+        setIsLoadingAlamat(true);
+        try {
+            const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+            const user = userStr ? JSON.parse(userStr) : null;
+            if (!user?.id) return;
+
+            const res = await fetch(`/api/users/${user.id}`);
+            if (res.ok) {
+                const json = await res.json();
+                if (json.user && json.user.alamat_lengkap) {
+                    setAlamatDefault(json.user.alamat_lengkap);
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsLoadingAlamat(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchAlamatDefault();
+    }, [fetchAlamatDefault]);
+
+    const handleSaveAlamat = async () => {
+        const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+        const user = userStr ? JSON.parse(userStr) : null;
+        if (!user?.id) return;
+
+        setIsSavingAlamat(true);
+        try {
+            await updateUser(user.id, { alamat_lengkap: alamatDefault });
+            // update local storage just in case? no need, it's just DB
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSavingAlamat(false);
+        }
+    };
+
     const fetchPermintaan = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -56,9 +103,11 @@ export default function PenerimaPermintaanPage() {
             const user = userStr ? JSON.parse(userStr) : null;
             if (!user?.id) return;
 
-            const res = await fetch(`/api/permintaan?penerima_id=${user.id}`);
-            const json = await res.json();
-            if (json.data) setList(json.data);
+            const resData = await getPermintaan({ penerima_id: user.id });
+            // API return any date strings or Date objects, but Server Actions return Date objects.
+            // Client components expects serializable JSON but Server action returns Date directly 
+            // In App Router, Server Actions automatically serialize Dates, but let's be careful:
+            setList(resData as any);
         } catch (err) {
             console.error(err);
         } finally {
@@ -74,15 +123,10 @@ export default function PenerimaPermintaanPage() {
         if (!confirm('Yakin ingin membatalkan permintaan ini?')) return;
         setCancellingId(id);
         try {
-            const res = await fetch(`/api/permintaan/${id}`, { method: 'DELETE' });
-            const json = await res.json();
-            if (res.ok) {
-                setList(prev => prev.filter(p => p.id !== id));
-            } else {
-                alert(json.error || 'Gagal membatalkan permintaan');
-            }
-        } catch {
-            alert('Terjadi kesalahan');
+            await deletePermintaan(id);
+            setList(prev => prev.filter(p => p.id !== id));
+        } catch (err: any) {
+            alert(err.message || 'Gagal membatalkan permintaan');
         } finally {
             setCancellingId(null);
         }
@@ -91,20 +135,10 @@ export default function PenerimaPermintaanPage() {
     const handleKonfirmasi = async (id: number) => {
         setConfirmingId(id);
         try {
-            const res = await fetch(`/api/permintaan/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ konfirmasi: true }),
-            });
-            const json = await res.json();
-            if (res.ok) {
-                // Refresh list to get updated pesan
-                await fetchPermintaan();
-            } else {
-                alert(json.error || 'Gagal mengkonfirmasi penerimaan');
-            }
-        } catch {
-            alert('Terjadi kesalahan');
+            await updatePermintaan(id, { konfirmasi: true });
+            await fetchPermintaan();
+        } catch (err: any) {
+            alert(err.message || 'Gagal mengkonfirmasi penerimaan');
         } finally {
             setConfirmingId(null);
         }
@@ -124,6 +158,36 @@ export default function PenerimaPermintaanPage() {
             <div>
                 <h1 className="text-2xl font-display font-bold text-stone-900">Permintaan Saya</h1>
                 <p className="text-stone-500 mt-1">Riwayat dan status permintaan barang yang Anda ajukan.</p>
+            </div>
+
+            {/* Alamat Tujuan Default */}
+            <div className="bg-white border border-stone-200 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-2">
+                    <MapPin size={16} className="text-stone-500" />
+                    <h3 className="font-bold text-stone-800 text-sm">Alamat Tujuan Default</h3>
+                </div>
+                <p className="text-xs text-stone-500 mb-3">
+                    Alamat ini akan otomatis terisi setiap kali Anda mengajukan permintaan barang baru di Katalog Donasi.
+                </p>
+                {isLoadingAlamat ? (
+                    <div className="flex items-center gap-2 text-stone-400 text-sm py-2">
+                        <Loader2 size={16} className="animate-spin" /> Memuat alamat...
+                    </div>
+                ) : (
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <textarea
+                            value={alamatDefault}
+                            onChange={(e) => setAlamatDefault(e.target.value)}
+                            placeholder="Masukkan alamat lengkap tujuan pengiriman..."
+                            rows={2}
+                            className="flex-1 px-4 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 resize-none"
+                        />
+                        <Button variant="primary" size="sm" onClick={handleSaveAlamat} disabled={isSavingAlamat} className="self-end sm:self-start">
+                            {isSavingAlamat ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                            Simpan
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* Tabs */}
@@ -192,14 +256,14 @@ export default function PenerimaPermintaanPage() {
                                             <MapPin size={11} />
                                             {item.barang.donatur.kota || 'Lokasi tidak tersedia'}
                                         </div>
-                                        {item.barang.campaign && (
-                                            <p className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-lg inline-block mb-1">
-                                                Kampanye: {item.barang.campaign.judul}
-                                            </p>
-                                        )}
                                         <p className="text-xs text-stone-500">
                                             Diajukan: {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                                         </p>
+                                        {item.alamat_tujuan && (
+                                            <p className="text-xs text-stone-400 mt-1 line-clamp-1">
+                                                Dikirim ke: {item.alamat_tujuan}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 

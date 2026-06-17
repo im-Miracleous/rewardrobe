@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { getAdminInventory } from '@/app/actions/admin';
+import { STATUS_BARANG_LABEL, STATUS_BARANG_BADGE, type StatusBarang } from '@/lib/statusBarang';
 
 // ─── Data Types ────────────────────────────────────────────────────────────────
 
@@ -26,13 +28,13 @@ interface InventoryItem {
   id: number;
   judul: string | null;
   kategori: string | null;
-  kondisi: string | null;
+  kondisi_user: string;
   deskripsi: string;
   foto_url: string | null;
   donatur: { id: number; nama: string };
-  status: "menunggu_verifikasi" | "disetujui" | "ditolak" | "tersalurkan";
-  created_at: string;
-  updated_at: string;
+  status: "menunggu_pengiriman" | "terkirim" | "ditolak" | "tersalurkan";
+  created_at: string | Date;
+  updated_at: string | Date;
   qr_code?: string;
 }
 
@@ -114,6 +116,7 @@ export default function InventoryPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
   const [kategoriFilter, setKategoriFilter] = useState("Semua");
+  const [statusFilter, setStatusFilter] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
 
   // QR modal state
@@ -122,10 +125,9 @@ export default function InventoryPage() {
   const fetchData = async () => {
     try {
         setIsLoading(true);
-        const res = await fetch('/api/admin/inventory');
-        const json = await res.json();
-        if (json.data) {
-            setItems(json.data);
+        const data = await getAdminInventory();
+        if (data) {
+            setItems(data as InventoryItem[]);
         }
     } catch (err) {
         console.error(err);
@@ -145,7 +147,8 @@ export default function InventoryPage() {
       item.id.toString().includes(search.toLowerCase()) ||
       item.donatur?.nama?.toLowerCase().includes(search.toLowerCase());
     const matchKategori = kategoriFilter === "Semua" || item.kategori === kategoriFilter;
-    return matchSearch && matchKategori;
+    const matchStatus = statusFilter === "Semua" || item.status === statusFilter;
+    return matchSearch && matchKategori && matchStatus;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
@@ -159,23 +162,16 @@ export default function InventoryPage() {
 
   // ── Stats ────────────────────────────────────────────────────────────────
   const totalGudang = items.length;
-  const siapSalurkan = items.filter((i) => i.status === "disetujui").length; // Di gudang artinya disetujui
+  const siapSalurkan = items.filter((i) => i.status === "terkirim").length; // Di gudang artinya sudah terkirim ke admin
   const tersalurkan = items.filter((i) => i.status === "tersalurkan").length;
 
-  const statusLabel = (s: string) => {
-    switch (s) {
-      case "disetujui": return "Siap Disalurkan";
-      case "tersalurkan": return "Tersalurkan";
-      default: return "Lainnya";
-    }
-  };
-
-  const statusBadgeColor = (s: string): "green" | "blue" | "stone" => {
-    switch (s) {
-      case "disetujui": return "green";
-      case "tersalurkan": return "blue";
-      default: return "stone";
-    }
+  const getStatusBadge = (status: string) => {
+    const s = status as StatusBarang;
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold border ${STATUS_BARANG_BADGE[s] ?? ''}`}>
+        {STATUS_BARANG_LABEL[s] ?? status}
+      </span>
+    );
   };
 
   const kondisiBadgeColor = (s: string | null) => {
@@ -245,6 +241,20 @@ export default function InventoryPage() {
               </select>
             </div>
 
+            {/* Status filter */}
+            <div className="flex items-center gap-2">
+              <Filter size={16} className="text-stone-400" />
+              <select
+                value={statusFilter}
+                onChange={(e) => updateFilter(setStatusFilter, e.target.value)}
+                className="px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-400 transition-all cursor-pointer"
+              >
+                <option value="Semua">Semua Status</option>
+                <option value="terkirim">{STATUS_BARANG_LABEL['terkirim']}</option>
+                <option value="tersalurkan">{STATUS_BARANG_LABEL['tersalurkan']}</option>
+              </select>
+            </div>
+
             {/* View toggle */}
             <div className="flex items-center bg-stone-100 rounded-xl p-1 ml-auto">
               <button
@@ -299,7 +309,7 @@ export default function InventoryPage() {
                 </div>
                 {/* Status badge overlay */}
                 <div className="absolute top-3 left-3">
-                  <Badge color={statusBadgeColor(item.status)}>{statusLabel(item.status)}</Badge>
+                  {getStatusBadge(item.status)}
                 </div>
               </div>
 
@@ -310,7 +320,7 @@ export default function InventoryPage() {
                     <h3 className="font-display font-bold text-stone-900 leading-tight">{item.judul || item.kategori || "Barang Donasi"}</h3>
                     <p className="text-xs text-stone-400 mt-0.5 font-mono">ID: {item.id}</p>
                   </div>
-                  {item.kondisi && <Badge color={kondisiBadgeColor(item.kondisi)}>{item.kondisi}</Badge>}
+                  {item.kondisi_user && <Badge color={kondisiBadgeColor(item.kondisi_user)}>{item.kondisi_user}</Badge>}
                 </div>
 
                 <div className="flex items-center gap-4 text-xs text-stone-500 mb-2">
@@ -367,11 +377,11 @@ export default function InventoryPage() {
                     </td>
                     <td className="p-5 text-sm text-stone-600">{item.kategori || "-"}</td>
                     <td className="p-5">
-                      {item.kondisi ? <Badge color={kondisiBadgeColor(item.kondisi)}>{item.kondisi}</Badge> : "-"}
+                      {item.kondisi_user ? <Badge color={kondisiBadgeColor(item.kondisi_user)}>{item.kondisi_user}</Badge> : "-"}
                     </td>
                     <td className="p-5 text-sm text-stone-600">{item.donatur?.nama}</td>
                     <td className="p-5">
-                      <Badge color={statusBadgeColor(item.status)}>{statusLabel(item.status)}</Badge>
+                      {getStatusBadge(item.status)}
                     </td>
                     <td className="p-5">
                       <Button variant="ghost" size="sm" className="!text-xs" onClick={() => setQrModal(item)}>
@@ -467,7 +477,7 @@ export default function InventoryPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-stone-400">Kondisi</span>
-                {qrModal.kondisi ? <Badge color={kondisiBadgeColor(qrModal.kondisi)}>{qrModal.kondisi}</Badge> : <span>-</span>}
+                {qrModal.kondisi_user ? <Badge color={kondisiBadgeColor(qrModal.kondisi_user)}>{qrModal.kondisi_user}</Badge> : <span>-</span>}
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-stone-400">Donatur</span>

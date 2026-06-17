@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { CheckCircle, XCircle, Loader2, Package, Eye, X } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Package, Eye, X, Filter } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { getPermintaan, updatePermintaan } from "@/app/actions/permintaan";
 
 interface Permintaan {
     id: number;
@@ -16,7 +17,6 @@ interface Permintaan {
         deskripsi: string;
         foto_url: string | null;
         donatur: { nama: string; kota: string | null };
-        campaign: { judul: string } | null;
     };
     penerima: { id: number; nama: string; kota: string | null; tipe: string | null };
 }
@@ -53,9 +53,8 @@ export default function AdminPermintaanPage() {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const res = await fetch("/api/permintaan");
-            const json = await res.json();
-            if (json.data) setList(json.data);
+            const resData = await getPermintaan();
+            setList(resData as any);
         } catch (err) {
             console.error(err);
         } finally {
@@ -72,12 +71,8 @@ export default function AdminPermintaanPage() {
     const handleApprove = async (id: number) => {
         setIsProcessing(true);
         try {
-            const res = await fetch(`/api/permintaan/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: "diterima" }),
-            });
-            if (res.ok) await fetchData();
+            await updatePermintaan(id, { status: "diterima" });
+            await fetchData();
         } catch (err) {
             console.error(err);
         } finally {
@@ -89,16 +84,10 @@ export default function AdminPermintaanPage() {
         if (!alasan.trim()) return;
         setIsProcessing(true);
         try {
-            const res = await fetch(`/api/permintaan/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: "ditolak", alasan }),
-            });
-            if (res.ok) {
-                setRejectingId(null);
-                setAlasan("");
-                await fetchData();
-            }
+            await updatePermintaan(id, { status: "ditolak", alasan });
+            setRejectingId(null);
+            setAlasan("");
+            await fetchData();
         } catch (err) {
             console.error(err);
         } finally {
@@ -123,21 +112,20 @@ export default function AdminPermintaanPage() {
                 )}
             </div>
 
-            {/* Tabs */}
-            <div className="flex items-center gap-2 flex-wrap">
-                {(["menunggu", "semua", "diterima", "ditolak"] as const).map((tab) => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 capitalize ${
-                            activeTab === tab
-                                ? "bg-teal-600 text-white shadow-md shadow-teal-600/20"
-                                : "bg-white text-stone-600 border border-stone-200 hover:bg-stone-50"
-                        }`}
-                    >
-                        {tab === "menunggu" ? `Menunggu${menungguCount > 0 ? ` (${menungguCount})` : ""}` : tab.charAt(0).toUpperCase() + tab.slice(1)}
-                    </button>
-                ))}
+            {/* Filter Dropdown */}
+            <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-4 flex flex-wrap items-center gap-3">
+                <Filter size={18} className="text-stone-400" />
+                <span className="text-sm font-semibold text-stone-600">Filter Status:</span>
+                <select
+                    value={activeTab}
+                    onChange={(e) => setActiveTab(e.target.value as any)}
+                    className="px-4 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm font-semibold text-stone-700 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 transition-all cursor-pointer min-w-[200px]"
+                >
+                    <option value="semua">Semua Permintaan</option>
+                    <option value="menunggu">Menunggu{menungguCount > 0 ? ` (${menungguCount})` : ""}</option>
+                    <option value="diterima">Diterima</option>
+                    <option value="ditolak">Ditolak</option>
+                </select>
             </div>
 
             {/* Table */}
@@ -176,11 +164,19 @@ export default function AdminPermintaanPage() {
                                                 <p className="text-xs text-stone-400">{item.penerima.kota} • {item.penerima.tipe || '-'}</p>
                                             </td>
                                             <td className="p-4">
-                                                <p className="font-bold text-stone-900">{item.barang.kategori || 'Pakaian'}</p>
-                                                <p className="text-xs text-stone-400">Kondisi: {item.barang.kondisi_user}</p>
-                                                {item.barang.campaign && (
-                                                    <p className="text-xs text-green-700 mt-0.5">📢 {item.barang.campaign.judul}</p>
-                                                )}
+                                                <div className="flex items-center gap-3">
+                                                    {item.barang.foto_url ? (
+                                                        <img src={item.barang.foto_url} alt={item.barang.kategori || 'Barang'} className="w-10 h-10 rounded-lg object-cover border border-stone-200 shrink-0" />
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-lg bg-stone-100 border border-stone-200 flex items-center justify-center shrink-0">
+                                                            <Package size={16} className="text-stone-400" />
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="font-bold text-stone-900">{item.barang.kategori || 'Pakaian'}</p>
+                                                        <p className="text-xs text-stone-400">Kondisi: {item.barang.kondisi_user}</p>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td className="p-4 max-w-[200px]">
                                                 <p className="text-xs text-stone-600 line-clamp-2">{item.pesan || '-'}</p>
@@ -211,6 +207,9 @@ export default function AdminPermintaanPage() {
                                                             <XCircle size={13} />
                                                             Tolak
                                                         </Button>
+                                                        <button onClick={() => setSelectedItem(item)} className="flex items-center gap-1 text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors">
+                                                            <Eye size={14} /> Detail
+                                                        </button>
                                                     </div>
                                                 ) : (
                                                     <button onClick={() => setSelectedItem(item)} className="flex items-center gap-1 text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors">
@@ -267,8 +266,19 @@ export default function AdminPermintaanPage() {
                             </div>
                             <div>
                                 <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">Barang</p>
-                                <p className="font-bold text-stone-900">{selectedItem.barang.kategori || 'Pakaian'}</p>
-                                <p className="text-sm text-stone-500">{selectedItem.barang.deskripsi}</p>
+                                <div className="flex items-center gap-3">
+                                    {selectedItem.barang.foto_url ? (
+                                        <img src={selectedItem.barang.foto_url} alt={selectedItem.barang.kategori || 'Barang'} className="w-16 h-16 rounded-xl object-cover border border-stone-200 shrink-0" />
+                                    ) : (
+                                        <div className="w-16 h-16 rounded-xl bg-stone-100 border border-stone-200 flex items-center justify-center shrink-0">
+                                            <Package size={20} className="text-stone-400" />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <p className="font-bold text-stone-900">{selectedItem.barang.kategori || 'Pakaian'}</p>
+                                        <p className="text-sm text-stone-500">{selectedItem.barang.deskripsi}</p>
+                                    </div>
+                                </div>
                             </div>
                             {selectedItem.pesan && (
                                 <div>
