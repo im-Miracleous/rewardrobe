@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { CheckCircle, XCircle, Loader2, Package, Eye, X, Filter } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { getPermintaan, updatePermintaan } from "@/app/actions/permintaan";
 
 interface Permintaan {
     id: number;
@@ -52,9 +53,8 @@ export default function AdminPermintaanPage() {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const res = await fetch("/api/permintaan");
-            const json = await res.json();
-            if (json.data) setList(json.data);
+            const resData = await getPermintaan();
+            setList(resData as any);
         } catch (err) {
             console.error(err);
         } finally {
@@ -71,12 +71,8 @@ export default function AdminPermintaanPage() {
     const handleApprove = async (id: number) => {
         setIsProcessing(true);
         try {
-            const res = await fetch(`/api/permintaan/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: "diterima" }),
-            });
-            if (res.ok) await fetchData();
+            await updatePermintaan(id, { status: "diterima" });
+            await fetchData();
         } catch (err) {
             console.error(err);
         } finally {
@@ -88,16 +84,10 @@ export default function AdminPermintaanPage() {
         if (!alasan.trim()) return;
         setIsProcessing(true);
         try {
-            const res = await fetch(`/api/permintaan/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: "ditolak", alasan }),
-            });
-            if (res.ok) {
-                setRejectingId(null);
-                setAlasan("");
-                await fetchData();
-            }
+            await updatePermintaan(id, { status: "ditolak", alasan });
+            setRejectingId(null);
+            setAlasan("");
+            await fetchData();
         } catch (err) {
             console.error(err);
         } finally {

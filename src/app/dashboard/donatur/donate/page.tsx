@@ -5,6 +5,7 @@ import { ArrowLeft, Send, AlertCircle, CheckCircle, Image as ImageIcon } from 'l
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Link from 'next/link';
+import { createBarangDonasi } from '@/app/actions/barang';
 
 const KONDISI_OPTIONS = [
     { label: 'Baik / Layak pakai', value: 'baik' },
@@ -82,27 +83,15 @@ function DonateFormContent() {
         setIsSubmitting(true);
 
         try {
-            const payload = {
+            await createBarangDonasi({
                 tipePakaian: resolvedTipePakaian,
                 catatan,
                 kondisi,
                 donatur_id: donaturId,
                 bukti_foto: buktiFoto.trim(),
-            };
-
-            const response = await fetch('/api/barang-donasi', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
             });
 
-            const result = await response.json();
-            if (!response.ok) {
-                setErrorMsg(result.error || 'Gagal mengirim donasi pakaian.');
-                return;
-            }
-
-            setSuccessMsg('SUCCESS');
+            setSuccessMsg('Donasi pakaian berhasil dikirim! Menunggu penjemputan oleh admin.');
 
             setTipePakaian('');
             setTipePakaianLainnya('');
@@ -115,7 +104,7 @@ function DonateFormContent() {
             }, 2000);
         } catch (error) {
             console.error('Submit donation error:', error);
-            setErrorMsg('Terjadi kesalahan. Silakan coba lagi.');
+            setErrorMsg(error instanceof Error ? error.message : 'Terjadi kesalahan. Silakan coba lagi.');
         } finally {
             setIsSubmitting(false);
         }

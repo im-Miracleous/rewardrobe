@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { getAdminPenjemputan, updateAdminPenjemputanStatus } from '@/app/actions/admin';
 
 // ─── Types ───────────────────────────────────────────────────────
 type StatusPenjemputan = "disiapkan" | "dalam_pengiriman" | "terkirim";
@@ -104,9 +105,8 @@ export default function PenjemputanBarangPage() {
   const fetchData = async () => {
     try {
         setIsLoading(true);
-        const res = await fetch('/api/admin/penjemputan');
-        const json = await res.json();
-        if (json.data) setData(json.data);
+        const data = await getAdminPenjemputan();
+        if (data) setData(data as any);
     } catch (err) {
         console.error(err);
     } finally {
@@ -172,15 +172,13 @@ export default function PenjemputanBarangPage() {
     if (!selectedId || !formKurir) return;
     setIsProcessing(true);
     try {
-        const res = await fetch(`/api/admin/penjemputan/${selectedId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ kurir: formKurir, status: 'dalam_pengiriman', catatan: formCatatan })
+        await updateAdminPenjemputanStatus(selectedId, {
+            kurir: formKurir,
+            status: 'dalam_pengiriman',
+            catatan: formCatatan
         });
-        if (res.ok) {
-            await fetchData();
-            setModalOpen(false);
-        }
+        await fetchData();
+        setModalOpen(false);
     } catch (err) {
         console.error(err);
     } finally {
@@ -191,12 +189,8 @@ export default function PenjemputanBarangPage() {
   const markAsPickedUp = async (id: number) => {
     setIsProcessing(true);
     try {
-        const res = await fetch(`/api/admin/penjemputan/${id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'terkirim' })
-        });
-        if (res.ok) await fetchData();
+        await updateAdminPenjemputanStatus(id, { status: 'terkirim' });
+        await fetchData();
     } catch (err) {
         console.error(err);
     } finally {

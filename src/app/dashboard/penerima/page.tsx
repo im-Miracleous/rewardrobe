@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Search, Shirt, X, Loader2, Package, MapPin, CheckCircle } from 'lucide-react';
+import { getBarangDonasi } from '@/app/actions/barang';
+import { getPermintaan, createPermintaan } from '@/app/actions/permintaan';
 
 interface BarangItem {
     id: number;
@@ -27,46 +29,58 @@ export default function PenerimaDash() {
     const [kategoriFilter, setKategoriFilter] = useState('');
     const [selectedBarang, setSelectedBarang] = useState<BarangItem | null>(null);
     const [pesan, setPesan] = useState('');
-    const [alamatTujuan, setAlamatTujuan] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [alamatDefault, setAlamatDefault] = useState('');
+    const [alamatTujuan, setAlamatTujuan] = useState('');
     // barang_id yang sudah pernah diminta (menunggu/diterima) — diisi dari API saat mount
     const [requestedIds, setRequestedIds] = useState<Set<number>>(new Set());
-    // alamat default penerima, untuk auto-fill saat mengajukan permintaan baru
-    const [alamatDefault, setAlamatDefault] = useState('');
+
+    useEffect(() => {
+        const fetchAlamat = async () => {
+            const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                try {
+                    const res = await fetch(`/api/users/${user.id}`);
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json.user && json.user.alamat_lengkap) {
+                            setAlamatDefault(json.user.alamat_lengkap);
+                        }
+                    }
+                } catch (e) {
+                    // Ignore
+                }
+            }
+        };
+        fetchAlamat();
+    }, []);
 
     useEffect(() => {
         const init = async () => {
             setIsLoading(true);
             try {
-                const [barangRes, userStr] = await Promise.all([
-                    fetch('/api/barang-donasi?status=terkirim'),
+                const [userStr] = await Promise.all([
                     Promise.resolve(typeof window !== 'undefined' ? localStorage.getItem('user') : null),
                 ]);
 
-                const barangJson = await barangRes.json();
-                if (barangJson.data) setBarangList(barangJson.data);
+                const barangJson = await getBarangDonasi({ status: 'terkirim' });
+                setBarangList(barangJson as any);
 
                 if (userStr) {
                     const user = JSON.parse(userStr);
                     if (user?.id) {
-                        const [permintaanRes, userRes] = await Promise.all([
-                            fetch(`/api/permintaan?penerima_id=${user.id}`),
-                            fetch(`/api/users/${user.id}`),
-                        ]);
-                        const permintaanJson = await permintaanRes.json();
-                        if (permintaanJson.data) {
+                        const permintaanJson = await getPermintaan({ penerima_id: user.id });
+                        if (permintaanJson) {
                             const activeIds = new Set<number>(
-                                permintaanJson.data
-                                    .filter((p: { status: string; barang: { id: number } }) =>
+                                permintaanJson
+                                    .filter((p: any) =>
                                         p.status === 'menunggu' || p.status === 'diterima'
                                     )
-                                    .map((p: { barang: { id: number } }) => p.barang.id)
+                                    .map((p: any) => p.barang.id)
                             );
                             setRequestedIds(activeIds);
                         }
-
-                        const userJson = await userRes.json();
-                        if (userJson.user?.alamat_lengkap) setAlamatDefault(userJson.user.alamat_lengkap);
                     }
                 }
             } catch (err) {
@@ -92,22 +106,16 @@ export default function PenerimaDash() {
 
         setIsSubmitting(true);
         try {
-            const res = await fetch('/api/permintaan', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ barang_id: selectedBarang.id, pesan, alamat_tujuan: alamatTujuan }),
+            await createPermintaan({ 
+                barang_id: selectedBarang.id, 
+                pesan: pesan.trim(),
+                alamat_tujuan: alamatTujuan.trim()
             });
-            const json = await res.json();
-            if (res.ok) {
-                setRequestedIds(prev => new Set(prev).add(selectedBarang.id));
-                setSelectedBarang(null);
-                setPesan('');
-                setAlamatTujuan('');
-            } else {
-                alert(json.error || 'Gagal mengajukan permintaan');
-            }
-        } catch (err) {
-            console.error(err);
+            setRequestedIds(prev => new Set(prev).add(selectedBarang.id));
+            setSelectedBarang(null);
+            setPesan('');
+        } catch (err: any) {
+            alert(err.message || 'Gagal mengajukan permintaan');
         } finally {
             setIsSubmitting(false);
         }
@@ -160,7 +168,7 @@ export default function PenerimaDash() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {filtered.map((item) => (
                         <div key={item.id} className="bg-white border border-stone-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group">
-                            <div className="aspect-square bg-stone-50 flex items-center justify-center text-5xl group-hover:scale-105 transition-transform duration-500 overflow-hidden">
+                            <div className="h-44 bg-stone-50 flex items-center justify-center text-5xl group-hover:scale-105 transition-transform duration-500 overflow-hidden">
                                 {item.foto_url ? (
                                     <img src={item.foto_url} alt={item.kategori || 'barang'} className="w-full h-full object-cover" />
                                 ) : (

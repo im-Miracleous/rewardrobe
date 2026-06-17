@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
-import { RoleUser, TipePenerima } from '@prisma/client';
+'use server';
+
 import prisma from '@/lib/prisma';
 import { hashPassword } from '@/lib/auth';
+import { RoleUser, TipePenerima } from '@prisma/client';
 
 function isRoleUser(value: unknown): value is RoleUser {
   return value === 'admin' || value === 'donatur' || value === 'penerima';
@@ -11,16 +12,9 @@ function isTipePenerima(value: unknown): value is TipePenerima {
   return value === 'panti' || value === 'komunitas' || value === 'pengrajin';
 }
 
-type RouteParams = {
-  params: Promise<{ id: string }>;
-};
-
-export async function GET(_request: Request, { params }: RouteParams) {
-  const { id } = await params;
-  const userId = Number(id);
-
+export async function getUser(userId: number) {
   if (!Number.isInteger(userId)) {
-    return NextResponse.json({ message: 'id tidak valid' }, { status: 400 });
+    throw new Error('id tidak valid');
   }
 
   const user = await prisma.user.findUnique({
@@ -28,21 +22,15 @@ export async function GET(_request: Request, { params }: RouteParams) {
   });
 
   if (!user) {
-    return NextResponse.json({ message: 'User tidak ditemukan' }, { status: 404 });
+    throw new Error('User tidak ditemukan');
   }
 
-  return NextResponse.json({ user });
+  return user;
 }
 
-export async function PATCH(request: Request, { params }: RouteParams) {
-  const { id } = await params;
-  const userId = Number(id);
-
-  if (!Number.isInteger(userId)) {
-    return NextResponse.json({ message: 'id tidak valid' }, { status: 400 });
-  }
-
-  const body = (await request.json()) as {
+export async function updateUser(
+  userId: number,
+  body: {
     nama?: string;
     email?: string;
     password?: string;
@@ -50,9 +38,13 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     alamat_lengkap?: string | null;
     kota?: string | null;
     foto_profil?: string | null;
-    role?: RoleUser;
-    tipe?: TipePenerima | null;
-  };
+    role?: string;
+    tipe?: string | null;
+  }
+) {
+  if (!Number.isInteger(userId)) {
+    throw new Error('id tidak valid');
+  }
 
   let hashedPassword;
   if (body.password) {
@@ -74,20 +66,17 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     },
   });
 
-  return NextResponse.json({ user: updatedUser });
+  return updatedUser;
 }
 
-export async function DELETE(_request: Request, { params }: RouteParams) {
-  const { id } = await params;
-  const userId = Number(id);
-
+export async function deleteUser(userId: number) {
   if (!Number.isInteger(userId)) {
-    return NextResponse.json({ message: 'id tidak valid' }, { status: 400 });
+    throw new Error('id tidak valid');
   }
 
   await prisma.user.delete({
     where: { id: userId },
   });
 
-  return NextResponse.json({ message: 'User deleted' });
+  return { message: 'User deleted' };
 }

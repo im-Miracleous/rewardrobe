@@ -3,6 +3,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Package, Loader2, Shirt, MapPin, Truck, CheckCircle2, X, Save } from 'lucide-react';
+import { getPermintaan, updatePermintaan, deletePermintaan } from '@/app/actions/permintaan';
+import { updateUser } from '@/app/actions/user';
 
 interface Pengiriman {
     id: number;
@@ -61,8 +63,12 @@ export default function PenerimaPermintaanPage() {
             if (!user?.id) return;
 
             const res = await fetch(`/api/users/${user.id}`);
-            const json = await res.json();
-            if (json.user) setAlamatDefault(json.user.alamat_lengkap || '');
+            if (res.ok) {
+                const json = await res.json();
+                if (json.user && json.user.alamat_lengkap) {
+                    setAlamatDefault(json.user.alamat_lengkap);
+                }
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -81,11 +87,8 @@ export default function PenerimaPermintaanPage() {
 
         setIsSavingAlamat(true);
         try {
-            await fetch(`/api/users/${user.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ alamat_lengkap: alamatDefault }),
-            });
+            await updateUser(user.id, { alamat_lengkap: alamatDefault });
+            // update local storage just in case? no need, it's just DB
         } catch (err) {
             console.error(err);
         } finally {
@@ -100,9 +103,11 @@ export default function PenerimaPermintaanPage() {
             const user = userStr ? JSON.parse(userStr) : null;
             if (!user?.id) return;
 
-            const res = await fetch(`/api/permintaan?penerima_id=${user.id}`);
-            const json = await res.json();
-            if (json.data) setList(json.data);
+            const resData = await getPermintaan({ penerima_id: user.id });
+            // API return any date strings or Date objects, but Server Actions return Date objects.
+            // Client components expects serializable JSON but Server action returns Date directly 
+            // In App Router, Server Actions automatically serialize Dates, but let's be careful:
+            setList(resData as any);
         } catch (err) {
             console.error(err);
         } finally {
@@ -118,15 +123,10 @@ export default function PenerimaPermintaanPage() {
         if (!confirm('Yakin ingin membatalkan permintaan ini?')) return;
         setCancellingId(id);
         try {
-            const res = await fetch(`/api/permintaan/${id}`, { method: 'DELETE' });
-            const json = await res.json();
-            if (res.ok) {
-                setList(prev => prev.filter(p => p.id !== id));
-            } else {
-                alert(json.error || 'Gagal membatalkan permintaan');
-            }
-        } catch {
-            alert('Terjadi kesalahan');
+            await deletePermintaan(id);
+            setList(prev => prev.filter(p => p.id !== id));
+        } catch (err: any) {
+            alert(err.message || 'Gagal membatalkan permintaan');
         } finally {
             setCancellingId(null);
         }
@@ -135,20 +135,10 @@ export default function PenerimaPermintaanPage() {
     const handleKonfirmasi = async (id: number) => {
         setConfirmingId(id);
         try {
-            const res = await fetch(`/api/permintaan/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ konfirmasi: true }),
-            });
-            const json = await res.json();
-            if (res.ok) {
-                // Refresh list to get updated pesan
-                await fetchPermintaan();
-            } else {
-                alert(json.error || 'Gagal mengkonfirmasi penerimaan');
-            }
-        } catch {
-            alert('Terjadi kesalahan');
+            await updatePermintaan(id, { konfirmasi: true });
+            await fetchPermintaan();
+        } catch (err: any) {
+            alert(err.message || 'Gagal mengkonfirmasi penerimaan');
         } finally {
             setConfirmingId(null);
         }

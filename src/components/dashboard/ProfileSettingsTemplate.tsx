@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { getUser, updateUser, deleteUser } from '@/app/actions/user';
 
 interface ProfileSettingsTemplateProps {
     role: 'Admin' | 'Donatur' | 'Penerima';
@@ -35,22 +36,18 @@ export default function ProfileSettingsTemplate({ role }: ProfileSettingsTemplat
                 const user = JSON.parse(userStr);
                 setUserId(user.id);
                 try {
-                    const res = await fetch(`/api/users/${user.id}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        const dbUser = data.user;
-                        setFormData({
-                            name: dbUser.nama || '',
-                            email: dbUser.email || '',
-                            phone: dbUser.no_telpon || '',
-                            currentPassword: '',
-                            newPassword: '',
-                        });
-                        if (dbUser.foto_profil) {
-                            setAvatarUrl(dbUser.foto_profil);
-                        } else {
-                            setAvatarUrl(`https://api.dicebear.com/7.x/notionists/svg?seed=${dbUser.nama}`);
-                        }
+                    const dbUser = await getUser(user.id);
+                    setFormData({
+                        name: dbUser.nama || '',
+                        email: dbUser.email || '',
+                        phone: dbUser.no_telpon || '',
+                        currentPassword: '',
+                        newPassword: '',
+                    });
+                    if (dbUser.foto_profil) {
+                        setAvatarUrl(dbUser.foto_profil);
+                    } else {
+                        setAvatarUrl(`https://api.dicebear.com/7.x/notionists/svg?seed=${dbUser.nama}`);
                     }
                 } catch (error) {
                     console.error("Failed to fetch user data:", error);
@@ -84,38 +81,29 @@ export default function ProfileSettingsTemplate({ role }: ProfileSettingsTemplat
         if (!userId) return;
 
         try {
-            const res = await fetch(`/api/users/${userId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    nama: formData.name,
-                    email: formData.email,
-                    no_telpon: formData.phone,
-                    foto_profil: avatarUrl.startsWith('data:') ? avatarUrl : undefined,
-                    ...(formData.newPassword ? { password: formData.newPassword } : {})
-                }),
+            await updateUser(userId, {
+                nama: formData.name,
+                email: formData.email,
+                no_telpon: formData.phone,
+                foto_profil: avatarUrl.startsWith('data:') ? avatarUrl : undefined,
+                ...(formData.newPassword ? { password: formData.newPassword } : {})
             });
             
-            if (res.ok) {
-                alert('Profil berhasil diperbarui!');
-                setIsEditing(false);
-                setFormData({ ...formData, currentPassword: '', newPassword: '' });
-                
-                // Update local storage so sidebar updates on next load
-                const userStr = localStorage.getItem('user');
-                if (userStr) {
-                    const user = JSON.parse(userStr);
-                    user.nama = formData.name;
-                    user.email = formData.email;
-                    localStorage.setItem('user', JSON.stringify(user));
-                }
-            } else {
-                const data = await res.json();
-                alert(`Gagal memperbarui profil: ${data.message || 'Unknown error'}`);
+            alert('Profil berhasil diperbarui!');
+            setIsEditing(false);
+            setFormData({ ...formData, currentPassword: '', newPassword: '' });
+            
+            // Update local storage so sidebar updates on next load
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                user.nama = formData.name;
+                user.email = formData.email;
+                localStorage.setItem('user', JSON.stringify(user));
             }
         } catch (error) {
             console.error("Error updating profile:", error);
-            alert('Terjadi kesalahan pada jaringan.');
+            alert(`Gagal memperbarui profil: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 
@@ -280,18 +268,15 @@ export default function ProfileSettingsTemplate({ role }: ProfileSettingsTemplat
                                     } else {
                                         if (!userId) return;
                                         try {
-                                            const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
-                                            if (res.ok) {
-                                                alert('Akun telah dihapus secara permanen.');
-                                                setIsDeleteModalOpen(false);
-                                                localStorage.removeItem('user');
-                                                localStorage.removeItem('authToken');
-                                                router.replace('/auth/login');
-                                            } else {
-                                                alert('Gagal menghapus akun.');
-                                            }
+                                            await deleteUser(userId);
+                                            alert('Akun telah dihapus secara permanen.');
+                                            setIsDeleteModalOpen(false);
+                                            localStorage.removeItem('user');
+                                            localStorage.removeItem('authToken');
+                                            router.replace('/auth/login');
                                         } catch (err) {
                                             console.error("Gagal menghapus akun:", err);
+                                            alert('Gagal menghapus akun.');
                                         }
                                     }
                                 }}

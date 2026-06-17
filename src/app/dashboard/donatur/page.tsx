@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Shirt, Leaf, Trophy, Upload, CheckCircle, Clock, XCircle, ArrowRight, Sparkles, BarChart2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, ComposedChart } from 'recharts';
+import { getDonaturStats, getDonaturHistory } from '@/app/actions/donatur';
 
 export default function DonaturDash() {
     const [isLoading, setIsLoading] = useState(true);
@@ -27,20 +28,18 @@ export default function DonaturDash() {
                 if (!donaturId) return;
 
                 // Fetch stats
-                const statsRes = await fetch(`/api/donatur/stats?donatur_id=${donaturId}`);
-                const statsResult = await statsRes.json();
-                if (statsResult.data) {
-                    setStats(statsResult.data);
-                    if (statsResult.data.monthly_stats) {
-                        setMonthlyStats(statsResult.data.monthly_stats);
+                const statsData = await getDonaturStats(donaturId);
+                if (statsData) {
+                    setStats(statsData as any);
+                    if (statsData.monthly_stats) {
+                        setMonthlyStats(statsData.monthly_stats);
                     }
                 }
 
                 // Fetch history to get latest donation
-                const historyRes = await fetch(`/api/donatur/history?donatur_id=${donaturId}`);
-                const historyResult = await historyRes.json();
-                if (historyResult.data) {
-                    const combined = (historyResult.data.barang || [])
+                const historyData = await getDonaturHistory(donaturId);
+                if (historyData) {
+                    const combined = (historyData.barang || [])
                         .map((b: any) => ({ ...b, type: 'pakaian' }))
                         .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
