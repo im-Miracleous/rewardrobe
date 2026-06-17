@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { getAdminDashboardStats } from '@/app/actions/admin';
 
 interface Donatur {
     id: number;
@@ -132,13 +133,10 @@ export default function AdminDash() {
     const fetchDashboardData = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch('/api/admin/dashboard');
-            const result = await response.json();
-            if (result.data) {
-                setStats(result.data.stats);
-                setRecentItems(result.data.recentDonations);
-            } else {
-                setError(result.error || 'Gagal memuat data dashboard');
+            const result = await getAdminDashboardStats();
+            if (result) {
+                setStats(result.stats);
+                setRecentItems(result.recentDonations as any);
             }
         } catch (err) {
             console.error('Fetch dashboard error:', err);

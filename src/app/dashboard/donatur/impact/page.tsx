@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Trophy, Sparkles, Globe, Heart, Flame, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { getDonaturStats } from '@/app/actions/donatur';
 
 export default function ImpactPage() {
     const router = useRouter();
@@ -33,10 +34,9 @@ export default function ImpactPage() {
             const userId = user.id;
 
             // Fetch Stats & Leaderboard
-            const statsRes = await fetch(`/api/donatur/stats?donatur_id=${userId}`);
-            const statsResult = await statsRes.json();
-            if (statsResult.data) {
-                setStats(statsResult.data);
+            const statsData = await getDonaturStats(userId);
+            if (statsData) {
+                setStats(statsData as any);
             }
         } catch (err) {
             console.error('Gagal memuat data dampak:', err);

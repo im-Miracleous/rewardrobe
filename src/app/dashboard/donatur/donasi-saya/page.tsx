@@ -5,6 +5,7 @@ import { History, Shirt, Calendar, AlertCircle, ExternalLink, RefreshCw, Search,
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { STATUS_BARANG_BADGE, STATUS_BARANG_LABEL, type StatusBarang } from '@/lib/statusBarang';
+import { getDonaturHistory, confirmPengirimanDonatur } from '@/app/actions/donatur';
 
 export default function DonationHistoryPage() {
     const router = useRouter();
@@ -56,16 +57,9 @@ export default function DonationHistoryPage() {
                 return;
             }
 
-            const response = await fetch(`/api/donatur/history?donatur_id=${donaturId}`);
-            const result = await response.json();
-
-            if (!response.ok) {
-                setError(result.error || 'Gagal memuat riwayat donasi.');
-                return;
-            }
-
-            if (result.data) {
-                setClothesList(result.data.barang || []);
+            const result = await getDonaturHistory(donaturId);
+            if (result && result.barang) {
+                setClothesList(result.barang as any);
             }
         } catch (err) {
             console.error('Fetch history error:', err);
@@ -102,24 +96,15 @@ export default function DonationHistoryPage() {
         setShipSubmitting(true);
         setShipError('');
         try {
-            const res = await fetch(`/api/donatur/pengiriman/${ship.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    metode: shipMetode,
-                    kurir: shipMetode === 'kurir' ? shipKurir : undefined,
-                    resi: shipMetode === 'kurir' ? shipResi : undefined,
-                }),
+            await confirmPengirimanDonatur(ship.id, {
+                metode: shipMetode,
+                kurir: shipMetode === 'kurir' ? shipKurir : undefined,
+                resi: shipMetode === 'kurir' ? shipResi : undefined,
             });
-            const json = await res.json();
-            if (!res.ok) {
-                setShipError(json.error || 'Gagal mengonfirmasi pengiriman.');
-                return;
-            }
             setConfirmItem(null);
             await fetchHistory();
-        } catch {
-            setShipError('Terjadi kesalahan koneksi.');
+        } catch (err: any) {
+            setShipError(err.message || 'Terjadi kesalahan koneksi.');
         } finally {
             setShipSubmitting(false);
         }

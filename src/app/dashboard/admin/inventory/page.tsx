@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { getAdminInventory } from '@/app/actions/admin';
 import { STATUS_BARANG_LABEL, STATUS_BARANG_BADGE, type StatusBarang } from '@/lib/statusBarang';
 
 // ─── Data Types ────────────────────────────────────────────────────────────────
@@ -27,13 +28,13 @@ interface InventoryItem {
   id: number;
   judul: string | null;
   kategori: string | null;
-  kondisi: string | null;
+  kondisi_user: string;
   deskripsi: string;
   foto_url: string | null;
   donatur: { id: number; nama: string };
   status: "menunggu_pengiriman" | "terkirim" | "ditolak" | "tersalurkan";
-  created_at: string;
-  updated_at: string;
+  created_at: string | Date;
+  updated_at: string | Date;
   qr_code?: string;
 }
 
@@ -124,10 +125,9 @@ export default function InventoryPage() {
   const fetchData = async () => {
     try {
         setIsLoading(true);
-        const res = await fetch('/api/admin/inventory');
-        const json = await res.json();
-        if (json.data) {
-            setItems(json.data);
+        const data = await getAdminInventory();
+        if (data) {
+            setItems(data as InventoryItem[]);
         }
     } catch (err) {
         console.error(err);
@@ -320,7 +320,7 @@ export default function InventoryPage() {
                     <h3 className="font-display font-bold text-stone-900 leading-tight">{item.judul || item.kategori || "Barang Donasi"}</h3>
                     <p className="text-xs text-stone-400 mt-0.5 font-mono">ID: {item.id}</p>
                   </div>
-                  {item.kondisi && <Badge color={kondisiBadgeColor(item.kondisi)}>{item.kondisi}</Badge>}
+                  {item.kondisi_user && <Badge color={kondisiBadgeColor(item.kondisi_user)}>{item.kondisi_user}</Badge>}
                 </div>
 
                 <div className="flex items-center gap-4 text-xs text-stone-500 mb-2">
@@ -377,7 +377,7 @@ export default function InventoryPage() {
                     </td>
                     <td className="p-5 text-sm text-stone-600">{item.kategori || "-"}</td>
                     <td className="p-5">
-                      {item.kondisi ? <Badge color={kondisiBadgeColor(item.kondisi)}>{item.kondisi}</Badge> : "-"}
+                      {item.kondisi_user ? <Badge color={kondisiBadgeColor(item.kondisi_user)}>{item.kondisi_user}</Badge> : "-"}
                     </td>
                     <td className="p-5 text-sm text-stone-600">{item.donatur?.nama}</td>
                     <td className="p-5">
@@ -477,7 +477,7 @@ export default function InventoryPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-stone-400">Kondisi</span>
-                {qrModal.kondisi ? <Badge color={kondisiBadgeColor(qrModal.kondisi)}>{qrModal.kondisi}</Badge> : <span>-</span>}
+                {qrModal.kondisi_user ? <Badge color={kondisiBadgeColor(qrModal.kondisi_user)}>{qrModal.kondisi_user}</Badge> : <span>-</span>}
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-stone-400">Donatur</span>

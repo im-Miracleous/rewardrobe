@@ -4,13 +4,14 @@ import Sidebar from '@/components/layout/Sidebar';
 import { Bell, X } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
+import { getNotifikasi, markNotifikasiRead } from '@/app/actions/notifikasi';
 
 interface Notifikasi {
     id: number;
     judul: string;
     pesan: string;
     dibaca: boolean;
-    created_at: string;
+    created_at: string | Date;
 }
 
 export default function DashboardLayout({
@@ -45,11 +46,10 @@ export default function DashboardLayout({
 
     const fetchNotifications = useCallback(async () => {
         try {
-            const res = await fetch('/api/notifikasi');
-            const json = await res.json();
-            if (json.data) {
-                setNotifications(json.data);
-                setUnreadCount(json.data.filter((n: Notifikasi) => !n.dibaca).length);
+            const data = await getNotifikasi();
+            if (data) {
+                setNotifications(data as any);
+                setUnreadCount(data.filter((n: Notifikasi) => !n.dibaca).length);
             }
         } catch {
             // silently ignore
@@ -81,7 +81,7 @@ export default function DashboardLayout({
         if (!isNotifOpen && unreadCount > 0) {
             // Mark all as read when opening
             try {
-                await fetch('/api/notifikasi', { method: 'PATCH' });
+                await markNotifikasiRead();
                 setNotifications(prev => prev.map(n => ({ ...n, dibaca: true })));
                 setUnreadCount(0);
             } catch {

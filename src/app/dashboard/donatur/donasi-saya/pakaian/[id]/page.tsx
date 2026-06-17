@@ -5,6 +5,8 @@ import { ArrowLeft, Shirt, Info, Clock, Truck, ShieldCheck, Package, CheckCircle
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { STATUS_BARANG_BADGE, STATUS_BARANG_LABEL, type StatusBarang } from '@/lib/statusBarang';
+import { getBarangDonasiById } from '@/app/actions/barang';
+import { confirmPengirimanDonatur } from '@/app/actions/donatur';
 
 export default function ClothingDetailPage() {
     const router = useRouter();
@@ -26,16 +28,11 @@ export default function ClothingDetailPage() {
         setIsLoading(true);
         setError('');
         try {
-            const res = await fetch(`/api/barang-donasi/${id}`);
-            const result = await res.json();
-            if (!res.ok) {
-                setError(result.error || 'Gagal memuat rincian donasi pakaian.');
-                return;
-            }
-            setBarang(result.data);
-        } catch (err) {
+            const data = await getBarangDonasiById(Number(id));
+            setBarang(data);
+        } catch (err: any) {
             console.error(err);
-            setError('Terjadi kesalahan koneksi internet.');
+            setError(err.message || 'Terjadi kesalahan koneksi internet.');
         } finally {
             setIsLoading(false);
         }
@@ -62,24 +59,15 @@ export default function ClothingDetailPage() {
         setShipSubmitting(true);
         setShipError('');
         try {
-            const res = await fetch(`/api/donatur/pengiriman/${pendingShipment.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    metode: shipMetode,
-                    kurir: shipMetode === 'kurir' ? shipKurir : undefined,
-                    resi: shipMetode === 'kurir' ? shipResi : undefined,
-                }),
+            await confirmPengirimanDonatur(pendingShipment.id, {
+                metode: shipMetode,
+                kurir: shipMetode === 'kurir' ? shipKurir : undefined,
+                resi: shipMetode === 'kurir' ? shipResi : undefined,
             });
-            const json = await res.json();
-            if (!res.ok) {
-                setShipError(json.error || 'Gagal mengonfirmasi pengiriman.');
-                return;
-            }
             setConfirmOpen(false);
             await fetchDetail();
-        } catch {
-            setShipError('Terjadi kesalahan koneksi.');
+        } catch (err: any) {
+            setShipError(err.message || 'Terjadi kesalahan koneksi.');
         } finally {
             setShipSubmitting(false);
         }

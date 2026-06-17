@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { getAdminPengiriman, getAdminInventory, createAdminPengiriman, updateAdminPengirimanStatus } from '@/app/actions/admin';
 
 type StatusPengiriman = 'disiapkan' | 'dalam_pengiriman' | 'terkirim';
 
@@ -96,19 +97,15 @@ export default function KelolaPengirimanPage() {
   const fetchData = async () => {
       try {
           setIsLoading(true);
-          const [resPengiriman, resInventory] = await Promise.all([
-              fetch('/api/admin/pengiriman'),
-              fetch('/api/admin/inventory')
+          const [dataPengiriman, dataInventory] = await Promise.all([
+              getAdminPengiriman(),
+              getAdminInventory()
           ]);
           
-          const jsonPengiriman = await resPengiriman.json();
-          const jsonInventory = await resInventory.json();
-
-          if (jsonPengiriman.data) setData(jsonPengiriman.data);
+          if (dataPengiriman) setData(dataPengiriman as any);
           
-          // Only show items that are 'terkirim' (in warehouse), not 'tersalurkan'
-          if (jsonInventory.data) {
-              setInventoryList(jsonInventory.data.filter((i: any) => i.status === 'terkirim'));
+          if (dataInventory) {
+              setInventoryList(dataInventory.filter((i: any) => i.status === 'terkirim'));
           }
       } catch (err) {
           console.error(err);
@@ -148,12 +145,8 @@ export default function KelolaPengirimanPage() {
   async function handleStatusChange(id: number, newStatus: StatusPengiriman) {
     setIsProcessing(true);
     try {
-        const res = await fetch(`/api/admin/pengiriman/${id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
-        });
-        if (res.ok) await fetchData();
+        await updateAdminPengirimanStatus(id, newStatus);
+        await fetchData();
     } catch (err) {
         console.error(err);
     } finally {
@@ -166,32 +159,24 @@ export default function KelolaPengirimanPage() {
     
     setIsProcessing(true);
     try {
-        const res = await fetch('/api/admin/pengiriman', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                penerima_id: formPenerimaId,
-                barang_ids: formBarangIds,
-                kurir: formKurir,
-                resi: formNoResi
-            })
+        await createAdminPengiriman({
+            penerima_id: formPenerimaId,
+            barang_ids: formBarangIds,
+            kurir: formKurir,
+            resi: formNoResi
         });
 
-        if (res.ok) {
-            setFormPenerimaId('');
-            setFormBarangIds([]);
-            setFormKurir('');
-            setFormNoResi('');
-            setShowPanel(false);
-            setActiveTab('semua');
-            setCurrentPage(1);
-            await fetchData();
-        } else {
-            const err = await res.json();
-            alert(`Gagal membuat pengiriman: ${err.error}`);
-        }
+        setFormPenerimaId('');
+        setFormBarangIds([]);
+        setFormKurir('');
+        setFormNoResi('');
+        setShowPanel(false);
+        setActiveTab('semua');
+        setCurrentPage(1);
+        await fetchData();
     } catch (err) {
         console.error(err);
+        alert(`Gagal membuat pengiriman: ${err instanceof Error ? err.message : 'Terjadi kesalahan'}`);
     } finally {
         setIsProcessing(false);
     }
