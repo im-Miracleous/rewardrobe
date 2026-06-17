@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         const barang = await prisma.$transaction(async (tx) => {
             const created = await tx.barangDonasi.create({
                 data: {
-                    judul: null,
+                    judul: tipePakaian,
                     deskripsi: fullDeskripsi,
                     kondisi_user: kondisi,
                     kategori: tipePakaian,

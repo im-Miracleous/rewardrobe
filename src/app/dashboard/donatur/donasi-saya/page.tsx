@@ -540,6 +540,13 @@ export default function DonationHistoryPage() {
                             </div>
                         </div>
 
+                        <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 space-y-1 text-xs text-stone-700">
+                            <div className="font-bold text-stone-500 uppercase tracking-wide text-[10px] mb-1.5">Alamat Gudang ReWardrobe</div>
+                            <div>📍 <span className="font-semibold">Jl. Sosial No. 1, Kebayoran Baru, Jakarta Selatan 12110</span></div>
+                            <div>📞 <span className="font-semibold">+62 21 7280 0001</span></div>
+                            <div className="text-stone-400">Jam operasional: Senin–Jumat, 08.00–17.00 WIB</div>
+                        </div>
+
                         <div className="space-y-3">
                             <div className="text-xs font-bold text-stone-500 uppercase tracking-wider">Metode Pengiriman</div>
                             <div className="grid grid-cols-2 gap-2">
